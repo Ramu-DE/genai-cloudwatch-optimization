@@ -940,46 +940,296 @@ def consult_tax_optimizer(query: str, client_id: str = ""):
     return invoke_peer_agent('olivia', query, client_id)
 
 
-# ── Indian Market / Groww Integration Tools ─────────────────────────
+# ── Dhan Brokerage Integration Tools (F&O + Equity) ─────────────────
 
 try:
-    from groww_connector import GrowwConnector, calculate_indian_tax_impact, get_indian_market_hours, NIFTY50_STOCKS, NSE_SECTOR_MAP
+    from dhan_connector import (
+        DhanConnector, calculate_fno_turnover, calculate_option_greeks,
+        analyze_fno_strategy, get_indian_market_hours,
+        NSE_SECTOR_MAP, FNO_LOT_SIZES, INDIA_TAX_RATES,
+    )
+    DHAN_AVAILABLE = True
+except ImportError:
+    DHAN_AVAILABLE = False
+
+try:
+    from groww_connector import GrowwConnector, calculate_indian_tax_impact, get_indian_market_hours as groww_market_hours, NIFTY50_STOCKS
     GROWW_AVAILABLE = True
 except ImportError:
     GROWW_AVAILABLE = False
+    NIFTY50_STOCKS = []
+
 
 @tool
 def get_indian_market_status():
     """Get current Indian stock market (NSE/BSE) status, trading hours, and session info.
     Use this when clients ask about Indian market timing or whether markets are open."""
-    if not GROWW_AVAILABLE:
-        from datetime import timezone
-        now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
-        is_weekday = now_ist.weekday() < 5
-        market_open = now_ist.replace(hour=9, minute=15)
-        market_close = now_ist.replace(hour=15, minute=30)
-        is_open = is_weekday and market_open <= now_ist <= market_close
+    if DHAN_AVAILABLE:
+        return json.dumps(get_indian_market_hours())
+    from datetime import timezone
+    now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+    is_weekday = now_ist.weekday() < 5
+    market_open = now_ist.replace(hour=9, minute=15)
+    market_close = now_ist.replace(hour=15, minute=30)
+    is_open = is_weekday and market_open <= now_ist <= market_close
+    return json.dumps({
+        'ist_time': now_ist.strftime('%Y-%m-%d %H:%M:%S IST'),
+        'market_open': is_open,
+        'session': 'trading' if is_open else 'closed',
+        'exchange': 'NSE/BSE',
+    })
+
+
+@tool
+def sync_dhan_portfolio(client_id: str):
+    """Sync portfolio data from Dhan brokerage into WealthAI system.
+    Pulls equity holdings, F&O positions, orders, and fund limits with read-only access.
+
+    Args:
+        client_id: WealthAI client ID to sync data for
+    """
+    if not DHAN_AVAILABLE:
         return json.dumps({
-            'ist_time': now_ist.strftime('%Y-%m-%d %H:%M:%S IST'),
-            'market_open': is_open,
-            'session': 'trading' if is_open else 'closed',
-            'exchange': 'NSE/BSE',
+            'status': 'error',
+            'message': 'Dhan connector not available. Ensure dhan_connector.py is in the shared directory.',
         })
-    return json.dumps(get_indian_market_hours())
+
+    access_token = os.environ.get('DHAN_ACCESS_TOKEN', '')
+    dhan_client_id = os.environ.get('DHAN_CLIENT_ID', '')
+    if not access_token or not dhan_client_id:
+        return json.dumps({
+            'status': 'needs_auth',
+            'message': 'Please configure your Dhan API credentials to sync portfolio data.',
+            'how_to_setup': '1. Go to https://dhanhq.co/ → Login → API Access\n2. Generate access token\n3. Add DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN to shared/.env',
+        })
+
+    try:
+        connector = DhanConnector(access_token=access_token, client_id=dhan_client_id)
+        result = connector.sync_to_dynamodb(client_id)
+        return json.dumps(result, default=str)
+    except Exception as e:
+        return json.dumps({'status': 'error', 'message': str(e)})
+
+
+@tool
+def get_dhan_holdings(client_id: str = ""):
+    """Get equity holdings from Dhan demat account — stocks, invested value, P&L.
+
+    Args:
+        client_id: Optional client ID to also check DynamoDB cache
+    """
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        holdings = connector.get_holdings()
+        if not holdings:
+            return json.dumps({'message': 'No equity holdings found in Dhan account.', 'count': 0})
+
+        total_invested = sum(h['invested_value'] for h in holdings)
+        total_current = sum(h['current_value'] for h in holdings)
+        total_pnl = total_current - total_invested
+
+        return json.dumps({
+            'count': len(holdings),
+            'total_invested': round(total_invested, 2),
+            'total_current_value': round(total_current, 2),
+            'total_pnl': round(total_pnl, 2),
+            'pnl_percent': round((total_pnl / total_invested) * 100, 2) if total_invested > 0 else 0,
+            'holdings': holdings,
+        }, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def get_fno_positions():
+    """Get all open F&O (Futures & Options) positions from Dhan account.
+    Shows futures and options positions with P&L, quantity, and margin details."""
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        positions = connector.get_fno_positions()
+        if not positions:
+            return json.dumps({'message': 'No open F&O positions.', 'count': 0})
+
+        total_pnl = sum(p['unrealized_pnl'] + p['realized_pnl'] for p in positions)
+        return json.dumps({
+            'count': len(positions),
+            'total_pnl': round(total_pnl, 2),
+            'positions': positions,
+        }, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def get_option_chain(symbol: str, expiry: str = ""):
+    """Get option chain for an index or stock with OI analysis, PCR, support/resistance levels.
+
+    Args:
+        symbol: Underlying symbol (NIFTY, BANKNIFTY, RELIANCE, TCS, etc.)
+        expiry: Expiry date YYYY-MM-DD (empty = nearest expiry)
+    """
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        chain = connector.get_option_chain(symbol.upper(), expiry=expiry if expiry else None)
+        if not chain:
+            return json.dumps({'error': f'Could not fetch option chain for {symbol}.'})
+
+        summary = {k: v for k, v in chain.items() if k != 'strikes'}
+        top_strikes = sorted(chain.get('strikes', []),
+                             key=lambda s: s.get('ce_oi', 0) + s.get('pe_oi', 0),
+                             reverse=True)[:10]
+        summary['top_10_strikes_by_oi'] = top_strikes
+
+        return json.dumps(summary, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def calculate_greeks(spot: float, strike: float, expiry_days: int, iv: float, option_type: str = "CE"):
+    """Calculate option Greeks (Delta, Gamma, Theta, Vega) using Black-Scholes model.
+    Uses India's risk-free rate (6.5%).
+
+    Args:
+        spot: Current underlying price (e.g., 24500 for NIFTY)
+        strike: Strike price (e.g., 24600)
+        expiry_days: Days until expiry (e.g., 7)
+        iv: Implied volatility as decimal (e.g., 0.15 for 15%)
+        option_type: CE for Call, PE for Put
+    """
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        greeks = calculate_option_greeks(spot, strike, expiry_days, iv, option_type)
+        return json.dumps(greeks, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def analyze_fno_tax(client_id: str = ""):
+    """Calculate F&O turnover for tax/audit purposes under Indian tax law.
+    F&O is business income under Section 43(5), NOT capital gains.
+    Determines: turnover, audit requirement, presumptive taxation eligibility.
+
+    Args:
+        client_id: Optional client ID for cached position data
+    """
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        positions = connector.get_positions()
+        fno_positions = [p for p in positions if p['exchange_segment'] in ('NSE_FNO', 'BSE_FNO', 'MCX_COMM')]
+
+        if not fno_positions:
+            return json.dumps({'message': 'No F&O positions found for tax calculation.'})
+
+        result = calculate_fno_turnover(fno_positions)
+        return json.dumps(result, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def get_fno_strategy_analysis():
+    """Analyze current F&O positions to detect trading strategy
+    (Straddle, Strangle, Spread, Iron Condor, Covered Call, etc.)
+    and calculate max profit/loss/breakevens."""
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        positions = connector.get_fno_positions()
+        if not positions:
+            return json.dumps({'message': 'No open F&O positions to analyze.'})
+
+        result = analyze_fno_strategy(positions, underlying_price=0)
+        return json.dumps(result, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def get_fund_limits():
+    """Get available funds, margin, and collateral from Dhan account."""
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        funds = connector.get_fund_limits()
+        if not funds:
+            return json.dumps({'message': 'Could not fetch fund limits.'})
+        return json.dumps(funds, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
+
+
+@tool
+def get_expiry_list(symbol: str):
+    """Get available F&O expiry dates for an index or stock.
+
+    Args:
+        symbol: Underlying symbol (NIFTY, BANKNIFTY, RELIANCE, etc.)
+    """
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        expiries = connector.get_expiry_list(symbol.upper())
+        lot_size = FNO_LOT_SIZES.get(symbol.upper(), 0)
+        return json.dumps({
+            'symbol': symbol.upper(),
+            'lot_size': lot_size,
+            'expiries': expiries,
+            'count': len(expiries),
+        }, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
 
 
 @tool
 def get_nse_stock_quote(ticker: str):
-    """Get live quote for an Indian stock on NSE/BSE.
-    Use this when clients ask about specific Indian stocks like RELIANCE, TCS, INFY, HDFCBANK etc.
+    """Get live quote for an Indian stock on NSE/BSE via Dhan.
 
     Args:
         ticker: NSE trading symbol (e.g., RELIANCE, TCS, INFY, HDFCBANK)
     """
     ticker = ticker.upper().replace('.NS', '').replace('.BSE', '').strip()
+    sector = NSE_SECTOR_MAP.get(ticker, 'Other') if DHAN_AVAILABLE else 'Unknown'
 
-    sector = NSE_SECTOR_MAP.get(ticker, 'Other') if GROWW_AVAILABLE else 'Unknown'
-    is_nifty50 = ticker in (NIFTY50_STOCKS if GROWW_AVAILABLE else [])
+    if DHAN_AVAILABLE:
+        try:
+            connector = DhanConnector()
+            holdings = connector.get_holdings()
+            for h in holdings:
+                if h.get('ticker', '').upper() == ticker:
+                    return json.dumps({
+                        'ticker': ticker,
+                        'exchange': h.get('exchange', 'NSE'),
+                        'price': h['current_price'],
+                        'sector': sector,
+                        'source': 'dhan_holdings',
+                        'quantity_held': h['quantity'],
+                        'pnl': h['pnl'],
+                        'pnl_percent': h['pnl_percent'],
+                    }, default=str)
+        except Exception:
+            pass
 
     dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
     try:
@@ -998,7 +1248,6 @@ def get_nse_stock_quote(ticker: str):
                 'price': item.get('price', {}).get('N', '0'),
                 'change_percent': item.get('change_percent', {}).get('N', '0'),
                 'sector': sector,
-                'nifty50': is_nifty50,
                 'source': 'cached',
             })
     except Exception:
@@ -1008,9 +1257,7 @@ def get_nse_stock_quote(ticker: str):
         'ticker': ticker,
         'exchange': 'NSE',
         'sector': sector,
-        'nifty50': is_nifty50,
-        'note': 'Live quote requires Groww connection. Use sync_groww_portfolio to connect.',
-        'suggestion': f'For {ticker} analysis, I can provide sector outlook and portfolio context from existing data.',
+        'note': 'Live quote requires Dhan connection. Use sync_dhan_portfolio to connect.',
     })
 
 
@@ -1023,79 +1270,41 @@ def calculate_india_tax(client_id: str, sell_tickers: str = ""):
         client_id: The client ID to look up holdings for
         sell_tickers: Comma-separated tickers to sell (empty = calculate for all holdings)
     """
-    portfolio_data = get_portfolio_from_db(client_id, 'groww_stocks')
+    portfolio_data = get_portfolio_from_db(client_id, 'dhan_equity')
     if not portfolio_data:
         portfolio_data = get_portfolio_from_db(client_id)
     if not portfolio_data:
-        return json.dumps({'error': 'No portfolio found. Sync Groww data first.'})
+        return json.dumps({'error': 'No portfolio found. Sync Dhan data first with sync_dhan_portfolio.'})
 
-    holdings = portfolio_data.get('holdings', [])
+    port = portfolio_data[0] if isinstance(portfolio_data, list) else portfolio_data
+    holdings = port.get('holdings', [])
     if not holdings:
         return json.dumps({'error': 'No holdings found in portfolio.'})
 
     holdings_for_calc = []
-    sell_list = [t.strip().upper() for t in sell_tickers.split(',') if t.strip()] if sell_tickers else None
-
     for h in holdings:
         holdings_for_calc.append({
             'ticker': h.get('ticker', h.get('name', '')),
             'quantity': int(h.get('shares', h.get('quantity', 0))),
             'avg_price': float(h.get('avg_cost', h.get('cost_basis', 0))),
-            'current_price': float(h.get('current_price', h.get('value', 0)) /
-                                   max(int(h.get('shares', 1)), 1)),
+            'current_price': float(h.get('current_price', 0)),
             'purchase_date': h.get('purchase_date', ''),
         })
 
-    if GROWW_AVAILABLE:
-        result = calculate_indian_tax_impact(holdings_for_calc, sell_list)
-    else:
-        stcg = sum(
-            (h['current_price'] - h['avg_price']) * h['quantity']
-            for h in holdings_for_calc
-            if (h['current_price'] - h['avg_price']) > 0
-        )
-        result = {
-            'stcg_gains': round(stcg, 2),
-            'stcg_tax_20pct': round(stcg * 0.20, 2),
-            'ltcg_exemption': 125000,
-            'note': 'Approximate calculation. Connect Groww for precise holding period data.',
-            'rates': 'STCG: 20%, LTCG: 12.5% (above 1.25L exemption)',
-        }
+    stcg = sum(
+        (h['current_price'] - h['avg_price']) * h['quantity']
+        for h in holdings_for_calc
+        if (h['current_price'] - h['avg_price']) > 0
+    )
+    result = {
+        'stcg_gains': round(stcg, 2),
+        'stcg_tax_20pct': round(stcg * 0.20, 2),
+        'ltcg_exemption': 125000,
+        'rates': 'STCG: 20%, LTCG: 12.5% (above ₹1.25L exemption)',
+        'note': 'For F&O tax, use analyze_fno_tax — F&O is business income, not capital gains.',
+    }
 
     return json.dumps(result, default=str)
-
-
-@tool
-def sync_groww_portfolio(client_id: str, auth_token: str = ""):
-    """Sync portfolio data from Groww brokerage into WealthAI system.
-    Pulls stocks, mutual funds, and order history with read-only access.
-
-    Args:
-        client_id: WealthAI client ID to sync data for
-        auth_token: Groww authentication token (read-only)
-    """
-    if not GROWW_AVAILABLE:
-        return json.dumps({
-            'status': 'error',
-            'message': 'Groww connector not available. Ensure groww_connector.py is in the shared directory.',
-        })
-
-    env_token = os.environ.get('GROWW_AUTH_TOKEN', '')
-    token = auth_token or env_token
-    if not token:
-        return json.dumps({
-            'status': 'needs_auth',
-            'message': 'Please provide your Groww read-only auth token to sync portfolio data.',
-            'how_to_get_token': 'Log into Groww web > Developer Tools > Network tab > Copy Authorization header value',
-            'alternative': 'Or set GROWW_AUTH_TOKEN in shared/.env file',
-        })
-
-    try:
-        connector = GrowwConnector(auth_token=token)
-        result = connector.sync_to_dynamodb(client_id)
-        return json.dumps(result, default=str)
-    except Exception as e:
-        return json.dumps({'status': 'error', 'message': str(e)})
 
 
 @tool
@@ -1136,7 +1345,6 @@ def analyze_indian_sector(sector: str):
         'market': 'India',
         'key_stocks': stocks,
         'stock_count': len(stocks),
-        'nifty50_representation': sum(1 for s in stocks if s in (NIFTY50_STOCKS if GROWW_AVAILABLE else [])),
         'analysis_note': f'Indian {sector_title} sector with {len(stocks)} major constituents on NSE.',
         'index': f'NIFTY{sector_title.upper()}' if sector_title in ['IT', 'Bank', 'Pharma', 'Metal'] else 'NIFTY50',
     })
@@ -1159,8 +1367,16 @@ base_tools = [
     get_indian_market_status,
     get_nse_stock_quote,
     calculate_india_tax,
-    sync_groww_portfolio,
     analyze_indian_sector,
+    sync_dhan_portfolio,
+    get_dhan_holdings,
+    get_fno_positions,
+    get_option_chain,
+    calculate_greeks,
+    analyze_fno_tax,
+    get_fno_strategy_analysis,
+    get_fund_limits,
+    get_expiry_list,
 ]
 
 agent = Agent(
@@ -1189,10 +1405,18 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 - consult_financial_planner(query, client_id): Ask the Financial Planner for portfolio allocation, retirement projections, or rebalancing advice
 - consult_tax_optimizer(query, client_id): Ask the Tax Optimizer for tax-loss harvesting, capital gains, or tax bracket strategies
 - get_indian_market_status(): Check if NSE/BSE is open, current IST time, trading session
-- get_nse_stock_quote(ticker): Get quote for Indian stocks (RELIANCE, TCS, INFY, HDFCBANK, etc.)
+- get_nse_stock_quote(ticker): Get quote for Indian stocks via Dhan (RELIANCE, TCS, INFY, HDFCBANK, etc.)
 - calculate_india_tax(client_id, sell_tickers=""): Calculate STCG/LTCG tax under Indian rules (FY 2024-25)
-- sync_groww_portfolio(client_id, auth_token=""): Sync holdings from Groww brokerage (read-only)
 - analyze_indian_sector(sector): Analyze Indian market sectors (Technology, Banking, FMCG, Pharma, etc.)
+- sync_dhan_portfolio(client_id): Sync equity + F&O data from Dhan brokerage (read-only)
+- get_dhan_holdings(client_id=""): Get equity holdings from Dhan demat with P&L
+- get_fno_positions(): Get open F&O positions (futures + options) with unrealized P&L
+- get_option_chain(symbol, expiry=""): Get option chain with OI, PCR, support/resistance levels
+- calculate_greeks(spot, strike, expiry_days, iv, option_type="CE"): Black-Scholes Greeks (Delta/Gamma/Theta/Vega)
+- analyze_fno_tax(client_id=""): F&O turnover calculation for tax audit / presumptive taxation
+- get_fno_strategy_analysis(): Detect F&O strategy (Straddle, Strangle, Spread, Iron Condor, etc.)
+- get_fund_limits(): Get available margin, collateral, and withdrawal limits from Dhan
+- get_expiry_list(symbol): Get available F&O expiry dates for any underlying
 
 🎯 **Critical Response Patterns:**
 1. Client asks about their portfolio → IMMEDIATELY use get_client_portfolio
@@ -1206,8 +1430,15 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 9. Client asks about Indian stocks (RELIANCE, TCS, etc.) → Use get_nse_stock_quote
 10. Client asks about NSE/BSE market timing → Use get_indian_market_status
 11. Client asks about Indian tax on selling stocks → Use calculate_india_tax (STCG 20%, LTCG 12.5%)
-12. Client asks to connect Groww portfolio → Use sync_groww_portfolio
+12. Client asks to connect Dhan portfolio → Use sync_dhan_portfolio
 13. Client asks about Indian sectors (Banking, IT, Pharma) → Use analyze_indian_sector
+14. Client asks about F&O positions or derivatives → Use get_fno_positions
+15. Client asks about option chain or OI analysis → Use get_option_chain
+16. Client asks about Greeks (delta, gamma, theta, vega) → Use calculate_greeks
+17. Client asks about F&O tax or audit → Use analyze_fno_tax (business income, NOT capital gains)
+18. Client asks about their F&O strategy → Use get_fno_strategy_analysis
+19. Client asks about available margin or funds → Use get_fund_limits
+20. Client asks about expiry dates → Use get_expiry_list
 
 💼 **Professional Standards:**
 - Always provide data-backed analysis, never speculation

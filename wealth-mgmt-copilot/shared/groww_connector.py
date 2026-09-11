@@ -2,13 +2,14 @@
 Groww Portfolio Connector — Read-Only Integration
 
 Connects to Groww (Indian brokerage) to fetch real portfolio data.
-Supports: Stocks (NSE/BSE), Mutual Funds, Gold, FDs.
+Supports: Stocks (NSE/BSE), Mutual Funds, F&O (Futures & Options).
 
 Usage:
     connector = GrowwConnector(auth_token="...")
     holdings = connector.get_holdings()
     mf = connector.get_mutual_funds()
-    orders = connector.get_order_history()
+    fno = connector.get_fno_positions()
+    chain = connector.get_option_chain("NIFTY")
 
 Data is normalized to the WealthAI Copilot schema and written to DynamoDB
 for agents to access via their existing tools.
@@ -54,6 +55,10 @@ GROWW_MF_URL = f"{GROWW_BASE_URL}/v1/mutual-fund"
 GROWW_ORDER_URL = f"{GROWW_BASE_URL}/order"
 GROWW_HOLDING_URL = f"{GROWW_BASE_URL}/v2/user/stocks/holdings"
 GROWW_POSITIONS_URL = f"{GROWW_BASE_URL}/v2/user/stocks/positions"
+GROWW_FNO_POSITIONS_URL = f"{GROWW_BASE_URL}/v1/user/derivatives/positions"
+GROWW_FNO_ORDERS_URL = f"{GROWW_BASE_URL}/v1/user/derivatives/orders"
+GROWW_OPTION_CHAIN_URL = f"{GROWW_BASE_URL}/v1/api/option_chain_data"
+GROWW_FUTURES_URL = f"{GROWW_BASE_URL}/v1/api/futures_data"
 
 NSE_SECTOR_MAP = {
     'RELIANCE': 'Energy', 'TCS': 'Technology', 'INFY': 'Technology',
@@ -69,6 +74,16 @@ NSE_SECTOR_MAP = {
 }
 
 INR_TO_USD = 0.012
+
+FNO_LOT_SIZES = {
+    'NIFTY': 25, 'BANKNIFTY': 15, 'FINNIFTY': 25, 'MIDCPNIFTY': 50,
+    'RELIANCE': 250, 'TCS': 150, 'HDFCBANK': 550, 'INFY': 300,
+    'ICICIBANK': 700, 'SBIN': 750, 'BHARTIARTL': 475, 'ITC': 1600,
+    'BAJFINANCE': 125, 'LT': 150, 'TATAMOTORS': 575, 'MARUTI': 50,
+    'HCLTECH': 350, 'SUNPHARMA': 300, 'WIPRO': 1500, 'TATASTEEL': 1717,
+    'AXISBANK': 600, 'KOTAKBANK': 400, 'M_M': 350, 'HINDUNILVR': 300,
+    'ADANIENT': 250, 'TITAN': 375, 'NTPC': 2800, 'POWERGRID': 2700,
+}
 
 
 class GrowwConnector:
@@ -245,6 +260,169 @@ class GrowwConnector:
                 }
         return indices
 
+    # ── F&O (Futures & Options) ────────────────────────────────────
+
+    def get_fno_positions(self) -> list:
+        """Fetch open F&O positions (futures and options)."""
+        data = self._get(GROWW_FNO_POSITIONS_URL)
+        if not data:
+            return []
+
+        positions = []
+        for p in data.get('positionData', data.get('positions', data.get('data', []))):
+            symbol = p.get('tradingSymbol', p.get('symbol', ''))
+            positions.append({
+                'symbol': symbol,
+                'underlying': p.get('underlying', symbol.split('-')[0] if '-' in symbol else symbol),
+                'exchange': p.get('exchange', 'NFO'),
+                'instrument_type': p.get('instrumentType', self._detect_instrument(symbol)),
+                'option_type': p.get('optionType', ''),  # CE / PE
+                'strike_price': float(p.get('strikePrice', 0)),
+                'expiry': p.get('expiry', p.get('expiryDate', '')),
+                'lot_size': int(p.get('lotSize', p.get('marketLot', 0))),
+                'quantity': int(p.get('quantity', p.get('netQuantity', 0))),
+                'buy_price': float(p.get('buyPrice', p.get('averagePrice', 0))),
+                'current_price': float(p.get('lastTradedPrice', p.get('ltp', 0))),
+                'pnl': float(p.get('pnl', p.get('unrealisedPnl', 0))),
+                'buy_value': float(p.get('buyValue', 0)),
+                'current_value': float(p.get('currentValue', 0)),
+                'product_type': p.get('productType', 'NRML'),  # NRML / MIS
+            })
+        return positions
+
+    def get_fno_orders(self, days: int = 30) -> list:
+        """Fetch F&O order history."""
+        params = {'segment': 'FNO', 'page': 0, 'size': 50}
+        data = self._get(GROWW_FNO_ORDERS_URL, params=params)
+        if not data:
+            return []
+
+        orders = []
+        for o in data.get('orders', data.get('orderData', data.get('data', []))):
+            orders.append({
+                'order_id': o.get('orderId', ''),
+                'symbol': o.get('tradingSymbol', ''),
+                'underlying': o.get('underlying', ''),
+                'instrument_type': o.get('instrumentType', ''),
+                'option_type': o.get('optionType', ''),
+                'strike_price': float(o.get('strikePrice', 0)),
+                'expiry': o.get('expiry', ''),
+                'order_type': o.get('transactionType', ''),
+                'quantity': int(o.get('quantity', 0)),
+                'price': float(o.get('price', 0)),
+                'status': o.get('orderStatus', ''),
+                'timestamp': o.get('orderTimestamp', ''),
+                'product_type': o.get('productType', 'NRML'),
+            })
+        return orders
+
+    def get_option_chain(self, symbol: str, expiry: str = None) -> dict:
+        """
+        Fetch option chain for an index or stock.
+
+        Args:
+            symbol: Underlying symbol (e.g., NIFTY, BANKNIFTY, RELIANCE)
+            expiry: Specific expiry date (YYYY-MM-DD). None = nearest expiry.
+        """
+        params = {'symbol': symbol}
+        if expiry:
+            params['expiry'] = expiry
+
+        data = self._get(f"{GROWW_OPTION_CHAIN_URL}/{symbol}", params=params)
+        if not data:
+            return {}
+
+        chain_data = data.get('optionChainData', data.get('data', data))
+        strikes = []
+
+        for strike in chain_data.get('strikes', chain_data.get('optionChain', [])):
+            ce = strike.get('callOption', strike.get('CE', {}))
+            pe = strike.get('putOption', strike.get('PE', {}))
+            strike_price = float(strike.get('strikePrice', 0))
+
+            strikes.append({
+                'strike_price': strike_price,
+                'ce_ltp': float(ce.get('lastTradedPrice', ce.get('ltp', 0))),
+                'ce_oi': int(ce.get('openInterest', ce.get('oi', 0))),
+                'ce_oi_change': int(ce.get('oiChange', ce.get('changeinOpenInterest', 0))),
+                'ce_volume': int(ce.get('volume', ce.get('totalTradedVolume', 0))),
+                'ce_iv': float(ce.get('impliedVolatility', ce.get('iv', 0))),
+                'ce_bid': float(ce.get('bidPrice', ce.get('bidprice', 0))),
+                'ce_ask': float(ce.get('askPrice', ce.get('askprice', 0))),
+                'pe_ltp': float(pe.get('lastTradedPrice', pe.get('ltp', 0))),
+                'pe_oi': int(pe.get('openInterest', pe.get('oi', 0))),
+                'pe_oi_change': int(pe.get('oiChange', pe.get('changeinOpenInterest', 0))),
+                'pe_volume': int(pe.get('volume', pe.get('totalTradedVolume', 0))),
+                'pe_iv': float(pe.get('impliedVolatility', pe.get('iv', 0))),
+                'pe_bid': float(pe.get('bidPrice', pe.get('bidprice', 0))),
+                'pe_ask': float(pe.get('askPrice', pe.get('askprice', 0))),
+            })
+
+        underlying_price = float(chain_data.get('underlyingValue',
+                                   chain_data.get('spotPrice', 0)))
+        lot_size = FNO_LOT_SIZES.get(symbol, int(chain_data.get('lotSize', 0)))
+
+        total_ce_oi = sum(s['ce_oi'] for s in strikes)
+        total_pe_oi = sum(s['pe_oi'] for s in strikes)
+        pcr = round(total_pe_oi / total_ce_oi, 2) if total_ce_oi > 0 else 0
+
+        max_ce_oi_strike = max(strikes, key=lambda s: s['ce_oi'])['strike_price'] if strikes else 0
+        max_pe_oi_strike = max(strikes, key=lambda s: s['pe_oi'])['strike_price'] if strikes else 0
+
+        return {
+            'symbol': symbol,
+            'underlying_price': underlying_price,
+            'lot_size': lot_size,
+            'expiry': expiry or chain_data.get('expiryDate', chain_data.get('nearestExpiry', '')),
+            'total_ce_oi': total_ce_oi,
+            'total_pe_oi': total_pe_oi,
+            'pcr': pcr,
+            'pcr_interpretation': 'Bullish' if pcr > 1.2 else 'Bearish' if pcr < 0.8 else 'Neutral',
+            'max_ce_oi_strike': max_ce_oi_strike,
+            'max_pe_oi_strike': max_pe_oi_strike,
+            'resistance': max_ce_oi_strike,
+            'support': max_pe_oi_strike,
+            'strikes': strikes,
+            'strike_count': len(strikes),
+        }
+
+    def get_futures_data(self, symbol: str) -> dict:
+        """Fetch futures contract data for an index or stock."""
+        data = self._get(f"{GROWW_FUTURES_URL}/{symbol}")
+        if not data:
+            return {}
+
+        contracts = []
+        for c in data.get('futuresData', data.get('data', data.get('contracts', []))):
+            contracts.append({
+                'symbol': c.get('tradingSymbol', f"{symbol}FUT"),
+                'expiry': c.get('expiry', c.get('expiryDate', '')),
+                'ltp': float(c.get('lastTradedPrice', c.get('ltp', 0))),
+                'open_interest': int(c.get('openInterest', c.get('oi', 0))),
+                'oi_change': int(c.get('oiChange', 0)),
+                'volume': int(c.get('volume', 0)),
+                'basis': float(c.get('basis', c.get('premium', 0))),
+                'basis_percent': float(c.get('basisPercent', 0)),
+            })
+
+        spot_price = float(data.get('spotPrice', data.get('underlyingValue', 0)))
+        lot_size = FNO_LOT_SIZES.get(symbol, 0)
+
+        return {
+            'symbol': symbol,
+            'spot_price': spot_price,
+            'lot_size': lot_size,
+            'lot_value': round(spot_price * lot_size, 2),
+            'contracts': contracts,
+        }
+
+    def _detect_instrument(self, symbol: str) -> str:
+        if 'CE' in symbol or 'PE' in symbol:
+            return 'OPTION'
+        if 'FUT' in symbol:
+            return 'FUTURE'
+        return 'UNKNOWN'
+
     # ── Sync to DynamoDB ────────────────────────────────────────────
 
     def sync_to_dynamodb(self, client_id: str) -> dict:
@@ -339,6 +517,43 @@ class GrowwConnector:
             summary['mutual_funds_synced'] = len(mf_holdings)
             summary['mf_portfolio_value_inr'] = round(total_mf_current, 2)
 
+        # Sync F&O positions
+        fno_positions = self.get_fno_positions()
+        if fno_positions:
+            fno_item = {
+                'client_id': client_id,
+                'portfolio_type': 'groww_fno',
+                'source': 'groww',
+                'currency': 'INR',
+                'positions': [
+                    {
+                        'symbol': p['symbol'],
+                        'underlying': p['underlying'],
+                        'instrument_type': p['instrument_type'],
+                        'option_type': p.get('option_type', ''),
+                        'strike_price': Decimal(str(p['strike_price'])),
+                        'expiry': p['expiry'],
+                        'lot_size': p['lot_size'],
+                        'quantity': p['quantity'],
+                        'buy_price': Decimal(str(p['buy_price'])),
+                        'current_price': Decimal(str(p['current_price'])),
+                        'pnl': Decimal(str(round(p['pnl'], 2))),
+                        'product_type': p['product_type'],
+                    }
+                    for p in fno_positions
+                ],
+                'total_pnl': Decimal(str(round(sum(p['pnl'] for p in fno_positions), 2))),
+                'open_positions': len(fno_positions),
+                'futures_count': sum(1 for p in fno_positions if p['instrument_type'] == 'FUTURE'),
+                'options_count': sum(1 for p in fno_positions if p['instrument_type'] == 'OPTION'),
+                'last_synced': datetime.now().isoformat(),
+            }
+
+            table = self.dynamodb.Table('wealth_mgmt_portfolios')
+            table.put_item(Item=fno_item)
+            summary['fno_positions_synced'] = len(fno_positions)
+            summary['fno_pnl_inr'] = round(sum(p['pnl'] for p in fno_positions), 2)
+
         # Sync order history as transactions
         orders = self.get_order_history()
         if orders:
@@ -399,11 +614,18 @@ INDIA_TAX_RATES = {
     'stcg_debt': 'slab',       # Debt funds taxed as per income slab
     'stt_delivery': 0.001,     # STT on delivery — 0.1%
     'stt_intraday': 0.00025,   # STT on intraday sell — 0.025%
+    'stt_options_sell': 0.000625,  # STT on options sell — 0.0625% on premium
+    'stt_futures_sell': 0.000125,  # STT on futures sell — 0.0125%
     'stamp_duty': 0.00015,     # Stamp duty — 0.015%
     'gst': 0.18,               # GST on brokerage
     'sebi_charges': 0.000001,  # SEBI turnover charges
     'exchange_charges_nse': 0.0000297,
     'exchange_charges_bse': 0.0000275,
+    # F&O is business income — taxed at slab rate, NOT capital gains
+    'fno_tax_type': 'business_income',
+    'fno_presumptive_rate': 0.06,       # Section 44AD — 6% of turnover if < 2Cr
+    'fno_audit_threshold': 100000000,   # ₹10Cr — tax audit required above this turnover
+    'fno_presumptive_threshold': 20000000,  # ₹2Cr — above this, normal computation required
 }
 
 NIFTY50_STOCKS = [
@@ -491,6 +713,126 @@ def calculate_indian_tax_impact(holdings: list, sell_tickers: list = None) -> di
         ) if (stcg_total + ltcg_total) > 0 else 0,
         'per_stock': results,
         'note': 'FY 2024-25 rates. STCG@20%, LTCG@12.5% above 1.25L exemption.',
+    }
+
+
+def calculate_fno_turnover(trades: list) -> dict:
+    """
+    Calculate F&O turnover for tax/audit purposes.
+
+    F&O turnover rules (ICAI guidance):
+    - Futures: absolute(sell_value - buy_value) per trade
+    - Options: absolute premium received/paid (premium is the turnover)
+    - This determines: presumptive taxation eligibility, audit requirement
+
+    Args:
+        trades: List of F&O trade dicts with 'instrument_type', 'buy_value',
+                'sell_value', 'premium', 'quantity', 'lot_size'
+    """
+    futures_turnover = 0
+    options_turnover = 0
+    futures_pnl = 0
+    options_pnl = 0
+
+    for t in trades:
+        if t.get('instrument_type') == 'FUTURE':
+            diff = abs(t.get('sell_value', 0) - t.get('buy_value', 0))
+            futures_turnover += diff
+            futures_pnl += t.get('sell_value', 0) - t.get('buy_value', 0)
+        else:
+            premium = abs(t.get('premium', t.get('sell_value', 0)))
+            options_turnover += premium
+            options_pnl += t.get('pnl', 0)
+
+    total_turnover = futures_turnover + options_turnover
+    total_pnl = futures_pnl + options_pnl
+
+    audit_required = total_turnover > INDIA_TAX_RATES['fno_audit_threshold']
+    presumptive_eligible = total_turnover <= INDIA_TAX_RATES['fno_presumptive_threshold']
+
+    presumptive_income = total_turnover * INDIA_TAX_RATES['fno_presumptive_rate']
+
+    stt_futures = futures_turnover * INDIA_TAX_RATES['stt_futures_sell']
+    stt_options = options_turnover * INDIA_TAX_RATES['stt_options_sell']
+
+    return {
+        'futures_turnover': round(futures_turnover, 2),
+        'options_turnover': round(options_turnover, 2),
+        'total_turnover': round(total_turnover, 2),
+        'futures_pnl': round(futures_pnl, 2),
+        'options_pnl': round(options_pnl, 2),
+        'total_pnl': round(total_pnl, 2),
+        'tax_type': 'Business Income (not Capital Gains)',
+        'taxed_at': 'Income tax slab rate',
+        'audit_required': audit_required,
+        'audit_threshold': '₹10 Crore',
+        'presumptive_eligible': presumptive_eligible,
+        'presumptive_threshold': '₹2 Crore',
+        'presumptive_income_44AD': round(presumptive_income, 2) if presumptive_eligible else None,
+        'stt_futures': round(stt_futures, 2),
+        'stt_options': round(stt_options, 2),
+        'total_stt': round(stt_futures + stt_options, 2),
+        'note': 'F&O income is business income under Section 43(5). '
+                'Losses carry forward 8 years, set off against business income only.',
+    }
+
+
+def calculate_option_greeks(spot: float, strike: float, expiry_days: int,
+                            iv: float, option_type: str = 'CE',
+                            risk_free_rate: float = 0.065) -> dict:
+    """
+    Calculate option Greeks using Black-Scholes approximation.
+
+    Args:
+        spot: Current underlying price
+        strike: Option strike price
+        expiry_days: Days to expiry
+        iv: Implied volatility (as decimal, e.g. 0.15 for 15%)
+        option_type: 'CE' for call, 'PE' for put
+        risk_free_rate: Risk-free rate (default 6.5% — India 10Y yield)
+    """
+    import math
+
+    if expiry_days <= 0 or iv <= 0:
+        return {'error': 'Invalid expiry or IV'}
+
+    T = expiry_days / 365.0
+    sqrt_T = math.sqrt(T)
+
+    d1 = (math.log(spot / strike) + (risk_free_rate + 0.5 * iv**2) * T) / (iv * sqrt_T)
+    d2 = d1 - iv * sqrt_T
+
+    def norm_cdf(x):
+        return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+    def norm_pdf(x):
+        return math.exp(-0.5 * x**2) / math.sqrt(2 * math.pi)
+
+    if option_type.upper() == 'CE':
+        delta = round(norm_cdf(d1), 4)
+        theta = round((-spot * norm_pdf(d1) * iv / (2 * sqrt_T)
+                       - risk_free_rate * strike * math.exp(-risk_free_rate * T) * norm_cdf(d2)) / 365, 2)
+    else:
+        delta = round(norm_cdf(d1) - 1, 4)
+        theta = round((-spot * norm_pdf(d1) * iv / (2 * sqrt_T)
+                       + risk_free_rate * strike * math.exp(-risk_free_rate * T) * norm_cdf(-d2)) / 365, 2)
+
+    gamma = round(norm_pdf(d1) / (spot * iv * sqrt_T), 6)
+    vega = round(spot * norm_pdf(d1) * sqrt_T / 100, 2)
+
+    return {
+        'delta': delta,
+        'gamma': gamma,
+        'theta': theta,
+        'vega': vega,
+        'iv': round(iv * 100, 2),
+        'days_to_expiry': expiry_days,
+        'interpretation': {
+            'delta': f"Option moves ₹{abs(delta):.2f} for every ₹1 move in underlying",
+            'gamma': f"Delta changes by {gamma:.4f} for every ₹1 move",
+            'theta': f"Option loses ₹{abs(theta):.2f} per day from time decay",
+            'vega': f"Option moves ₹{vega:.2f} for every 1% change in IV",
+        },
     }
 
 

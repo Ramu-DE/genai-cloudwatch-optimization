@@ -7,7 +7,7 @@
  │                              USERS / CLIENTS                                │
  │                                                                             │
  │  Registered via Login/Register flow                                        │
- │  Portfolios synced from connected trading platform (Groww)                 │
+ │  Portfolios synced from connected trading platform (Dhan)                  │
  │                                                                             │
  │  ┌───────────────────────┐       ┌───────────────────────────┐             │
  │  │  Client Accounts      │       │  Admin Accounts           │             │
@@ -99,14 +99,14 @@
         │             │             │                │
         ▼             ▼             ▼                ▼
 ┌──────────────┐ ┌──────────┐ ┌──────────┐  ┌──────────────┐
-│ Amazon       │ │ AgentCore│ │ DynamoDB │  │ Groww API    │
-│ Bedrock      │ │ Memory   │ │ 12 Tables│  │ (Read-Only)  │
+│ Amazon       │ │ AgentCore│ │ DynamoDB │  │ Dhan API     │
+│ Bedrock      │ │ Memory   │ │ 12 Tables│  │(Read-Only)   │
 │ Claude       │ │ Service  │ │          │  │              │
-│ Haiku/Sonnet │ │          │ │ Profiles │  │ Holdings     │
-│              │ │ Summary  │ │ Portfolios│  │ Positions   │
-│ Foundation   │ │ Semantic │ │ Txns     │  │ MF SIPs     │
+│ Haiku/Sonnet │ │          │ │ Profiles │  │ Equity       │
+│              │ │ Summary  │ │ Portfolios│  │ F&O Posns   │
+│ Foundation   │ │ Semantic │ │ Txns     │  │ Opt Chain   │
 │ Model        │ │Preference│ │ Tax      │  │ Orders      │
-│              │ │          │ │ Compliance│  │ NSE Quotes  │
+│              │ │          │ │ Compliance│  │ Margins     │
 └──────────────┘ └──────────┘ │ Audit    │  └──────────────┘
                               │ Market   │
                               │ Schedule │
@@ -130,27 +130,35 @@
 │  Model: Claude Haiku 4.5 / Sonnet 4                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  US MARKET TOOLS (9)              INDIAN MARKET TOOLS (5)       │
+│  US MARKET TOOLS (7)              DHAN BROKERAGE TOOLS (13)     │
 │  ┌─────────────────────────┐      ┌──────────────────────────┐  │
-│  │ get_client_portfolio    │      │ get_indian_market_status │  │
-│  │ analyze_market_sector   │      │ get_nse_stock_quote      │  │
-│  │ get_market_indicators   │      │ calculate_india_tax      │  │
-│  │ assess_portfolio_risk   │      │ sync_groww_portfolio     │  │
-│  │ get_stock_analysis      │      │ analyze_indian_sector    │  │
-│  │ get_memory_context      │      └──────────────────────────┘  │
-│  │ save_conversation_memory│                                    │
-│  │ consult_financial_planner│  CROSS-AGENT (2)                  │
-│  │ consult_tax_optimizer   │  ┌──────────────────────────────┐  │
-│  └─────────────────────────┘  │ consult_financial_planner    │  │
-│                               │ consult_tax_optimizer         │  │
-│                               └──────────────────────────────┘  │
+│  │ get_client_portfolio    │      │ sync_dhan_portfolio      │  │
+│  │ analyze_market_sector   │      │ get_dhan_holdings        │  │
+│  │ get_market_indicators   │      │ get_nse_stock_quote      │  │
+│  │ assess_portfolio_risk   │      │ get_indian_market_status │  │
+│  │ get_stock_analysis      │      │ calculate_india_tax      │  │
+│  │ get_memory_context      │      │ analyze_indian_sector    │  │
+│  │ save_conversation_memory│      │ get_fno_positions        │  │
+│  └─────────────────────────┘      │ get_option_chain         │  │
+│                                   │ calculate_greeks         │  │
+│  CROSS-AGENT (2)                  │ analyze_fno_tax          │  │
+│  ┌─────────────────────────┐      │ get_fno_strategy_analysis│  │
+│  │ consult_financial_planner│      │ get_fund_limits          │  │
+│  │ consult_tax_optimizer   │      │ get_expiry_list          │  │
+│  └─────────────────────────┘      └──────────────────────────┘  │
 │                                                                 │
 │  Indian Market Capabilities:                                    │
+│  • Dhan official API — proper developer tokens (not browser)   │
+│  • Equity holdings, positions, orders with live P&L            │
+│  • F&O: futures positions, option chain, OI analysis           │
+│  • Option Greeks: Black-Scholes (Delta/Gamma/Theta/Vega)       │
+│  • F&O strategy detection (Straddle, Spread, Iron Condor...)   │
+│  • F&O tax: business income (Sec 43(5)), audit thresholds      │
 │  • NSE/BSE stock quotes with INR pricing                       │
 │  • NIFTY50 sector analysis (30+ stocks mapped)                 │
-│  • Groww portfolio sync to DynamoDB                            │
 │  • Indian capital gains tax (STCG 20%, LTCG 12.5%)            │
 │  • Market hours awareness (IST 9:15 AM – 3:30 PM)             │
+│  • Fund limits / margin status from brokerage                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -275,27 +283,28 @@
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Flow 1 — Portfolio Analysis with Tax Impact (Indian Client)
+### Flow 1 — Portfolio + F&O Analysis with Tax Impact (Indian Client)
 
 ```
-User: "Analyze my Groww portfolio and tell me tax implications"
+User: "Analyze my Dhan portfolio and F&O positions, what are the tax implications?"
 
   User ──▶ API Gateway ──▶ Agent Router ──▶ Market Analyst
                                                │
                           ┌────────────────────┘
                           │
                           ▼
-              sync_groww_portfolio()
+              sync_dhan_portfolio()
               ┌──────────────────────┐
-              │ Groww API (read-only)│
-              │ GET /v1/api/stocks/  │
-              │     holdings/v2      │
-              │ GET /v1/api/mutual/  │
-              │     funds            │
+              │ Dhan API (read-only) │
+              │ GET /v2/holdings     │
+              │ GET /v2/positions    │
+              │ GET /v2/orders       │
+              │ GET /v2/fundlimit    │
               └──────────┬───────────┘
                          │
-                         ▼ holdings synced to DynamoDB
-              get_nse_stock_quote() × N stocks
+                         ▼ equity + F&O synced to DynamoDB
+              get_dhan_holdings()
+              get_fno_positions()
               analyze_indian_sector()
               assess_portfolio_risk()
                          │
@@ -303,17 +312,19 @@ User: "Analyze my Groww portfolio and tell me tax implications"
               consult_tax_optimizer()
               ┌──────────────────────────────────┐
               │ Tax Optimizer receives:           │
-              │  - Portfolio holdings             │
-              │  - Current market values          │
+              │  - Equity holdings               │
+              │  - F&O positions + turnover       │
               │                                   │
               │ Runs:                              │
-              │  calculate_indian_capital_gains_tax│
-              │  get_india_tax_saving_suggestions  │
+              │  calculate_india_tax (equity)      │
+              │  analyze_fno_tax (F&O business)    │
               │                                   │
               │ Returns:                           │
-              │  - STCG: ₹X at 20%               │
-              │  - LTCG: ₹Y at 12.5% (>1.25L)   │
-              │  - STT impact                     │
+              │  - Equity STCG: ₹X at 20%        │
+              │  - Equity LTCG: ₹Y at 12.5%      │
+              │  - F&O: business income at slab   │
+              │  - F&O turnover: ₹Z (audit/no)   │
+              │  - STT on options + futures        │
               │  - 80C/80D/80CCD savings options  │
               └──────────────────────────────────┘
                          │
@@ -321,12 +332,13 @@ User: "Analyze my Groww portfolio and tell me tax implications"
               Market Analyst combines:
               ┌─────────────────────────────────────┐
               │ Response to User:                    │
-              │ • Portfolio: ₹58.5L in 10 NSE stocks│
+              │ • Equity: ₹58.5L in 10 NSE stocks  │
+              │ • F&O: 3 open positions (₹+15K P&L)│
               │ • Sector breakdown (IT, Banking...)  │
               │ • Risk assessment: High (beta 1.3)   │
-              │ • Tax impact: STCG ₹1.2L, LTCG ₹0  │
+              │ • Equity tax: STCG ₹1.2L, LTCG ₹0  │
+              │ • F&O tax: biz income, no audit req  │
               │ • Tax-saving: invest ₹1.5L in ELSS  │
-              │ • Action: harvest losses in WIPRO    │
               └─────────────────────────────────────┘
 ```
 
@@ -414,21 +426,21 @@ User: "Give me a complete financial review"
 
 ---
 
-## Groww Integration Architecture (Read-Only)
+## Dhan Brokerage Integration (Read-Only)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                    GROWW BROKERAGE INTEGRATION                           │
-│                    (Indian Stock Market — NSE/BSE)                       │
+│                    DHAN BROKERAGE INTEGRATION                            │
+│              (Indian Market — NSE/BSE Equity + F&O + Currency)           │
 │                                                                         │
 │  ┌──────────────────────────────────────────────────────────────┐       │
 │  │                    SECURITY MODEL                            │       │
 │  │                                                              │       │
 │  │  • READ-ONLY access — never places orders or modifies data  │       │
-│  │  • Auth token from browser session (Bearer JWT)             │       │
-│  │  • Token stored in .env file (gitignored, never committed)  │       │
-│  │  • Fallback: environment variable GROWW_AUTH_TOKEN           │       │
-│  │  • Token expires periodically — manual refresh needed       │       │
+│  │  • Official API at api.dhan.co/v2 with developer tokens     │       │
+│  │  • Headers: access-token + client-id (from dhanhq.co)       │       │
+│  │  • Credentials stored in .env file (gitignored)             │       │
+│  │  • Fallback: DHAN_ACCESS_TOKEN / DHAN_CLIENT_ID env vars    │       │
 │  └──────────────────────────────────────────────────────────────┘       │
 │                                                                         │
 │  Credential Locations (priority order):                                 │
@@ -436,30 +448,36 @@ User: "Give me a complete financial review"
 │  │  1. shared/.env                (project-level)             │         │
 │  │  2. wealth-mgmt-copilot/.env   (root-level)               │         │
 │  │  3. ~/.wealthai/.env           (user home)                 │         │
-│  │  4. Environment variable       (GROWW_AUTH_TOKEN)          │         │
+│  │  4. Environment variables      (DHAN_ACCESS_TOKEN)         │         │
 │  └────────────────────────────────────────────────────────────┘         │
 │                                                                         │
 │  ┌─────────────────┐       ┌──────────────────────────────────┐        │
-│  │ GrowwConnector  │       │  Groww API Endpoints             │        │
-│  │ (shared/groww_  │       │  (groww.in/v1/api/*)             │        │
+│  │ DhanConnector   │       │  Dhan API Endpoints              │        │
+│  │ (shared/dhan_   │       │  (api.dhan.co/v2/*)              │        │
 │  │  connector.py)  │       │                                  │        │
-│  │                 │ HTTPS │  GET /stocks/holdings/v2         │        │
-│  │ get_holdings()──┼──────▶│    → Current stock holdings      │        │
+│  │                 │ HTTPS │                                  │        │
+│  │ EQUITY:         │       │  EQUITY:                         │        │
+│  │ get_holdings()──┼──────▶│  GET /holdings                   │        │
+│  │ get_positions()─┼──────▶│  GET /positions (all segments)   │        │
+│  │ get_orders()────┼──────▶│  GET /orders                     │        │
+│  │ get_trades()────┼──────▶│  GET /trades                     │        │
 │  │                 │       │                                  │        │
-│  │ get_positions()─┼──────▶│  GET /stocks/positions           │        │
-│  │                 │       │    → Open positions (day)        │        │
-│  │ get_mutual_     │       │                                  │        │
-│  │   funds()───────┼──────▶│  GET /mutual-funds/holdings      │        │
-│  │                 │       │    → MF SIP portfolio            │        │
-│  │ get_order_      │       │                                  │        │
-│  │   history()─────┼──────▶│  GET /stocks/orders              │        │
-│  │                 │       │    → Trade history               │        │
-│  │ get_stock_      │       │                                  │        │
-│  │   quote()───────┼──────▶│  GET /stocks/quote/{symbol}      │        │
-│  │                 │       │    → Live NSE price              │        │
-│  │ get_nse_        │       │                                  │        │
-│  │   indices()─────┼──────▶│  GET /indices/nifty50            │        │
-│  │                 │       │    → NIFTY50 index value         │        │
+│  │ F&O:            │       │  F&O:                            │        │
+│  │ get_fno_        │       │                                  │        │
+│  │  positions()────┼──────▶│  GET /positions (NSE_FNO filter) │        │
+│  │ get_option_     │       │                                  │        │
+│  │  chain()────────┼──────▶│  POST /optionchain               │        │
+│  │ get_expiry_     │       │                                  │        │
+│  │  list()─────────┼──────▶│  POST /optionchain/expirylist    │        │
+│  │                 │       │                                  │        │
+│  │ MARKET DATA:    │       │  MARKET DATA:                    │        │
+│  │ get_ltp()───────┼──────▶│  POST /marketfeed/ltp            │        │
+│  │ get_market_     │       │                                  │        │
+│  │  quote()────────┼──────▶│  POST /marketfeed/quote          │        │
+│  │                 │       │                                  │        │
+│  │ ACCOUNT:        │       │  ACCOUNT:                        │        │
+│  │ get_fund_       │       │                                  │        │
+│  │  limits()───────┼──────▶│  GET /fundlimit                  │        │
 │  └────────┬────────┘       └──────────────────────────────────┘        │
 │           │                                                            │
 │           │ sync_to_dynamodb(client_id)                                │
@@ -467,20 +485,44 @@ User: "Give me a complete financial review"
 │  ┌─────────────────────────────────────────────────┐                   │
 │  │  DynamoDB: wealth_mgmt_portfolios               │                  │
 │  │                                                  │                  │
-│  │  { client_id: "client_ramu_de",                 │                  │
-│  │    portfolio_id: "groww_stocks",                 │                  │
-│  │    portfolio_type: "groww_stocks",               │                  │
-│  │    source: "groww_live_sync",                    │                  │
-│  │    holdings: [                                   │                  │
-│  │      { ticker: "RELIANCE.NS", shares: 50,       │                  │
-│  │        avg_price: 2450, current: 2680 },         │                  │
-│  │      { ticker: "TCS.NS", shares: 30,            │                  │
-│  │        avg_price: 3200, current: 3450 },         │                  │
-│  │      ...                                         │                  │
-│  │    ],                                            │                  │
-│  │    total_value: 5850000,                         │                  │
-│  │    currency: "INR",                              │                  │
-│  │    last_synced: "2024-01-15T10:30:00Z" }        │                  │
+│  │  Equity Record:                                  │                  │
+│  │  { client_id: "...",                             │                  │
+│  │    portfolio_id: "dhan_equity",                  │                  │
+│  │    portfolio_type: "dhan_equity",                │                  │
+│  │    source: "dhan",                               │                  │
+│  │    holdings: [{ticker, qty, avg, current, pnl}], │                  │
+│  │    sector_allocation: {...},                      │                  │
+│  │    total_value, currency: "INR" }                │                  │
+│  │                                                  │                  │
+│  │  F&O Record:                                     │                  │
+│  │  { client_id: "...",                             │                  │
+│  │    portfolio_id: "dhan_fno",                     │                  │
+│  │    portfolio_type: "dhan_fno",                   │                  │
+│  │    positions: [{symbol, segment, qty, pnl}],     │                  │
+│  │    total_pnl, open_positions }                   │                  │
+│  └─────────────────────────────────────────────────┘                   │
+│                                                                         │
+│  F&O Analytics Engine:                                                  │
+│  ┌─────────────────────────────────────────────────┐                   │
+│  │  Option Chain Analysis:                          │                  │
+│  │    • PCR (Put-Call Ratio) with interpretation    │                  │
+│  │    • Max OI strikes → support/resistance levels  │                  │
+│  │    • IV (Implied Volatility) per strike          │                  │
+│  │                                                  │                  │
+│  │  Option Greeks (Black-Scholes):                  │                  │
+│  │    • Delta, Gamma, Theta, Vega                   │                  │
+│  │    • Risk-free rate: 6.5% (India 10Y yield)      │                  │
+│  │    • Moneyness detection (ITM/ATM/OTM)           │                  │
+│  │                                                  │                  │
+│  │  Strategy Detection:                              │                  │
+│  │    • Long/Short Straddle, Strangle               │                  │
+│  │    • Bull/Bear Call/Put Spread                    │                  │
+│  │    • Iron Condor, Covered Call, Protective Put    │                  │
+│  │    • Max profit/loss + breakeven calculation      │                  │
+│  │                                                  │                  │
+│  │  Lot Sizes (25+ contracts):                      │                  │
+│  │    NIFTY(25), BANKNIFTY(15), FINNIFTY(25)        │                  │
+│  │    RELIANCE(250), TCS(150), HDFCBANK(550)...     │                  │
 │  └─────────────────────────────────────────────────┘                   │
 │                                                                         │
 │  Indian Tax Engine:                                                     │
@@ -490,10 +532,16 @@ User: "Give me a complete financial review"
 │  │  Equity:                                         │                  │
 │  │    STCG (< 12 months)  → 20%                    │                  │
 │  │    LTCG (≥ 12 months)  → 12.5% above ₹1.25L    │                  │
-│  │    STT on sell         → 0.025%                  │                  │
+│  │    STT delivery sell   → 0.1%                    │                  │
 │  │                                                  │                  │
-│  │  Mutual Funds (Equity):                          │                  │
-│  │    STCG → 20%  |  LTCG → 12.5% above ₹1.25L   │                  │
+│  │  F&O (Business Income — Section 43(5)):          │                  │
+│  │    Tax type    → Income tax slab rate (NOT CG)   │                  │
+│  │    STT options → 0.0625% on sell premium         │                  │
+│  │    STT futures → 0.0125% on sell value           │                  │
+│  │    Turnover calc: abs(sell - buy) per trade       │                  │
+│  │    Audit required if turnover > ₹10Cr            │                  │
+│  │    Sec 44AD presumptive: 6% if turnover < ₹2Cr  │                  │
+│  │    Losses carry forward 8 years (biz income only)│                  │
 │  │                                                  │                  │
 │  │  Tax Saving Instruments:                         │                  │
 │  │    Section 80C  → ₹1,50,000 (ELSS, PPF, EPF)   │                  │
@@ -538,7 +586,7 @@ User: "Give me a complete financial review"
 │  │ investment_goals │  │ total_value      │  │ currency (USD/INR)│     │
 │  │ net_worth        │  │ currency         │  │ status, timestamp │     │
 │  │ kyc_status       │  │ source           │  └───────────────────┘     │
-│  │ country          │  │   (manual/groww) │                            │
+│  │ country          │  │   (manual/dhan)  │                            │
 │  └──────────────────┘  └──────────────────┘                            │
 │                                                                         │
 │  TAX & COMPLIANCE                                                       │
@@ -625,7 +673,7 @@ User: "Give me a complete financial review"
 │  │  │ • Latency (P50/  │  │ • Errors vs Invocations       │     │      │
 │  │  │   P90/P99)       │  │ • Concurrent Executions       │     │      │
 │  │  │ • Token Usage    │  │ • ECS CPU/Memory (Compliance)  │     │      │
-│  │  │ • Error Rate     │  │ • Groww API Latency           │     │      │
+│  │  │ • Error Rate     │  │ • Dhan API Latency            │     │      │
 │  │  └──────────────────┘  └────────────────────────────────┘     │      │
 │  │  ┌──────────────────┐  ┌────────────────────────────────┐     │      │
 │  │  │ API & Data Layer │  │ Custom Agent Metrics           │     │      │
@@ -697,7 +745,7 @@ User: "Give me a complete financial review"
 ## End-to-End Request Trace (with X-Ray)
 
 ```
-Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     DynamoDB   Groww API
+Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     DynamoDB   Dhan API
   │            │  X-Ray      │              │            │            │            │          │
   │ POST       │ Trace ID    │              │            │            │            │          │
   │ /agent     │ propagated  │              │            │            │            │          │
@@ -711,7 +759,7 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
   │            │             │ + traceId    ├───────────▶│            │            │          │
   │            │             │              │            │            │            │          │
   │            │             │              │            │ @tool:     │            │          │
-  │            │             │              │            │ sync_groww │            │          │
+  │            │             │              │            │ sync_dhan  │            │          │
   │            │             │              │            ├────────────┼────────────┼─────────▶│
   │            │             │              │            │◀───────────┼────────────┼──────────┤
   │            │             │              │            │            │            │          │
@@ -803,7 +851,7 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                                                                          │
 │  YOUR TRADING PLATFORM                    WEALTHAI COPILOT               │
-│  (Groww / Custom)                         (Current System)               │
+│  (Dhan Brokerage)                         (Current System)               │
 │                                                                          │
 │  ┌──────────────────────┐                ┌──────────────────────┐       │
 │  │ Trading Engine        │   REST API    │ Agent Router Lambda  │       │
@@ -853,7 +901,7 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 │     All 4 agents: combined market + plan + tax + compliance report       │
 │                                                                          │
 │  5. REAL-TIME DATA SYNC                                                  │
-│     Groww executions ──▶ DynamoDB transactions table                     │
+│     Dhan executions ──▶ DynamoDB transactions table                      │
 │     Portfolio updates ──▶ DynamoDB portfolios table                     │
 │     Agents always see latest positions                                  │
 │                                                                          │
@@ -890,9 +938,10 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 │ Foundation Model       │ Anthropic Claude Haiku 4.5 / Sonnet 4          │
 │ Agent Memory           │ AgentCore Memory (summary, semantic, preference)│
 │ Database               │ Amazon DynamoDB (12 tables, 1 GSI)              │
-│ Brokerage Integration  │ Groww API (Read-Only, Indian Market)            │
-│ Indian Market Data     │ NSE/BSE via Groww (NIFTY50, sector mapping)     │
-│ Indian Tax Engine      │ Custom (STCG/LTCG/STT/80C/80D/80CCD)          │
+│ Brokerage Integration  │ Dhan API (Read-Only, official developer tokens)  │
+│ F&O Analytics          │ Option chain, Greeks, strategy detection, PCR   │
+│ Indian Market Data     │ NSE/BSE via Dhan (NIFTY50, sector mapping)      │
+│ Indian Tax Engine      │ Equity (STCG/LTCG) + F&O (Sec 43(5) business)  │
 │ Observability          │ Amazon CloudWatch (Metrics, Logs, Dashboard)    │
 │ Tracing                │ AWS X-Ray (active tracing, annotations)         │
 │ Structured Logging     │ EMF (Embedded Metric Format)                    │
@@ -912,7 +961,7 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 wealth-mgmt-copilot/
 │
 ├── agents/
-│   ├── market-analyst/              # Market Analyst (Strands) — 14 tools
+│   ├── market-analyst/              # Market Analyst (Strands) — 22 tools
 │   │   ├── market_analyst.py        # ~1,400 lines
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
@@ -959,8 +1008,9 @@ wealth-mgmt-copilot/
 ├── shared/
 │   ├── metrics_emitter.py           # 290 lines — CloudWatch + EMF + X-Ray
 │   ├── cross_agent.py               # 109 lines — invoke_peer_agent()
-│   ├── groww_connector.py           # ~350 lines — Groww API integration
-│   ├── .env.example                 # Groww credential template
+│   ├── dhan_connector.py            # ~550 lines — Dhan API + F&O + Greeks
+│   ├── groww_connector.py           # ~350 lines — Groww API (legacy)
+│   ├── .env.example                 # Dhan credential template
 │   └── .env                         # (gitignored) actual credentials
 │
 ├── frontend/
@@ -1016,4 +1066,4 @@ wealth-mgmt-copilot/
 | admin@wealthai.com | admin | Password: `admin123` |
 
 Client accounts are created via the Register flow.
-Portfolio data syncs from your connected trading platform (Groww) at runtime.
+Portfolio data syncs from your connected trading platform (Dhan) at runtime.
