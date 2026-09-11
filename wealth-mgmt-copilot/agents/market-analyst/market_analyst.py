@@ -1220,15 +1220,18 @@ def sync_groww_portfolio(client_id: str, auth_token: str = ""):
             'message': 'Groww connector not available. Ensure groww_connector.py is in the shared directory.',
         })
 
-    if not auth_token:
+    env_token = os.environ.get('GROWW_AUTH_TOKEN', '')
+    token = auth_token or env_token
+    if not token:
         return json.dumps({
             'status': 'needs_auth',
             'message': 'Please provide your Groww read-only auth token to sync portfolio data.',
             'how_to_get_token': 'Log into Groww web > Developer Tools > Network tab > Copy Authorization header value',
+            'alternative': 'Or set GROWW_AUTH_TOKEN in shared/.env file',
         })
 
     try:
-        connector = GrowwConnector(auth_token=auth_token)
+        connector = GrowwConnector(auth_token=token)
         result = connector.sync_to_dynamodb(client_id)
         return json.dumps(result, default=str)
     except Exception as e:

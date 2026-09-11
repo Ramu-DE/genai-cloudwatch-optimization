@@ -21,9 +21,28 @@ import logging
 import hashlib
 from datetime import datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import boto3
 import requests
+
+# Auto-load .env file if present
+def _load_env():
+    for env_path in [
+        Path(__file__).parent / '.env',
+        Path(__file__).parent.parent / '.env',
+        Path.home() / '.wealthai' / '.env',
+    ]:
+        if env_path.exists():
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, val = line.split('=', 1)
+                        os.environ.setdefault(key.strip(), val.strip())
+            break
+
+_load_env()
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +82,16 @@ class GrowwConnector:
             'Content-Type': 'application/json',
         })
 
-        if auth_token:
-            self.session.headers['Authorization'] = f'Bearer {auth_token}'
-        if access_token:
-            self.session.headers['x-access-token'] = access_token
+        token = auth_token or os.environ.get('GROWW_AUTH_TOKEN', '')
+        if token:
+            if token.startswith('Bearer '):
+                self.session.headers['Authorization'] = token
+            else:
+                self.session.headers['Authorization'] = f'Bearer {token}'
+
+        acc_token = access_token or os.environ.get('GROWW_ACCESS_TOKEN', '')
+        if acc_token:
+            self.session.headers['x-access-token'] = acc_token
 
         self.dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
 
