@@ -128,105 +128,12 @@ def log_dynamodb_response(operation: str, response: dict, duration: float):
     logger.info("=" * 80)
 
 # =============================================================================
-# MOCK / FALLBACK DATA
+# FALLBACK DATA (empty — client data loaded from DynamoDB / trading platform)
 # =============================================================================
 
-MOCK_TAX_PROFILES = {
-    "client_sarah_chen": {
-        "name": "Sarah Chen",
-        "filing_status": "Married Filing Jointly",
-        "tax_bracket": "32%",
-        "marginal_rate": 0.32,
-        "estimated_agi": 450000,
-        "state": "CA",
-        "state_rate": 0.093,
-        "ytd_federal_tax_paid": 95000,
-        "ytd_state_tax_paid": 28000,
-        "deductions": {
-            "mortgage_interest": 18500,
-            "property_tax": 10000,
-            "charitable": 12000,
-            "salt_cap": 10000,
-        },
-        "retirement_contributions": {
-            "401k": 23000,
-            "ira": 7000,
-            "hsa": 8300,
-        },
-    },
-    "client_james_wilson": {
-        "name": "James Wilson",
-        "filing_status": "Single",
-        "tax_bracket": "24%",
-        "marginal_rate": 0.24,
-        "estimated_agi": 180000,
-        "state": "TX",
-        "state_rate": 0.0,
-        "ytd_federal_tax_paid": 32000,
-        "ytd_state_tax_paid": 0,
-        "deductions": {
-            "mortgage_interest": 9200,
-            "property_tax": 6000,
-            "charitable": 3500,
-            "salt_cap": 10000,
-        },
-        "retirement_contributions": {
-            "401k": 23000,
-            "ira": 7000,
-            "hsa": 4150,
-        },
-    },
-    "client_maria_garcia": {
-        "name": "Maria Garcia",
-        "filing_status": "Head of Household",
-        "tax_bracket": "35%",
-        "marginal_rate": 0.35,
-        "estimated_agi": 520000,
-        "state": "NY",
-        "state_rate": 0.0685,
-        "ytd_federal_tax_paid": 125000,
-        "ytd_state_tax_paid": 30000,
-        "deductions": {
-            "mortgage_interest": 24000,
-            "property_tax": 15000,
-            "charitable": 45000,
-            "salt_cap": 10000,
-        },
-        "retirement_contributions": {
-            "401k": 23000,
-            "ira": 0,
-            "hsa": 4150,
-        },
-    },
-}
+MOCK_TAX_PROFILES = {}
 
-MOCK_PORTFOLIO_POSITIONS = {
-    "client_sarah_chen": [
-        {"ticker": "AAPL", "shares": 150, "cost_basis": 142.50, "current_price": 178.30, "purchase_date": "2023-03-15", "holding_period": "long_term", "unrealized_gain": 5370.00},
-        {"ticker": "MSFT", "shares": 80, "cost_basis": 380.00, "current_price": 415.20, "purchase_date": "2023-06-20", "holding_period": "long_term", "unrealized_gain": 2816.00},
-        {"ticker": "TSLA", "shares": 50, "cost_basis": 265.00, "current_price": 198.50, "purchase_date": "2024-01-10", "holding_period": "long_term", "unrealized_gain": -3325.00},
-        {"ticker": "NVDA", "shares": 60, "cost_basis": 480.00, "current_price": 725.00, "purchase_date": "2024-05-01", "holding_period": "long_term", "unrealized_gain": 14700.00},
-        {"ticker": "AMZN", "shares": 100, "cost_basis": 185.00, "current_price": 178.40, "purchase_date": "2026-04-15", "holding_period": "short_term", "unrealized_gain": -660.00},
-        {"ticker": "META", "shares": 40, "cost_basis": 510.00, "current_price": 485.00, "purchase_date": "2026-06-01", "holding_period": "short_term", "unrealized_gain": -1000.00},
-        {"ticker": "VTI", "shares": 200, "cost_basis": 220.00, "current_price": 258.70, "purchase_date": "2022-01-15", "holding_period": "long_term", "unrealized_gain": 7740.00},
-        {"ticker": "BND", "shares": 300, "cost_basis": 72.50, "current_price": 71.80, "purchase_date": "2023-09-01", "holding_period": "long_term", "unrealized_gain": -210.00},
-    ],
-    "client_james_wilson": [
-        {"ticker": "GOOGL", "shares": 70, "cost_basis": 140.00, "current_price": 172.50, "purchase_date": "2023-11-20", "holding_period": "long_term", "unrealized_gain": 2275.00},
-        {"ticker": "INTC", "shares": 200, "cost_basis": 42.00, "current_price": 31.50, "purchase_date": "2024-02-10", "holding_period": "long_term", "unrealized_gain": -2100.00},
-        {"ticker": "DIS", "shares": 100, "cost_basis": 112.00, "current_price": 98.50, "purchase_date": "2024-08-15", "holding_period": "long_term", "unrealized_gain": -1350.00},
-        {"ticker": "SPY", "shares": 50, "cost_basis": 470.00, "current_price": 545.00, "purchase_date": "2023-07-01", "holding_period": "long_term", "unrealized_gain": 3750.00},
-        {"ticker": "QQQ", "shares": 30, "cost_basis": 485.00, "current_price": 460.00, "purchase_date": "2026-07-20", "holding_period": "short_term", "unrealized_gain": -750.00},
-    ],
-    "client_maria_garcia": [
-        {"ticker": "AAPL", "shares": 300, "cost_basis": 155.00, "current_price": 178.30, "purchase_date": "2022-06-15", "holding_period": "long_term", "unrealized_gain": 6990.00},
-        {"ticker": "JPM", "shares": 150, "cost_basis": 165.00, "current_price": 198.50, "purchase_date": "2023-01-10", "holding_period": "long_term", "unrealized_gain": 5025.00},
-        {"ticker": "PFE", "shares": 500, "cost_basis": 38.00, "current_price": 28.50, "purchase_date": "2023-04-20", "holding_period": "long_term", "unrealized_gain": -4750.00},
-        {"ticker": "BA", "shares": 80, "cost_basis": 220.00, "current_price": 185.00, "purchase_date": "2024-03-01", "holding_period": "long_term", "unrealized_gain": -2800.00},
-        {"ticker": "SCHD", "shares": 400, "cost_basis": 75.00, "current_price": 82.40, "purchase_date": "2022-09-01", "holding_period": "long_term", "unrealized_gain": 2960.00},
-        {"ticker": "NFLX", "shares": 25, "cost_basis": 680.00, "current_price": 620.00, "purchase_date": "2026-05-10", "holding_period": "short_term", "unrealized_gain": -1500.00},
-    ],
-}
+MOCK_PORTFOLIO_POSITIONS = {}
 
 FEDERAL_BRACKETS_2026_MFJ = [
     (23850, 0.10), (97100, 0.12), (206700, 0.22),

@@ -6,16 +6,17 @@
  ┌──────────────────────────────────────────────────────────────────────────────┐
  │                              USERS / CLIENTS                                │
  │                                                                             │
- │  US Market Clients                      Indian Market Clients (Groww)       │
- │  ┌─────────────┐ ┌──────────────┐       ┌───────────┐ ┌─────────────────┐  │
- │  │ Sarah Chen  │ │ James Wilson │       │ Ramu DE   │ │ Ananya Sharma   │  │
- │  │ Aggressive  │ │ Moderate     │       │ Aggressive│ │ Moderate        │  │
- │  │ $2.1M NW   │ │ $850K NW     │       │ ₹90L NW  │ │ ₹24.5L stocks  │  │
- │  └──────┬──────┘ └──────┬───────┘       └────┬──────┘ └───────┬─────────┘  │
- │         │               │                    │                │            │
- └─────────┼───────────────┼────────────────────┼────────────────┼────────────┘
-           │               │                    │                │
-           └───────────────┴────────────────────┴────────────────┘
+ │  Registered via Login/Register flow                                        │
+ │  Portfolios synced from connected trading platform (Groww)                 │
+ │                                                                             │
+ │  ┌───────────────────────┐       ┌───────────────────────────┐             │
+ │  │  Client Accounts      │       │  Admin Accounts           │             │
+ │  │  (self-registration)  │       │  admin@wealthai.com       │             │
+ │  └───────────┬───────────┘       └─────────────┬─────────────┘             │
+ │              │                                 │                           │
+ └──────────────┼─────────────────────────────────┼───────────────────────────┘
+                │                                 │
+                └─────────────────────────────────┘
                                     │
                                     ▼
  ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -25,8 +26,8 @@
  │  │ index.html│  │client-dashboard.html│  │observability │  │ performance │  │
  │  │ Login     │  │ Agent Chat UI       │  │  .html       │  │ -tuning.html│  │
  │  │ Register  │  │ Portfolio View      │  │ CloudWatch   │  │ 16 Scenario │  │
- │  │ Demo Auth │  │ Multi-Agent Tabs    │  │ Dashboard    │  │ Optim. Lab  │  │
- │  │ US + Groww│  │ Indian Market View  │  │ Metrics View │  │ Fault Inject│  │
+ │  │           │  │ Multi-Agent Tabs    │  │ Dashboard    │  │ Optim. Lab  │  │
+ │  │           │  │ Indian Market View  │  │ Metrics View │  │ Fault Inject│  │
  │  └─────┬─────┘  └─────────┬──────────┘  └──────┬───────┘  └──────┬──────┘  │
  │        │                  │                     │                 │         │
  └────────┼──────────────────┼─────────────────────┼─────────────────┼─────────┘
@@ -962,7 +963,7 @@ wealth-mgmt-copilot/
 │   └── .env                         # (gitignored) actual credentials
 │
 ├── frontend/
-│   ├── index.html                   # Login (US + Groww quick-login)
+│   ├── index.html                   # Login / Register
 │   ├── client-dashboard.html        # Agent chat + portfolio view
 │   ├── observability.html           # CloudWatch dashboard viewer
 │   ├── performance-tuning.html      # 16-scenario optimization lab
@@ -979,7 +980,7 @@ wealth-mgmt-copilot/
 │
 ├── dynamodb/
 │   ├── create_tables.py             # 12 tables + GSI creation
-│   └── seed_data.py                 # 7 clients (4 US + 3 Indian), portfolios, txns
+│   └── seed_data.py                 # Admin account + advisor schedules
 │
 ├── infra/
 │   └── cloudformation.yaml          # 801 lines — complete IaC
@@ -1007,16 +1008,11 @@ wealth-mgmt-copilot/
 
 ---
 
-## Demo Accounts
+## Default Accounts
 
-| Email | Client ID | Market | Risk Profile |
-|-------|-----------|--------|--------------|
-| sarah.chen@email.com | client_sarah_chen | US | Aggressive, $2.1M |
-| james.wilson@email.com | client_james_wilson | US | Moderate, $850K |
-| priya.patel@email.com | client_priya_patel | US | Moderate, $620K |
-| alex.rodriguez@email.com | client_alex_rodriguez | US | Conservative, $1.5M |
-| ramu@groww.in | client_ramu_de | India (Groww) | Aggressive, ₹90L |
-| ananya@groww.in | client_ananya_sharma | India (Groww) | Moderate, ₹24.5L |
-| vikram@groww.in | client_vikram_patel | India (Groww) | Conservative, ₹2.5Cr |
+| Email | Role | Notes |
+|-------|------|-------|
+| admin@wealthai.com | admin | Password: `admin123` |
 
-**Password for all demo accounts:** `demo123`
+Client accounts are created via the Register flow.
+Portfolio data syncs from your connected trading platform (Groww) at runtime.

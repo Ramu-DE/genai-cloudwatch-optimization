@@ -89,183 +89,14 @@ memory_id = None
 memory_tool_provider = None
 
 # ============================================================================
-# MOCK DATA (used when DynamoDB tables are not yet populated)
+# FALLBACK DATA (empty — client data loaded from DynamoDB / trading platform)
 # ============================================================================
 
-MOCK_CLIENT_PROFILES = {
-    "client_sarah_chen": {
-        "client_id": "client_sarah_chen",
-        "name": "Sarah Chen",
-        "email": "sarah.chen@email.com",
-        "age": 42,
-        "annual_income": 185000,
-        "net_worth": 1250000,
-        "risk_tolerance": "moderate",
-        "investment_horizon": "long-term",
-        "goals": [
-            {"type": "retirement", "target_age": 62, "target_amount": 3000000},
-            {"type": "education", "description": "College fund for twins", "target_year": 2038, "target_amount": 400000}
-        ],
-        "tax_filing_status": "married_filing_jointly",
-        "state": "CA",
-        "advisor": "James Rivera"
-    },
-    "client_michael_okonkwo": {
-        "client_id": "client_michael_okonkwo",
-        "name": "Michael Okonkwo",
-        "email": "m.okonkwo@email.com",
-        "age": 35,
-        "annual_income": 125000,
-        "net_worth": 450000,
-        "risk_tolerance": "aggressive",
-        "investment_horizon": "long-term",
-        "goals": [
-            {"type": "retirement", "target_age": 55, "target_amount": 5000000},
-            {"type": "home_purchase", "description": "Vacation property", "target_year": 2030, "target_amount": 250000}
-        ],
-        "tax_filing_status": "single",
-        "state": "TX",
-        "advisor": "Sophia Martinez"
-    },
-    "client_emily_watson": {
-        "client_id": "client_emily_watson",
-        "name": "Emily Watson",
-        "email": "e.watson@email.com",
-        "age": 58,
-        "annual_income": 220000,
-        "net_worth": 2800000,
-        "risk_tolerance": "conservative",
-        "investment_horizon": "short-term",
-        "goals": [
-            {"type": "retirement", "target_age": 63, "target_amount": 4000000},
-            {"type": "estate_planning", "description": "Legacy fund for grandchildren", "target_amount": 500000}
-        ],
-        "tax_filing_status": "married_filing_jointly",
-        "state": "NY",
-        "advisor": "James Rivera"
-    }
-}
+MOCK_CLIENT_PROFILES = {}
 
-MOCK_PORTFOLIOS = {
-    "client_sarah_chen": {
-        "client_id": "client_sarah_chen",
-        "total_value": 875000,
-        "last_updated": "2026-09-10",
-        "current_allocation": {
-            "us_equities": {"pct": 45, "value": 393750, "holdings": [
-                {"ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "shares": 1200, "value": 165000},
-                {"ticker": "AAPL", "name": "Apple Inc.", "shares": 400, "value": 92000},
-                {"ticker": "MSFT", "name": "Microsoft Corp.", "shares": 250, "value": 85750},
-                {"ticker": "AMZN", "name": "Amazon.com Inc.", "shares": 100, "value": 51000}
-            ]},
-            "international_equities": {"pct": 15, "value": 131250, "holdings": [
-                {"ticker": "VXUS", "name": "Vanguard Total International ETF", "shares": 1800, "value": 131250}
-            ]},
-            "fixed_income": {"pct": 25, "value": 218750, "holdings": [
-                {"ticker": "BND", "name": "Vanguard Total Bond Market ETF", "shares": 2900, "value": 145000},
-                {"ticker": "TIP", "name": "iShares TIPS Bond ETF", "shares": 600, "value": 73750}
-            ]},
-            "alternatives": {"pct": 10, "value": 87500, "holdings": [
-                {"ticker": "VNQ", "name": "Vanguard Real Estate ETF", "shares": 500, "value": 52500},
-                {"ticker": "GLD", "name": "SPDR Gold Shares", "shares": 150, "value": 35000}
-            ]},
-            "cash": {"pct": 5, "value": 43750}
-        },
-        "target_allocation": {
-            "us_equities": 40,
-            "international_equities": 20,
-            "fixed_income": 30,
-            "alternatives": 5,
-            "cash": 5
-        },
-        "ytd_return": 8.7,
-        "one_year_return": 12.3,
-        "three_year_annualized": 9.1
-    },
-    "client_michael_okonkwo": {
-        "client_id": "client_michael_okonkwo",
-        "total_value": 320000,
-        "last_updated": "2026-09-10",
-        "current_allocation": {
-            "us_equities": {"pct": 55, "value": 176000, "holdings": [
-                {"ticker": "QQQ", "name": "Invesco QQQ Trust", "shares": 200, "value": 68000},
-                {"ticker": "NVDA", "name": "NVIDIA Corp.", "shares": 300, "value": 48000},
-                {"ticker": "TSLA", "name": "Tesla Inc.", "shares": 150, "value": 36000},
-                {"ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "shares": 180, "value": 24000}
-            ]},
-            "international_equities": {"pct": 15, "value": 48000, "holdings": [
-                {"ticker": "EEM", "name": "iShares MSCI Emerging Markets ETF", "shares": 800, "value": 48000}
-            ]},
-            "fixed_income": {"pct": 10, "value": 32000, "holdings": [
-                {"ticker": "BND", "name": "Vanguard Total Bond Market ETF", "shares": 400, "value": 32000}
-            ]},
-            "alternatives": {"pct": 15, "value": 48000, "holdings": [
-                {"ticker": "ARKK", "name": "ARK Innovation ETF", "shares": 600, "value": 28000},
-                {"ticker": "BITW", "name": "Bitwise Crypto Index Fund", "shares": 400, "value": 20000}
-            ]},
-            "cash": {"pct": 5, "value": 16000}
-        },
-        "target_allocation": {
-            "us_equities": 50,
-            "international_equities": 20,
-            "fixed_income": 10,
-            "alternatives": 15,
-            "cash": 5
-        },
-        "ytd_return": 14.2,
-        "one_year_return": 18.5,
-        "three_year_annualized": 11.4
-    },
-    "client_emily_watson": {
-        "client_id": "client_emily_watson",
-        "total_value": 2100000,
-        "last_updated": "2026-09-10",
-        "current_allocation": {
-            "us_equities": {"pct": 30, "value": 630000, "holdings": [
-                {"ticker": "VIG", "name": "Vanguard Dividend Appreciation ETF", "shares": 2000, "value": 250000},
-                {"ticker": "SCHD", "name": "Schwab US Dividend Equity ETF", "shares": 3000, "value": 210000},
-                {"ticker": "JNJ", "name": "Johnson & Johnson", "shares": 600, "value": 100000},
-                {"ticker": "PG", "name": "Procter & Gamble", "shares": 400, "value": 70000}
-            ]},
-            "international_equities": {"pct": 10, "value": 210000, "holdings": [
-                {"ticker": "VXUS", "name": "Vanguard Total International ETF", "shares": 3000, "value": 210000}
-            ]},
-            "fixed_income": {"pct": 40, "value": 840000, "holdings": [
-                {"ticker": "BND", "name": "Vanguard Total Bond Market ETF", "shares": 6000, "value": 400000},
-                {"ticker": "VTIP", "name": "Vanguard Short-Term Inflation-Protected ETF", "shares": 3000, "value": 240000},
-                {"ticker": "MUB", "name": "iShares National Muni Bond ETF", "shares": 2000, "value": 200000}
-            ]},
-            "alternatives": {"pct": 10, "value": 210000, "holdings": [
-                {"ticker": "VNQ", "name": "Vanguard Real Estate ETF", "shares": 1200, "value": 130000},
-                {"ticker": "GLD", "name": "SPDR Gold Shares", "shares": 350, "value": 80000}
-            ]},
-            "cash": {"pct": 10, "value": 210000}
-        },
-        "target_allocation": {
-            "us_equities": 25,
-            "international_equities": 10,
-            "fixed_income": 45,
-            "alternatives": 10,
-            "cash": 10
-        },
-        "ytd_return": 5.8,
-        "one_year_return": 7.2,
-        "three_year_annualized": 6.5
-    }
-}
+MOCK_PORTFOLIOS = {}
 
-MOCK_CONSULTATIONS = {
-    "client_sarah_chen": [
-        {"consultation_id": "cons_001", "client_id": "client_sarah_chen", "advisor": "James Rivera",
-         "date": "2026-09-20", "time": "10:00", "type": "annual_review",
-         "status": "scheduled", "notes": "Annual portfolio review and retirement planning update"},
-    ],
-    "client_emily_watson": [
-        {"consultation_id": "cons_003", "client_id": "client_emily_watson", "advisor": "James Rivera",
-         "date": "2026-09-18", "time": "14:00", "type": "estate_planning",
-         "status": "scheduled", "notes": "Estate planning review with attorney liaison"},
-    ]
-}
+MOCK_CONSULTATIONS = {}
 
 ALLOCATION_TEMPLATES = {
     "conservative": {
@@ -761,7 +592,7 @@ def get_client_profile(client_id: str):
     """Get full client profile including risk assessment, financial goals, and net worth.
 
     Args:
-        client_id: The client ID (e.g., 'client_sarah_chen')
+        client_id: The client ID
 
     Returns:
         Complete client profile with financial details and goals
@@ -773,7 +604,7 @@ def get_client_profile(client_id: str):
         if not profile:
             return json.dumps({
                 "error": f"Client profile not found for ID: {client_id}",
-                "suggestion": "Please verify the client ID. Available demo clients: client_sarah_chen, client_michael_okonkwo, client_emily_watson"
+                "suggestion": "Please verify the client ID. Register via the login page to create your account."
             })
 
         portfolio = get_portfolio_from_db(client_id)

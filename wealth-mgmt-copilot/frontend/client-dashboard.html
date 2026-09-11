@@ -212,71 +212,8 @@
         victor: { title: 'Victor — Compliance Checker', greeting: "Good day. I'm Victor, your compliance officer. I handle KYC verification, transaction screening, and regulatory compliance checks." }
     };
 
-    // ---- Demo Data ----
-    const DEMO_DATA = {
-        client_sarah_chen: {
-            risk: 'aggressive', totalValue: 2100000, ytd: 18.5,
-            allocation: { stocks: 85, bonds: 10, alternatives: 5 },
-            holdings: [
-                { ticker: 'AAPL', shares: 150, avg: 145.50, current: 227.80, sector: 'Technology' },
-                { ticker: 'MSFT', shares: 100, avg: 280.00, current: 415.20, sector: 'Technology' },
-                { ticker: 'NVDA', shares: 200, avg: 45.00, current: 138.70, sector: 'Technology' },
-                { ticker: 'GOOGL', shares: 120, avg: 110.00, current: 175.30, sector: 'Technology' },
-                { ticker: 'AMZN', shares: 80, avg: 130.00, current: 186.50, sector: 'Consumer Disc.' },
-                { ticker: 'VTI', shares: 300, avg: 210.00, current: 265.80, sector: 'Broad Market ETF' }
-            ],
-            transactions: [
-                { date: '2024-09-10', type: 'BUY', ticker: 'MSFT', shares: 25, price: 405.00, total: 10125, status: 'COMPLETED' },
-                { date: '2024-09-05', type: 'SELL', ticker: 'TSLA', shares: 20, price: 255.00, total: 5100, status: 'COMPLETED' },
-                { date: '2024-09-01', type: 'BUY', ticker: 'NVDA', shares: 50, price: 120.50, total: 6025, status: 'COMPLETED' }
-            ]
-        },
-        client_james_wilson: {
-            risk: 'moderate', totalValue: 750000, ytd: 11.8,
-            allocation: { stocks: 58, bonds: 32, alternatives: 10 },
-            holdings: [
-                { ticker: 'VTI', shares: 400, avg: 200.00, current: 265.80, sector: 'Broad Market ETF' },
-                { ticker: 'BND', shares: 800, avg: 75.00, current: 72.50, sector: 'Bond ETF' },
-                { ticker: 'VIG', shares: 300, avg: 155.00, current: 182.30, sector: 'Dividend ETF' },
-                { ticker: 'SCHD', shares: 250, avg: 72.00, current: 81.50, sector: 'Dividend ETF' },
-                { ticker: 'GLD', shares: 50, avg: 180.00, current: 235.60, sector: 'Commodities' }
-            ],
-            transactions: [
-                { date: '2024-09-01', type: 'DIVIDEND', ticker: 'VIG', shares: 0, price: 0, total: 850, status: 'COMPLETED' },
-                { date: '2024-08-15', type: 'BUY', ticker: 'SCHD', shares: 100, price: 79.00, total: 7900, status: 'COMPLETED' }
-            ]
-        },
-        client_priya_patel: {
-            risk: 'conservative', totalValue: 5200000, ytd: 7.2,
-            allocation: { stocks: 28, bonds: 57, alternatives: 15 },
-            holdings: [
-                { ticker: 'BND', shares: 5000, avg: 76.00, current: 72.50, sector: 'Bond ETF' },
-                { ticker: 'MUB', shares: 2000, avg: 108.00, current: 106.80, sector: 'Muni Bond ETF' },
-                { ticker: 'VCIT', shares: 3000, avg: 82.00, current: 80.20, sector: 'Corp Bond ETF' },
-                { ticker: 'VIG', shares: 800, avg: 148.00, current: 182.30, sector: 'Dividend ETF' },
-                { ticker: 'SCHD', shares: 1000, avg: 68.00, current: 81.50, sector: 'Dividend ETF' },
-                { ticker: 'TLT', shares: 1500, avg: 98.00, current: 92.30, sector: 'Treasury Bond ETF' }
-            ],
-            transactions: [
-                { date: '2024-09-08', type: 'BUY', ticker: 'MUB', shares: 500, price: 107.00, total: 53500, status: 'COMPLETED' }
-            ]
-        },
-        client_alex_rodriguez: {
-            risk: 'aggressive', totalValue: 480000, ytd: 32.4,
-            allocation: { stocks: 97, bonds: 0, alternatives: 3 },
-            holdings: [
-                { ticker: 'NVDA', shares: 300, avg: 35.00, current: 138.70, sector: 'Technology' },
-                { ticker: 'AMD', shares: 200, avg: 95.00, current: 155.20, sector: 'Technology' },
-                { ticker: 'PLTR', shares: 500, avg: 18.00, current: 42.80, sector: 'Technology' },
-                { ticker: 'COIN', shares: 80, avg: 180.00, current: 165.30, sector: 'Financials' },
-                { ticker: 'SOFI', shares: 1000, avg: 8.50, current: 12.40, sector: 'Financials' }
-            ],
-            transactions: [
-                { date: '2024-09-14', type: 'BUY', ticker: 'COIN', shares: 30, price: 170.00, total: 5100, status: 'FLAGGED' },
-                { date: '2024-09-12', type: 'BUY', ticker: 'PLTR', shares: 200, price: 40.50, total: 8100, status: 'COMPLETED' }
-            ]
-        }
-    };
+    // ---- Portfolio Data (populated from trading platform at runtime) ----
+    const PORTFOLIO_DATA = {};
 
     // ---- Init ----
     function init() {
@@ -289,7 +226,7 @@
         document.getElementById('sidebar-name').textContent = clientName;
         document.getElementById('sidebar-id').textContent = clientId;
 
-        const data = DEMO_DATA[clientId] || DEMO_DATA.client_sarah_chen;
+        const data = PORTFOLIO_DATA[clientId] || { risk: '—', totalValue: 0, ytd: 0, allocation: { stocks: 0, bonds: 0, alternatives: 0 }, holdings: [], transactions: [] };
         populateOverview(data);
         populateHoldings(data.holdings);
         populateTransactions(data.transactions);

@@ -104,7 +104,7 @@ def handle_optimize(body: dict, trace_ctx: dict):
     """Execute a single scenario (fault injection or baseline)."""
     scenario_id = body.get('scenario_id')
     prompt = body.get('prompt', '')
-    client_id = body.get('client_id', 'client_sarah_chen')
+    client_id = body.get('client_id', 'default_client')
 
     if scenario_id is None:
         return _error(400, "Missing required field: scenario_id")
@@ -145,7 +145,7 @@ def handle_parallel(body: dict, trace_ctx: dict):
     """
     scenario_id = body.get('scenario_id')
     prompt = body.get('prompt', '')
-    client_id = body.get('client_id', 'client_sarah_chen')
+    client_id = body.get('client_id', 'default_client')
 
     if scenario_id is None:
         return _error(400, "Missing required field: scenario_id")
@@ -214,7 +214,7 @@ def handle_batch(body: dict, trace_ctx: dict):
     """Run multiple scenarios and return aggregate summary."""
     scenario_ids = body.get('scenario_ids', list(range(1, 17)))
     prompt = body.get('prompt', 'Analyze my portfolio')
-    client_id = body.get('client_id', 'client_sarah_chen')
+    client_id = body.get('client_id', 'default_client')
 
     router = ScenarioRouter()
     from optimization_executors import execute_scenario_with_agent

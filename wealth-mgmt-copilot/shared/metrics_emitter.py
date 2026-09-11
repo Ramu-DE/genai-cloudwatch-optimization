@@ -11,7 +11,7 @@ Usage:
     from metrics_emitter import MetricsEmitter
     metrics = MetricsEmitter(agent_name='marcus')
 
-    with metrics.track_tool('get_client_portfolio', client_id='client_sarah_chen'):
+    with metrics.track_tool('get_client_portfolio', client_id='my_client'):
         result = actual_tool_call()
 
     metrics.emit_agent_response(latency_ms=1250, input_tokens=500, output_tokens=200)

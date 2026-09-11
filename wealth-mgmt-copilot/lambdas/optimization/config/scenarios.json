@@ -12,7 +12,7 @@
         "tool_calls": 1
       },
       "baseline_scenario": true,
-      "sample_prompt": "What is client_sarah_chen's current portfolio allocation?"
+      "sample_prompt": "What is my_client's current portfolio allocation?"
     },
     {
       "id": 2,
@@ -30,7 +30,7 @@
         "bloat_source": "raw_transaction_history"
       },
       "baseline_scenario": 3,
-      "sample_prompt": "Summarize recent trading activity for client_sarah_chen"
+      "sample_prompt": "Summarize recent trading activity for my_client"
     },
     {
       "id": 3,
@@ -62,7 +62,7 @@
         "bloat_source": "irrelevant_crm_fields"
       },
       "baseline_scenario": 1,
-      "sample_prompt": "What is the current allocation for client_james_wilson?"
+      "sample_prompt": "What is the current allocation for my_client?"
     },
     {
       "id": 5,
@@ -76,7 +76,7 @@
         "tool_calls": 1
       },
       "baseline_scenario": true,
-      "sample_prompt": "Give me client_sarah_chen's full portfolio overview with risk analysis"
+      "sample_prompt": "Give me my_client's full portfolio overview with risk analysis"
     },
     {
       "id": 6,
@@ -93,7 +93,7 @@
         "redundant_tools": ["get_client_portfolio", "assess_portfolio_risk", "recommend_allocation"]
       },
       "baseline_scenario": 5,
-      "sample_prompt": "Give me a complete view of client_sarah_chen's investments"
+      "sample_prompt": "Give me a complete view of my_client's investments"
     },
     {
       "id": 7,
@@ -112,7 +112,7 @@
         "retry_count": 1
       },
       "baseline_scenario": 5,
-      "sample_prompt": "What are the current market conditions for client_sarah_chen's tech holdings?"
+      "sample_prompt": "What are the current market conditions for my_client's tech holdings?"
     },
     {
       "id": 8,
@@ -162,7 +162,7 @@
         "delay_location": "portfolio_query"
       },
       "baseline_scenario": 1,
-      "sample_prompt": "Show me client_priya_patel's portfolio"
+      "sample_prompt": "Show me my_client's portfolio"
     },
     {
       "id": 11,
@@ -180,7 +180,7 @@
         "remove_all_tools": true
       },
       "baseline_scenario": 1,
-      "sample_prompt": "What is client_sarah_chen's portfolio performance?"
+      "sample_prompt": "What is my_client's portfolio performance?"
     },
     {
       "id": 12,
@@ -217,7 +217,7 @@
         "bloat_source": "extreme_compliance_history"
       },
       "baseline_scenario": 3,
-      "sample_prompt": "Review client_priya_patel's complete compliance and transaction history"
+      "sample_prompt": "Review my_client's complete compliance and transaction history"
     },
     {
       "id": 14,
@@ -231,7 +231,7 @@
         "tool_calls": 1
       },
       "baseline_scenario": 1,
-      "sample_prompt": "Check client_sarah_chen's current holdings"
+      "sample_prompt": "Check my_client's current holdings"
     },
     {
       "id": 15,
@@ -268,7 +268,7 @@
         "techniques": ["remove_redundancy", "structured_format", "abbreviations"],
         "compare_metrics": ["token_reduction_percent", "quality_degradation"]
       },
-      "sample_prompt": "Generate a comprehensive retirement projection for client_james_wilson"
+      "sample_prompt": "Generate a comprehensive retirement projection for my_client"
     }
   ]
 }

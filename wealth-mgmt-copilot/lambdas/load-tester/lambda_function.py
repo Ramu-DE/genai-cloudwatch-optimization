@@ -38,10 +38,10 @@ DEFAULT_PROMPTS = {
 }
 
 DEFAULT_CLIENT_IDS = {
-    'marcus': 'client_sarah_chen',
-    'sophia': 'client_james_wilson',
-    'olivia': 'client_sarah_chen',
-    'victor': 'client_alex_rodriguez',
+    'marcus': 'default_client',
+    'sophia': 'default_client',
+    'olivia': 'default_client',
+    'victor': 'default_client',
 }
 
 
@@ -228,7 +228,7 @@ def process_async_load_test(event):
     agent_arn = event['agent_arn']
     num_requests = min(event.get('num_requests', 10), 50)
     prompt = event.get('prompt', DEFAULT_PROMPTS.get(agent_name, 'Hello'))
-    client_id = event.get('client_id', DEFAULT_CLIENT_IDS.get(agent_name, 'client_sarah_chen'))
+    client_id = event.get('client_id', DEFAULT_CLIENT_IDS.get(agent_name, 'default_client'))
     is_fargate = agent_arn.startswith('http')
 
     table = dynamodb.Table(LOAD_TEST_RESULTS_TABLE)

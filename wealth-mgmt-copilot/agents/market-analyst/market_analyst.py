@@ -407,152 +407,12 @@ def get_transaction_history_from_db(client_id: str, limit: int = 10):
         return None
 
 # ============================================================================
-# REALISTIC FALLBACK DATA (used when DynamoDB tables are not yet populated)
+# FALLBACK DATA (empty — client data loaded from DynamoDB / trading platform)
 # ============================================================================
 
-SAMPLE_CLIENT_PROFILES = {
-    "client_sarah_chen": {
-        "client_id": "client_sarah_chen",
-        "name": "Sarah Chen",
-        "email": "sarah.chen@email.com",
-        "phone": "+1-415-555-0142",
-        "risk_tolerance": "Moderate-Aggressive",
-        "investment_horizon": "15 years",
-        "annual_income": 285000,
-        "net_worth": 1850000,
-        "goals": ["Retirement at 55", "Children's education fund", "Real estate investment"],
-        "advisor": "Marcus (AI Market Analyst)",
-        "account_type": "Premium",
-        "created_date": "2024-03-15"
-    },
-    "client_james_mitchell": {
-        "client_id": "client_james_mitchell",
-        "name": "James Mitchell",
-        "email": "james.m@techcorp.com",
-        "phone": "+1-212-555-0198",
-        "risk_tolerance": "Aggressive",
-        "investment_horizon": "20 years",
-        "annual_income": 420000,
-        "net_worth": 3200000,
-        "goals": ["Wealth accumulation", "Early retirement", "Angel investing"],
-        "advisor": "Marcus (AI Market Analyst)",
-        "account_type": "Platinum",
-        "created_date": "2023-11-08"
-    },
-    "client_maria_rodriguez": {
-        "client_id": "client_maria_rodriguez",
-        "name": "Maria Rodriguez",
-        "email": "maria.r@email.com",
-        "phone": "+1-305-555-0167",
-        "risk_tolerance": "Conservative",
-        "investment_horizon": "8 years",
-        "annual_income": 165000,
-        "net_worth": 920000,
-        "goals": ["Capital preservation", "Steady income", "Home purchase"],
-        "advisor": "Marcus (AI Market Analyst)",
-        "account_type": "Standard",
-        "created_date": "2024-01-20"
-    }
-}
+SAMPLE_CLIENT_PROFILES = {}
 
-SAMPLE_PORTFOLIOS = {
-    "client_sarah_chen": {
-        "portfolio_id": "port_sarah_001",
-        "client_id": "client_sarah_chen",
-        "portfolio_type": "Growth",
-        "total_value": 892450.00,
-        "cost_basis": 745000.00,
-        "unrealized_gain": 147450.00,
-        "unrealized_gain_pct": 19.79,
-        "last_rebalance": "2026-07-15",
-        "holdings": [
-            {"ticker": "AAPL", "name": "Apple Inc.", "shares": 250, "avg_cost": 178.50, "current_price": 215.30, "value": 53825.00, "weight": 6.03, "gain_pct": 20.62},
-            {"ticker": "MSFT", "name": "Microsoft Corp.", "shares": 180, "avg_cost": 365.00, "current_price": 442.80, "value": 79704.00, "weight": 8.93, "gain_pct": 21.32},
-            {"ticker": "AMZN", "name": "Amazon.com Inc.", "shares": 300, "avg_cost": 155.20, "current_price": 198.75, "value": 59625.00, "weight": 6.68, "gain_pct": 28.06},
-            {"ticker": "GOOGL", "name": "Alphabet Inc.", "shares": 220, "avg_cost": 140.50, "current_price": 176.20, "value": 38764.00, "weight": 4.34, "gain_pct": 25.41},
-            {"ticker": "NVDA", "name": "NVIDIA Corp.", "shares": 150, "avg_cost": 480.00, "current_price": 875.50, "value": 131325.00, "weight": 14.71, "gain_pct": 82.40},
-            {"ticker": "VOO", "name": "Vanguard S&P 500 ETF", "shares": 400, "avg_cost": 420.00, "current_price": 498.60, "value": 199440.00, "weight": 22.35, "gain_pct": 18.71},
-            {"ticker": "QQQ", "name": "Invesco QQQ Trust", "shares": 200, "avg_cost": 380.00, "current_price": 465.20, "value": 93040.00, "weight": 10.43, "gain_pct": 22.42},
-            {"ticker": "BND", "name": "Vanguard Total Bond ETF", "shares": 500, "avg_cost": 72.50, "current_price": 73.80, "value": 36900.00, "weight": 4.13, "gain_pct": 1.79},
-            {"ticker": "VWO", "name": "Vanguard Emerging Markets ETF", "shares": 600, "avg_cost": 42.00, "current_price": 44.15, "value": 26490.00, "weight": 2.97, "gain_pct": 5.12},
-            {"ticker": "SCHD", "name": "Schwab US Dividend Equity ETF", "shares": 800, "avg_cost": 78.00, "current_price": 82.30, "value": 65840.00, "weight": 7.38, "gain_pct": 5.51},
-            {"ticker": "GLD", "name": "SPDR Gold Shares", "shares": 150, "avg_cost": 185.00, "current_price": 223.50, "value": 33525.00, "weight": 3.76, "gain_pct": 20.81},
-            {"ticker": "COIN", "name": "Coinbase Global", "shares": 100, "avg_cost": 180.00, "current_price": 239.72, "value": 23972.00, "weight": 2.69, "gain_pct": 33.18}
-        ],
-        "allocation": {
-            "US Equities": 41.61,
-            "US ETFs (Broad)": 32.78,
-            "International": 2.97,
-            "Bonds": 4.13,
-            "Commodities": 3.76,
-            "Crypto-adjacent": 2.69,
-            "Dividend": 7.38,
-            "Cash": 4.68
-        }
-    },
-    "client_james_mitchell": {
-        "portfolio_id": "port_james_001",
-        "client_id": "client_james_mitchell",
-        "portfolio_type": "Aggressive Growth",
-        "total_value": 1645800.00,
-        "cost_basis": 1200000.00,
-        "unrealized_gain": 445800.00,
-        "unrealized_gain_pct": 37.15,
-        "last_rebalance": "2026-08-01",
-        "holdings": [
-            {"ticker": "NVDA", "name": "NVIDIA Corp.", "shares": 400, "avg_cost": 450.00, "current_price": 875.50, "value": 350200.00, "weight": 21.28, "gain_pct": 94.56},
-            {"ticker": "TSLA", "name": "Tesla Inc.", "shares": 500, "avg_cost": 220.00, "current_price": 285.60, "value": 142800.00, "weight": 8.68, "gain_pct": 29.82},
-            {"ticker": "MSFT", "name": "Microsoft Corp.", "shares": 300, "avg_cost": 350.00, "current_price": 442.80, "value": 132840.00, "weight": 8.07, "gain_pct": 26.51},
-            {"ticker": "AMZN", "name": "Amazon.com Inc.", "shares": 400, "avg_cost": 148.00, "current_price": 198.75, "value": 79500.00, "weight": 4.83, "gain_pct": 34.29},
-            {"ticker": "META", "name": "Meta Platforms Inc.", "shares": 200, "avg_cost": 320.00, "current_price": 515.40, "value": 103080.00, "weight": 6.26, "gain_pct": 61.06},
-            {"ticker": "AVGO", "name": "Broadcom Inc.", "shares": 100, "avg_cost": 950.00, "current_price": 1680.00, "value": 168000.00, "weight": 10.21, "gain_pct": 76.84},
-            {"ticker": "SMH", "name": "VanEck Semiconductor ETF", "shares": 350, "avg_cost": 210.00, "current_price": 278.50, "value": 97475.00, "weight": 5.92, "gain_pct": 32.62},
-            {"ticker": "ARKK", "name": "ARK Innovation ETF", "shares": 800, "avg_cost": 48.00, "current_price": 62.30, "value": 49840.00, "weight": 3.03, "gain_pct": 29.79},
-            {"ticker": "SOXX", "name": "iShares Semiconductor ETF", "shares": 250, "avg_cost": 220.00, "current_price": 265.80, "value": 66450.00, "weight": 4.04, "gain_pct": 20.82},
-            {"ticker": "PLTR", "name": "Palantir Technologies", "shares": 1500, "avg_cost": 22.00, "current_price": 38.75, "value": 58125.00, "weight": 3.53, "gain_pct": 76.14},
-            {"ticker": "CRWD", "name": "CrowdStrike Holdings", "shares": 150, "avg_cost": 280.00, "current_price": 365.20, "value": 54780.00, "weight": 3.33, "gain_pct": 30.43}
-        ],
-        "allocation": {
-            "Mega Cap Tech": 27.84,
-            "Semiconductors": 41.41,
-            "Growth/Innovation": 6.56,
-            "Cybersecurity": 3.33,
-            "AI/Data": 3.53,
-            "Cash": 17.33
-        }
-    },
-    "client_maria_rodriguez": {
-        "portfolio_id": "port_maria_001",
-        "client_id": "client_maria_rodriguez",
-        "portfolio_type": "Conservative Income",
-        "total_value": 478200.00,
-        "cost_basis": 445000.00,
-        "unrealized_gain": 33200.00,
-        "unrealized_gain_pct": 7.46,
-        "last_rebalance": "2026-06-20",
-        "holdings": [
-            {"ticker": "BND", "name": "Vanguard Total Bond ETF", "shares": 1200, "avg_cost": 72.00, "current_price": 73.80, "value": 88560.00, "weight": 18.52, "gain_pct": 2.50},
-            {"ticker": "SCHD", "name": "Schwab US Dividend Equity ETF", "shares": 600, "avg_cost": 76.00, "current_price": 82.30, "value": 49380.00, "weight": 10.33, "gain_pct": 8.29},
-            {"ticker": "VYM", "name": "Vanguard High Dividend Yield ETF", "shares": 500, "avg_cost": 110.00, "current_price": 118.50, "value": 59250.00, "weight": 12.39, "gain_pct": 7.73},
-            {"ticker": "JEPI", "name": "JPMorgan Equity Premium Income ETF", "shares": 700, "avg_cost": 55.00, "current_price": 58.20, "value": 40740.00, "weight": 8.52, "gain_pct": 5.82},
-            {"ticker": "TLT", "name": "iShares 20+ Year Treasury ETF", "shares": 400, "avg_cost": 92.00, "current_price": 95.40, "value": 38160.00, "weight": 7.98, "gain_pct": 3.70},
-            {"ticker": "VOO", "name": "Vanguard S&P 500 ETF", "shares": 150, "avg_cost": 410.00, "current_price": 498.60, "value": 74790.00, "weight": 15.64, "gain_pct": 21.61},
-            {"ticker": "O", "name": "Realty Income Corp.", "shares": 400, "avg_cost": 55.00, "current_price": 58.90, "value": 23560.00, "weight": 4.93, "gain_pct": 7.09},
-            {"ticker": "JNJ", "name": "Johnson & Johnson", "shares": 200, "avg_cost": 155.00, "current_price": 162.40, "value": 32480.00, "weight": 6.79, "gain_pct": 4.77},
-            {"ticker": "PG", "name": "Procter & Gamble", "shares": 180, "avg_cost": 158.00, "current_price": 170.50, "value": 30690.00, "weight": 6.42, "gain_pct": 7.91},
-            {"ticker": "GLD", "name": "SPDR Gold Shares", "shares": 100, "avg_cost": 182.00, "current_price": 223.50, "value": 22350.00, "weight": 4.67, "gain_pct": 22.80}
-        ],
-        "allocation": {
-            "Bonds/Fixed Income": 26.50,
-            "Dividend Equity": 31.24,
-            "Broad Market": 15.64,
-            "REITs": 4.93,
-            "Defensive Stocks": 13.21,
-            "Commodities": 4.67,
-            "Cash": 3.81
-        }
-    }
-}
+SAMPLE_PORTFOLIOS = {}
 
 SECTOR_DATA = {
     "technology": {
@@ -670,7 +530,7 @@ def get_client_portfolio(client_id: str, portfolio_type: str = None):
     """Get client portfolio holdings, allocations, and performance from the database.
 
     Args:
-        client_id: The client ID (e.g., 'client_sarah_chen')
+        client_id: The client ID
         portfolio_type: Optional filter for portfolio type (e.g., 'Growth', 'Conservative Income')
 
     Returns:
@@ -827,7 +687,7 @@ def assess_portfolio_risk(client_id: str):
     """Calculate portfolio risk metrics including beta, Sharpe ratio, volatility, and diversification score.
 
     Args:
-        client_id: The client ID (e.g., 'client_sarah_chen')
+        client_id: The client ID
 
     Returns:
         Portfolio risk assessment with metrics, risk breakdown, and recommendations
