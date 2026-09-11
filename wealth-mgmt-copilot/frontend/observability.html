@@ -44,7 +44,7 @@
     </div>
     <div class="obs-grid">
         <div class="obs-card">
-            <h4>&#x1F4CA; Marcus — Market Analyst</h4>
+            <h4>&#x1F4CA; Market Analyst</h4>
             <div class="obs-metric"><span class="label">Framework</span><span class="value">Strands (AgentCore)</span></div>
             <div class="obs-metric"><span class="label">Avg Latency</span><span class="value" id="marcus-latency">3.2s</span></div>
             <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value" id="marcus-tokens">~1,850</span></div>
@@ -52,7 +52,7 @@
             <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/market-analyst</span></div>
         </div>
         <div class="obs-card">
-            <h4>&#x1F4C5; Sophia — Financial Planner</h4>
+            <h4>&#x1F4C5; Financial Planner</h4>
             <div class="obs-metric"><span class="label">Framework</span><span class="value">Strands (AgentCore)</span></div>
             <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">4.1s</span></div>
             <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~2,200</span></div>
@@ -60,7 +60,7 @@
             <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/financial-planner</span></div>
         </div>
         <div class="obs-card">
-            <h4>&#x1F4B5; Olivia — Tax Optimizer</h4>
+            <h4>&#x1F4B5; Tax Optimizer</h4>
             <div class="obs-metric"><span class="label">Framework</span><span class="value">CrewAI (AgentCore)</span></div>
             <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">5.8s</span></div>
             <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~3,100</span></div>
@@ -68,7 +68,7 @@
             <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/tax-optimizer</span></div>
         </div>
         <div class="obs-card">
-            <h4>&#x2705; Victor — Compliance Checker</h4>
+            <h4>&#x2705; Compliance Checker</h4>
             <div class="obs-metric"><span class="label">Framework</span><span class="value">LangGraph (ECS Fargate)</span></div>
             <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">2.8s</span></div>
             <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~1,400</span></div>
@@ -141,10 +141,10 @@
             </div>
             <div class="card-body">
                 <div style="font-family: monospace; font-size:0.78rem; background: var(--gray-50); padding:12px; border-radius:var(--radius-sm); max-height:220px; overflow-y:auto; line-height:1.8;">
-                    <div><span style="color:var(--gray-500)">14:32:05</span> <span style="color:var(--green)">INFO</span> Marcus agent processed market analysis request (3.1s)</div>
-                    <div><span style="color:var(--gray-500)">14:31:58</span> <span style="color:var(--green)">INFO</span> Sophia retrieved client portfolio for allocation review</div>
+                    <div><span style="color:var(--gray-500)">14:32:05</span> <span style="color:var(--green)">INFO</span> Market Analyst processed market analysis request (3.1s)</div>
+                    <div><span style="color:var(--gray-500)">14:31:58</span> <span style="color:var(--green)">INFO</span> Financial Planner retrieved client portfolio for allocation review</div>
                     <div><span style="color:var(--gray-500)">14:31:42</span> <span style="color:var(--green)">INFO</span> Bedrock invocation: claude-haiku-4-5, 1240 input tokens, 580 output tokens</div>
-                    <div><span style="color:var(--gray-500)">14:31:15</span> <span style="color:var(--orange)">WARN</span> Victor flagged transaction txn_008 — concentration limit exceeded</div>
+                    <div><span style="color:var(--gray-500)">14:31:15</span> <span style="color:var(--orange)">WARN</span> Compliance Checker flagged transaction — concentration limit exceeded</div>
                     <div><span style="color:var(--gray-500)">14:30:48</span> <span style="color:var(--green)">INFO</span> Agent router: request routed to olivia (tax-optimizer)</div>
                     <div><span style="color:var(--gray-500)">14:30:22</span> <span style="color:var(--green)">INFO</span> WebSocket connection established: connected_client</div>
                     <div><span style="color:var(--gray-500)">14:29:55</span> <span style="color:var(--green)">INFO</span> DynamoDB: GetItem wealth_mgmt_client_profiles (12ms)</div>

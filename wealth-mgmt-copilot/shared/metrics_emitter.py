@@ -198,7 +198,7 @@ class MetricsEmitter:
         })
 
     def emit_compliance_event(self, event_type: str, status: str, client_id: str):
-        """Track compliance-specific events (Victor agent)"""
+        """Track compliance-specific events (Compliance Checker agent)"""
         self._put_metric('ComplianceEvents', 1, 'Count', {
             'EventType': event_type,
             'Status': status

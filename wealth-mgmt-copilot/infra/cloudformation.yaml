@@ -686,22 +686,22 @@ Resources:
   # ============================================================
   # ECR Repositories
   # ============================================================
-  MarcusECR:
+  MarketAnalystECR:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: wealth-mgmt-market-analyst
 
-  SophiaECR:
+  FinancialPlannerECR:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: wealth-mgmt-financial-planner
 
-  OliviaECR:
+  TaxOptimizerECR:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: wealth-mgmt-tax-optimizer
 
-  VictorECR:
+  ComplianceCheckerECR:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: wealth-mgmt-compliance-checker
@@ -727,22 +727,22 @@ Resources:
       LogGroupName: /aws/lambda/wealth_mgmt_auth_lambda
       RetentionInDays: 14
 
-  MarcusAgentLogGroup:
+  MarketAnalystLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_marcus_market_analyst
+      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_market_analyst
       RetentionInDays: 30
 
-  SophiaAgentLogGroup:
+  FinancialPlannerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_sophia_financial_planner
+      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_financial_planner
       RetentionInDays: 30
 
-  OliviaAgentLogGroup:
+  TaxOptimizerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_olivia_tax_optimizer
+      LogGroupName: /aws/bedrock-agentcore/runtimes/wealth_mgmt_tax_optimizer
       RetentionInDays: 30
 
   ComplianceCheckerLogGroup:
@@ -752,7 +752,7 @@ Resources:
       RetentionInDays: 30
 
   # ============================================================
-  # ECS Cluster for Compliance Checker (Victor)
+  # ECS Cluster for Compliance Checker
   # ============================================================
   ComplianceCluster:
     Type: AWS::ECS::Cluster

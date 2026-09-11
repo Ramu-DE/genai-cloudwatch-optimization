@@ -3,7 +3,7 @@
 Lambda Handler for Wealth Management Agent Optimization System
 
 Handles HTTP API Gateway requests for performance testing and
-optimization scenarios against the Sophia Financial Planner agent.
+optimization scenarios against the Financial Planner agent.
 """
 
 import json

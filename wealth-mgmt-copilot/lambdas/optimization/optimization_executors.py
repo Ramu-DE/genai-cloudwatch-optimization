@@ -2,7 +2,7 @@
 Optimization Executors for Wealth Management Agent Performance Testing
 
 Each executor function creates a modified agent context with a specific fault
-injected, invokes the Sophia Financial Planner agent (or simulates the
+injected, invokes the Financial Planner agent (or simulates the
 invocation), and returns PerformanceMetrics for comparison against a baseline.
 """
 
@@ -112,7 +112,7 @@ def _build_metrics(result: Dict[str, Any], scenario_id: int,
 
 
 BASELINE_SYSTEM_PROMPT = (
-    "You are Sophia, a certified financial planner at WealthAI Advisors. "
+    "You are the Financial Planner at WealthAI Advisors. "
     "Answer concisely using only the information provided."
 )
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Olivia Tax Optimizer Agent - CrewAI on Bedrock AgentCore
+Tax Optimizer Agent - CrewAI on Bedrock AgentCore
 Tax-loss harvesting, capital gains optimization, bracket management, and year-end planning.
 """
 import os
@@ -195,7 +195,7 @@ def initialize_memory(client_id=None, session_id=None):
         try:
             memory = memory_client.create_memory_and_wait(
                 name=target_memory_id,
-                description="Unified persistent memory for Olivia tax optimizer agent",
+                description="Unified persistent memory for tax optimizer agent",
                 strategies=[
                     {
                         "summaryMemoryStrategy": {
@@ -872,14 +872,14 @@ except ImportError:
 
 @tool
 def consult_financial_planner(query: str, client_id: str = ""):
-    """Consult Sophia (Financial Planner) for portfolio details, allocation strategy, or retirement projections.
+    """Consult the Financial Planner for portfolio details, allocation strategy, or retirement projections.
 
     Args:
-        query: The financial planning question to ask Sophia
+        query: The financial planning question to ask the Financial Planner
         client_id: The client ID for context
 
     Returns:
-        Sophia's financial planning analysis
+        Financial Planner's analysis
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -887,14 +887,14 @@ def consult_financial_planner(query: str, client_id: str = ""):
 
 @tool
 def consult_market_analyst(query: str, client_id: str = ""):
-    """Consult Marcus (Market Analyst) for current market conditions, stock analysis, or sector trends.
+    """Consult the Market Analyst for current market conditions, stock analysis, or sector trends.
 
     Args:
-        query: The market-related question to ask Marcus
+        query: The market-related question to ask the Market Analyst
         client_id: The client ID for context
 
     Returns:
-        Marcus's market analysis
+        Market Analyst's analysis
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -1168,7 +1168,7 @@ base_tools = [
 agent = Agent(
     model=model,
     tools=base_tools,
-    system_prompt="""You are Olivia, a senior tax optimization specialist at WealthAI Advisors.
+    system_prompt="""You are the Tax Optimizer at WealthAI Advisors.
 
 CRITICAL: You MUST use your tools to provide accurate information. Never guess or fabricate tax data.
 
@@ -1180,8 +1180,8 @@ YOUR TOOLS:
 - recommend_tax_strategy(client_id, goal=None): Generate personalized tax optimization strategy
 - get_memory_context(client_id, session_id=None): Retrieve conversation history
 - save_conversation_memory(client_id, user_message, agent_response, session_id=None): Save conversation context
-- consult_financial_planner(query, client_id): Ask Sophia for portfolio details or allocation info
-- consult_market_analyst(query, client_id): Ask Marcus for current market data and stock analysis
+- consult_financial_planner(query, client_id): Ask the Financial Planner for portfolio details or allocation info
+- consult_market_analyst(query, client_id): Ask the Market Analyst for current market data and stock analysis
 - calculate_indian_capital_gains_tax(client_id, sell_tickers=""): Calculate Indian STCG/LTCG tax with STT
 - get_india_tax_saving_suggestions(client_id): Get Indian tax-saving suggestions (80C, 80D, 80CCD, harvesting)
 
@@ -1244,14 +1244,14 @@ Be professional, precise, and thorough. Use clear formatting with dollar amounts
 
 @app.entrypoint
 def tax_optimizer_agent(payload, context):
-    """Olivia Tax Optimizer Agent with CrewAI deep analysis and Strands tools."""
+    """Tax Optimizer Agent with CrewAI deep analysis and Strands tools."""
     request_start = time.time()
     try:
         user_input = payload.get("prompt", "Hello! How can I help with your taxes?")
         client_id = payload.get("customer_id", "")
         session_id = context.session_id or ""
 
-        logger.info(f"Olivia Agent - Processing request for client: {client_id}")
+        logger.info(f"Tax Optimizer - Processing request for client: {client_id}")
         logger.info(f"Session ID: {session_id}")
 
         current_agent = agent
@@ -1354,7 +1354,7 @@ def tax_optimizer_agent(payload, context):
 
         return result
     except Exception as e:
-        logger.error(f"Error in Olivia agent: {e}")
+        logger.error(f"Error in Tax Optimizer agent: {e}")
         if metrics:
             request_latency = (time.time() - request_start) * 1000
             metrics.emit_agent_response(latency_ms=request_latency, input_tokens=0, output_tokens=0)

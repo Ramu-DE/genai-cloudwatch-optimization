@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sophia Financial Planner Agent - Complete Implementation with Memory & Session Management
+Financial Planner Agent - Complete Implementation with Memory & Session Management
 Integrates all DynamoDB, memory, and session logic as Strands tools
 """
 import os
@@ -210,7 +210,7 @@ def initialize_memory(client_id=None, session_id=None):
         try:
             memory = memory_client.create_memory_and_wait(
                 name=target_memory_id,
-                description="Unified persistent memory for Sophia financial planner agent - stores all client interactions",
+                description="Unified persistent memory for financial planner agent - stores all client interactions",
                 strategies=[
                     {
                         "summaryMemoryStrategy": {
@@ -301,7 +301,7 @@ def save_conversation_to_memory(client_id, session_id, user_message, sophia_resp
 
     try:
         logger.info(f"💾 Saving to unified memory: Client={client_id}, Session={session_id}")
-        logger.info(f"💾 User='{user_message[:30]}...', Sophia='{sophia_response[:30]}...'")
+        logger.info(f"💾 User='{user_message[:30]}...', Planner='{sophia_response[:30]}...'")
 
         max_length = 8500
 
@@ -318,7 +318,7 @@ def save_conversation_to_memory(client_id, session_id, user_message, sophia_resp
                 "... [middle truncated] ..." +
                 sophia_response[-half_length:]
             )
-            logger.warning(f"⚠️ Sophia response truncated from {len(sophia_response)} to {len(truncated_sophia_response)} chars")
+            logger.warning(f"⚠️ Planner response truncated from {len(sophia_response)} to {len(truncated_sophia_response)} chars")
 
         memory_client.create_event(
             memory_id=memory_id,
@@ -1030,7 +1030,7 @@ def save_conversation_memory(client_id: str, user_message: str, agent_response: 
     Args:
         client_id: The client ID
         user_message: The user's message
-        agent_response: Sophia's response
+        agent_response: The agent's response
         session_id: Optional session ID
 
     Returns:
@@ -1062,14 +1062,14 @@ except ImportError:
 
 @tool
 def consult_market_analyst(query: str, client_id: str = ""):
-    """Consult Marcus (Market Analyst) for stock analysis, market trends, sector performance, or risk assessment.
+    """Consult the Market Analyst for stock analysis, market trends, sector performance, or risk assessment.
 
     Args:
-        query: The market-related question to ask Marcus
+        query: The market-related question to ask the Market Analyst
         client_id: The client ID for context
 
     Returns:
-        Marcus's market analysis and insights
+        Market Analyst's analysis and insights
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -1077,14 +1077,14 @@ def consult_market_analyst(query: str, client_id: str = ""):
 
 @tool
 def consult_tax_optimizer(query: str, client_id: str = ""):
-    """Consult Olivia (Tax Optimizer) for tax implications of financial decisions, harvesting opportunities, or tax strategy.
+    """Consult the Tax Optimizer for tax implications of financial decisions, harvesting opportunities, or tax strategy.
 
     Args:
-        query: The tax-related question to ask Olivia
+        query: The tax-related question to ask the Tax Optimizer
         client_id: The client ID for context
 
     Returns:
-        Olivia's tax analysis and recommendations
+        Tax Optimizer's analysis and recommendations
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -1092,14 +1092,14 @@ def consult_tax_optimizer(query: str, client_id: str = ""):
 
 @tool
 def consult_compliance_checker(query: str, client_id: str = ""):
-    """Consult Victor (Compliance Checker) for regulatory compliance, KYC status, or trade limit verification.
+    """Consult the Compliance Checker for regulatory compliance, KYC status, or trade limit verification.
 
     Args:
-        query: The compliance question to ask Victor
+        query: The compliance question to ask the Compliance Checker
         client_id: The client ID for context
 
     Returns:
-        Victor's compliance assessment
+        Compliance Checker's assessment
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -1134,7 +1134,7 @@ base_tools = [
 agent = Agent(
     model=model,
     tools=base_tools,
-    system_prompt="""You are Sophia, a certified financial planner at WealthAI Advisors.
+    system_prompt="""You are the Financial Planner at WealthAI Advisors.
 
 CRITICAL: You MUST use your tools to provide accurate information. Never guess or make up financial data.
 
@@ -1155,9 +1155,9 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 - rebalance_portfolio(client_id): Analyze portfolio drift and suggest rebalancing trades
 - get_memory_context(client_id, session_id=None): Retrieve conversation history
 - save_conversation_memory(client_id, user_message, agent_response, session_id=None): Save conversation context
-- consult_market_analyst(query, client_id): Ask Marcus for market data, stock analysis, sector trends
-- consult_tax_optimizer(query, client_id): Ask Olivia for tax implications of financial decisions
-- consult_compliance_checker(query, client_id): Ask Victor for regulatory compliance and trade limit checks
+- consult_market_analyst(query, client_id): Ask the Market Analyst for market data, stock analysis, sector trends
+- consult_tax_optimizer(query, client_id): Ask the Tax Optimizer for tax implications of financial decisions
+- consult_compliance_checker(query, client_id): Ask the Compliance Checker for regulatory compliance and trade limit checks
 
 🤝 **Cross-Agent Collaboration:**
 - When allocation decisions need market context → consult_market_analyst
@@ -1201,7 +1201,7 @@ Be warm, professional, and data-driven. Always use the appropriate tools and pro
 @app.entrypoint
 def sophia_financial_planner_agent(payload, context):
     """
-    Sophia Financial Planner Agent with complete memory, session, and DynamoDB integration
+    Financial Planner Agent with complete memory, session, and DynamoDB integration
     """
     request_start = time.time()
     try:
@@ -1209,7 +1209,7 @@ def sophia_financial_planner_agent(payload, context):
         client_id = payload.get("customer_id", "") or payload.get("client_id", "")
         session_id = context.session_id or ""
 
-        logger.info(f"📊 Sophia Agent - Processing request for client: {client_id}")
+        logger.info(f"📊 Financial Planner - Processing request for client: {client_id}")
         logger.info(f"🔗 Session ID: {session_id}")
 
         # Extract context from user input
@@ -1320,7 +1320,7 @@ def sophia_financial_planner_agent(payload, context):
         return result
 
     except Exception as e:
-        logger.error(f"❌ Error in Sophia agent: {e}")
+        logger.error(f"❌ Error in Financial Planner agent: {e}")
         if metrics:
             request_latency = (time.time() - request_start) * 1000
             metrics.emit_agent_response(latency_ms=request_latency, input_tokens=0, output_tokens=0)

@@ -82,9 +82,9 @@
            │              AI AGENT LAYER                          │
            │                                                     │
            │  ┌──────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐ │
-           │  │ Marcus   │ │ Sophia   │ │ Olivia │ │ Victor   │ │
-           │  │ Market   │ │ Financial│ │ Tax    │ │Compliance│ │
+           │  │ Market   │ │Financial │ │ Tax    │ │Compliance│ │
            │  │ Analyst  │ │ Planner  │ │Optimizer│ │ Checker │ │
+           │  │          │ │          │ │        │ │          │ │
            │  │          │ │          │ │        │ │          │ │
            │  │ Strands  │ │ Strands  │ │ CrewAI │ │LangGraph │ │
            │  │ AgentCore│ │ AgentCore│ │AgentCore│ │ECS      │ │
@@ -121,11 +121,11 @@
 
 ## Agent Architecture — Tools & Capabilities
 
-### Marcus — Market Analyst (Strands Framework)
+### Market Analyst (Strands Framework)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  MARCUS — Market Analyst                                        │
+│  MARKET ANALYST                                                 │
 │  Framework: Strands SDK  |  Runtime: Amazon Bedrock AgentCore   │
 │  Model: Claude Haiku 4.5 / Sonnet 4                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -154,11 +154,11 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Sophia — Financial Planner (Strands Framework)
+### Financial Planner (Strands Framework)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  SOPHIA — Financial Planner                                     │
+│  FINANCIAL PLANNER                                              │
 │  Framework: Strands SDK  |  Runtime: Amazon Bedrock AgentCore   │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -177,11 +177,11 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Olivia — Tax Optimizer (CrewAI Framework)
+### Tax Optimizer (CrewAI Framework)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  OLIVIA — Tax Optimizer                                         │
+│  TAX OPTIMIZER                                                  │
 │  Framework: CrewAI 1.3.0  |  Runtime: Amazon Bedrock AgentCore  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -210,11 +210,11 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Victor — Compliance Checker (LangGraph + Flask)
+### Compliance Checker (LangGraph + Flask)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  VICTOR — Compliance Checker                                    │
+│  COMPLIANCE CHECKER                                             │
 │  Framework: LangGraph + Flask  |  Runtime: ECS Fargate :8080    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -255,7 +255,8 @@
 │            └──┬──────┬──────┬──────┬─────┘                              │
 │               │      │      │      │                                    │
 │               ▼      ▼      ▼      ▼                                    │
-│           Marcus  Sophia  Olivia  Victor                                │
+│         Market   Financial  Tax     Compliance                          │
+│         Analyst  Planner    Optim.  Checker                             │
 │               │      │      │      │                                    │
 │               └──────┴──────┴──────┘                                    │
 │                      │                                                  │
@@ -264,12 +265,12 @@
 │  ┌──────────────────────────────────────────────────────────────┐       │
 │  │            PEER COMMUNICATION MATRIX                         │       │
 │  │                                                              │       │
-│  │  FROM ╲ TO    Marcus    Sophia    Olivia    Victor           │       │
+│  │  FROM ╲ TO    Mkt.Anlst Fin.Plan  Tax.Opt   Compliance      │       │
 │  │  ─────────────────────────────────────────────────           │       │
-│  │  Marcus         —        ✓         ✓         —              │       │
-│  │  Sophia         ✓        —         ✓         ✓              │       │
-│  │  Olivia         ✓        ✓         —         —              │       │
-│  │  Victor         ✓        ✓         ✓         —              │       │
+│  │  Mkt.Anlst      —        ✓         ✓         —              │       │
+│  │  Fin.Plan       ✓        —         ✓         ✓              │       │
+│  │  Tax.Opt        ✓        ✓         —         —              │       │
+│  │  Compliance     ✓        ✓         ✓         —              │       │
 │  └──────────────────────────────────────────────────────────────┘       │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -279,7 +280,7 @@
 ```
 User: "Analyze my Groww portfolio and tell me tax implications"
 
-  User ──▶ API Gateway ──▶ Agent Router ──▶ Marcus (Market Analyst)
+  User ──▶ API Gateway ──▶ Agent Router ──▶ Market Analyst
                                                │
                           ┌────────────────────┘
                           │
@@ -299,10 +300,10 @@ User: "Analyze my Groww portfolio and tell me tax implications"
               assess_portfolio_risk()
                          │
                          ▼
-              consult_tax_optimizer(Olivia)
+              consult_tax_optimizer()
               ┌──────────────────────────────────┐
-              │ Olivia receives:                  │
-              │  - Portfolio holdings from Marcus │
+              │ Tax Optimizer receives:           │
+              │  - Portfolio holdings             │
               │  - Current market values          │
               │                                   │
               │ Runs:                              │
@@ -317,7 +318,7 @@ User: "Analyze my Groww portfolio and tell me tax implications"
               └──────────────────────────────────┘
                          │
                          ▼
-              Marcus combines:
+              Market Analyst combines:
               ┌─────────────────────────────────────┐
               │ Response to User:                    │
               │ • Portfolio: ₹58.5L in 10 NSE stocks│
@@ -334,7 +335,7 @@ User: "Analyze my Groww portfolio and tell me tax implications"
 ```
 User: "Is my portfolio compliant? Run a full check."
 
-  User ──▶ Agent Router ──▶ Victor (Compliance Checker)
+  User ──▶ Agent Router ──▶ Compliance Checker
                                 │
               LangGraph State Machine
               classify ──▶ route ──▶ regulatory
@@ -342,34 +343,34 @@ User: "Is my portfolio compliant? Run a full check."
                           ┌────────────┘
                           │
                           ▼
-              consult_market_analyst(Marcus)
+              consult_market_analyst()
               ┌────────────────────────────┐
-              │ Marcus returns:            │
+              │ Market Analyst returns:    │
               │ • Portfolio risk score     │
               │ • Concentration analysis   │
               │ • Sector exposure          │
               └────────────┬───────────────┘
                            │
                            ▼
-              consult_financial_planner(Sophia)
+              consult_financial_planner()
               ┌────────────────────────────┐
-              │ Sophia returns:            │
+              │ Financial Planner returns: │
               │ • Suitability assessment   │
               │ • Risk tolerance match     │
               │ • Allocation vs target     │
               └────────────┬───────────────┘
                            │
                            ▼
-              consult_tax_optimizer(Olivia)
+              consult_tax_optimizer()
               ┌────────────────────────────┐
-              │ Olivia returns:            │
+              │ Tax Optimizer returns:     │
               │ • Tax compliance status    │
               │ • Wash sale alerts         │
               │ • Indian STCG/LTCG rules  │
               └────────────┬───────────────┘
                            │
                            ▼
-              Victor generates:
+              Compliance Checker generates:
               ┌─────────────────────────────────┐
               │ Compliance Report:              │
               │ ✅ KYC: Verified                │
@@ -391,8 +392,8 @@ User: "Give me a complete financial review"
               ┌─────────────────┼─────────────────┐
               │                 │                  │
     ┌─────────▼──────┐ ┌───────▼───────┐ ┌───────▼────────┐ ┌────────────────┐
-    │ Marcus         │ │ Sophia        │ │ Olivia         │ │ Victor         │
-    │                │ │               │ │                │ │                │
+    │ Market Analyst │ │ Fin. Planner  │ │ Tax Optimizer  │ │ Compliance     │
+    │                │ │               │ │                │ │   Checker      │
     │ • Market data  │ │ • Allocation  │ │ • Tax position │ │ • KYC status   │
     │ • Risk metrics │ │ • Retirement  │ │ • Harvesting   │ │ • AML screen   │
     │ • Sector view  │ │ • Rebalance   │ │ • STCG/LTCG   │ │ • Regulatory   │
@@ -623,7 +624,7 @@ User: "Give me a complete financial review"
 │  │  │ • Invocations    │  │ • Lambda Duration              │     │      │
 │  │  │ • Latency (P50/  │  │ • Errors vs Invocations       │     │      │
 │  │  │   P90/P99)       │  │ • Concurrent Executions       │     │      │
-│  │  │ • Token Usage    │  │ • ECS CPU/Memory (Victor)     │     │      │
+│  │  │ • Token Usage    │  │ • ECS CPU/Memory (Compliance)  │     │      │
 │  │  │ • Error Rate     │  │ • Groww API Latency           │     │      │
 │  │  └──────────────────┘  └────────────────────────────────┘     │      │
 │  │  ┌──────────────────┐  ┌────────────────────────────────┐     │      │
@@ -770,7 +771,7 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 │  │ • optimization_  │     │  8. concurrent_load — parallel requests │   │
 │  │   executors      │     │  9. cold_start_analysis — Lambda init   │   │
 │  └────────┬─────────┘     │ 10. memory_retrieval_perf — recall spd  │   │
-│           │               │ 11. compliance_audit_load — Victor perf  │   │
+│           │               │ 11. compliance_audit_load — Compliance   │   │
 │           │               │ 12. cross_agent_latency — peer calls     │   │
 │           ▼               │ 13. dynamodb_throttle_sim — DB limits    │   │
 │  ┌────────────────┐       │ 14. response_quality_check — accuracy   │   │
@@ -834,17 +835,17 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 │  1. PRE-TRADE ANALYSIS                                                   │
 │     Trading Platform ──▶ POST /agent {agent:"marcus"}                   │
 │     "Analyze risk of buying 100 RELIANCE at ₹2680"                      │
-│     Marcus: risk score, sector exposure, technical indicators            │
+│     Market Analyst: risk score, sector exposure, technical indicators    │
 │                                                                          │
 │  2. COMPLIANCE GATE                                                      │
 │     Trading Platform ──▶ POST /agent {agent:"victor"}                   │
 │     "Pre-trade compliance check for client_ramu_de buying RELIANCE"     │
-│     Victor: KYC status, concentration limits, regulatory flags           │
+│     Compliance Checker: KYC status, concentration limits, regulatory flags│
 │                                                                          │
 │  3. TAX-AWARE TRADING                                                    │
 │     Trading Platform ──▶ POST /agent {agent:"olivia"}                   │
 │     "Tax impact of selling TCS position — held 8 months"                │
-│     Olivia: STCG ₹X at 20%, STT ₹Y, suggest waiting 4 months for LTCG │
+│     Tax Optimizer: STCG ₹X at 20%, STT ₹Y, wait 4 months for LTCG     │
 │                                                                          │
 │  4. PORTFOLIO REBALANCE                                                  │
 │     Trading Platform ──▶ POST /agent {agent:"orchestrator"}             │
@@ -881,11 +882,11 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 │ REST API               │ Amazon API Gateway (Regional)                   │
 │ WebSocket API          │ Amazon API Gateway (WebSocket)                  │
 │ Compute (Serverless)   │ AWS Lambda (Python 3.12)                        │
-│ Compute (Container)    │ Amazon ECS Fargate (Victor)                     │
+│ Compute (Container)    │ Amazon ECS Fargate (Compliance Checker)          │
 │ AI Agents              │ Amazon Bedrock AgentCore Runtime                │
-│ Agent Framework 1      │ Strands SDK (Marcus, Sophia)                    │
-│ Agent Framework 2      │ CrewAI 1.3.0 (Olivia)                          │
-│ Agent Framework 3      │ LangGraph + Flask (Victor)                      │
+│ Agent Framework 1      │ Strands SDK (Market Analyst, Financial Planner)  │
+│ Agent Framework 2      │ CrewAI 1.3.0 (Tax Optimizer)                   │
+│ Agent Framework 3      │ LangGraph + Flask (Compliance Checker)          │
 │ Foundation Model       │ Anthropic Claude Haiku 4.5 / Sonnet 4          │
 │ Agent Memory           │ AgentCore Memory (summary, semantic, preference)│
 │ Database               │ Amazon DynamoDB (12 tables, 1 GSI)              │
@@ -911,22 +912,22 @@ Browser      API GW     Agent Router    AgentCore      Agent       Bedrock     D
 wealth-mgmt-copilot/
 │
 ├── agents/
-│   ├── market-analyst/              # Marcus (Strands) — 14 tools
+│   ├── market-analyst/              # Market Analyst (Strands) — 14 tools
 │   │   ├── market_analyst.py        # ~1,400 lines
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
 │   │
-│   ├── financial-planner/           # Sophia (Strands) — 11 tools
+│   ├── financial-planner/           # Financial Planner (Strands) — 11 tools
 │   │   ├── financial_planner.py     # ~1,499 lines
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
 │   │
-│   ├── tax-optimizer/               # Olivia (CrewAI) — 9 tools (incl. Indian tax)
+│   ├── tax-optimizer/               # Tax Optimizer (CrewAI) — 9 tools (incl. Indian tax)
 │   │   ├── tax_optimizer.py         # ~1,400 lines
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
 │   │
-│   └── compliance-checker/          # Victor (LangGraph + Flask) — 9 tools
+│   └── compliance-checker/          # Compliance Checker (LangGraph + Flask) — 9 tools
 │       ├── app.py                   # ~1,177 lines
 │       ├── config_reader.py
 │       ├── config/config.conf
@@ -1004,7 +1005,7 @@ wealth-mgmt-copilot/
 | CloudWatch Dashboard | `wealth_mgmt_copilot_dashboard` |
 | DynamoDB Tables | 12 tables + 1 GSI |
 | Lambda Functions | 5 (auth, agent-router, websocket, load-tester, optimization) |
-| ECS Service | Victor (compliance-checker) on Fargate |
+| ECS Service | Compliance Checker on Fargate |
 
 ---
 

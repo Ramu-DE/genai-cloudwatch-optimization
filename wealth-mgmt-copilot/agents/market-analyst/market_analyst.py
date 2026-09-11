@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Marcus Market Analyst Agent - Complete Implementation with Memory & Session Management
+Market Analyst Agent - Complete Implementation with Memory & Session Management
 Integrates all DynamoDB, memory, and session logic as Strands tools
 """
 import os
@@ -172,7 +172,7 @@ def initialize_memory(client_id=None, session_id=None):
         try:
             memory = memory_client.create_memory_and_wait(
                 name=target_memory_id,
-                description="Unified persistent memory for Marcus market analyst agent - stores all client interactions",
+                description="Unified persistent memory for market analyst agent - stores all client interactions",
                 strategies=[
                     {
                         "summaryMemoryStrategy": {
@@ -327,7 +327,7 @@ def get_conversation_context(client_id, session_id):
                 role = turn.get('role', 'unknown')
                 content = turn.get('content', '')
                 if content:
-                    prefix = "Client" if role == "user" else "Marcus"
+                    prefix = "Client" if role == "user" else "Market Analyst"
                     context_parts.append(f"{prefix}: {content[:200]}...")
             return "\n".join(context_parts)
 
@@ -883,7 +883,7 @@ def save_conversation_memory(client_id: str, user_message: str, agent_response: 
     Args:
         client_id: The client ID
         user_message: The client's message
-        agent_response: Marcus's response
+        agent_response: The agent's response
         session_id: Optional session ID
 
     Returns:
@@ -911,14 +911,14 @@ except ImportError:
 
 @tool
 def consult_financial_planner(query: str, client_id: str = ""):
-    """Consult Sophia (Financial Planner) for portfolio allocation advice, retirement projections, or rebalancing recommendations.
+    """Consult the Financial Planner for portfolio allocation advice, retirement projections, or rebalancing recommendations.
 
     Args:
-        query: The question to ask Sophia
+        query: The question to ask the Financial Planner
         client_id: The client ID for context
 
     Returns:
-        Sophia's analysis and recommendations
+        Financial Planner's analysis and recommendations
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -926,14 +926,14 @@ def consult_financial_planner(query: str, client_id: str = ""):
 
 @tool
 def consult_tax_optimizer(query: str, client_id: str = ""):
-    """Consult Olivia (Tax Optimizer) for tax implications of investment decisions.
+    """Consult the Tax Optimizer for tax implications of investment decisions.
 
     Args:
         query: The tax-related question
         client_id: The client ID for context
 
     Returns:
-        Olivia's tax analysis
+        Tax Optimizer's analysis
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
@@ -1166,7 +1166,7 @@ base_tools = [
 agent = Agent(
     model=model,
     tools=base_tools,
-    system_prompt="""You are Marcus, a senior market analyst at WealthAI Advisors — a wealth management firm specializing in data-driven investment strategies.
+    system_prompt="""You are the Market Analyst at WealthAI Advisors — a wealth management firm specializing in data-driven investment strategies.
 
 CRITICAL: You MUST use your tools to provide accurate information. Never guess or make up market data, portfolio values, or economic indicators.
 
@@ -1186,8 +1186,8 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 - get_stock_analysis(ticker): Get detailed analysis for a stock or ETF
 - get_memory_context(client_id, session_id=None): Retrieve conversation history
 - save_conversation_memory(client_id, user_message, agent_response, session_id=None): Save conversation context
-- consult_financial_planner(query, client_id): Ask Sophia (Financial Planner) for portfolio allocation, retirement projections, or rebalancing advice
-- consult_tax_optimizer(query, client_id): Ask Olivia (Tax Optimizer) for tax-loss harvesting, capital gains, or tax bracket strategies
+- consult_financial_planner(query, client_id): Ask the Financial Planner for portfolio allocation, retirement projections, or rebalancing advice
+- consult_tax_optimizer(query, client_id): Ask the Tax Optimizer for tax-loss harvesting, capital gains, or tax bracket strategies
 - get_indian_market_status(): Check if NSE/BSE is open, current IST time, trading session
 - get_nse_stock_quote(ticker): Get quote for Indian stocks (RELIANCE, TCS, INFY, HDFCBANK, etc.)
 - calculate_india_tax(client_id, sell_tickers=""): Calculate STCG/LTCG tax under Indian rules (FY 2024-25)
@@ -1201,8 +1201,8 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 4. Client asks about risk → IMMEDIATELY use assess_portfolio_risk
 5. Client asks about a specific stock → IMMEDIATELY use get_stock_analysis
 6. Client asks for a comprehensive review → Use MULTIPLE tools (portfolio + risk + indicators)
-7. Client asks about retirement planning, allocation changes, or rebalancing → Use consult_financial_planner to get Sophia's input
-8. Client asks about tax implications of trades or tax-efficient strategies → Use consult_tax_optimizer to get Olivia's input
+7. Client asks about retirement planning, allocation changes, or rebalancing → Use consult_financial_planner to get the Financial Planner's input
+8. Client asks about tax implications of trades or tax-efficient strategies → Use consult_tax_optimizer to get the Tax Optimizer's input
 9. Client asks about Indian stocks (RELIANCE, TCS, etc.) → Use get_nse_stock_quote
 10. Client asks about NSE/BSE market timing → Use get_indian_market_status
 11. Client asks about Indian tax on selling stocks → Use calculate_india_tax (STCG 20%, LTCG 12.5%)
@@ -1234,7 +1234,7 @@ Be professional, approachable, and thorough. Use clear language that clients can
 @app.entrypoint
 def marcus_market_analyst_agent(payload, context):
     """
-    Marcus Market Analyst Agent with complete memory, session, and DynamoDB integration
+    Market Analyst Agent with complete memory, session, and DynamoDB integration
     """
     request_start = time.time()
     try:
@@ -1242,7 +1242,7 @@ def marcus_market_analyst_agent(payload, context):
         client_id = payload.get("customer_id", "")
         session_id = context.session_id or ""
 
-        logger.info(f"📈 Marcus Agent - Processing request for client: {client_id}")
+        logger.info(f"📈 Market Analyst - Processing request for client: {client_id}")
         logger.info(f"🔗 Session ID: {session_id}")
 
         current_agent = agent
@@ -1340,7 +1340,7 @@ def marcus_market_analyst_agent(payload, context):
         return result
 
     except Exception as e:
-        logger.error(f"❌ Error in Marcus agent: {e}")
+        logger.error(f"❌ Error in Market Analyst agent: {e}")
         if metrics:
             request_latency = (time.time() - request_start) * 1000
             metrics.emit_agent_response(latency_ms=request_latency, input_tokens=0, output_tokens=0)

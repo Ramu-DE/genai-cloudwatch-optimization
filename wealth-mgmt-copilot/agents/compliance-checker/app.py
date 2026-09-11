@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Victor Compliance Checker Agent - LangGraph with Flask HTTP Server
+Compliance Checker Agent - LangGraph with Flask HTTP Server
 KYC verification, AML screening, regulatory compliance, and audit trail generation.
 Deployed on AWS Fargate with ADOT observability.
 """
@@ -43,7 +43,7 @@ except ImportError:
     METRICS_AVAILABLE = False
 
 print("=" * 60, flush=True)
-print("Victor Compliance Checker Agent - Flask HTTP Server", flush=True)
+print("Compliance Checker Agent - Flask HTTP Server", flush=True)
 print("=" * 60, flush=True)
 
 logging.basicConfig(
@@ -855,57 +855,57 @@ except ImportError:
 
 @tool
 def consult_market_analyst(query: str, client_id: str = "") -> str:
-    """Consult Marcus (Market Analyst) for portfolio risk data, market conditions, or stock analysis
+    """Consult the Market Analyst for portfolio risk data, market conditions, or stock analysis
     relevant to compliance review. Use when you need current market data to assess whether
     a client's portfolio or trade complies with risk limits or suitability rules.
 
     Args:
-        query: The question to ask Marcus
+        query: The question to ask the Market Analyst
         client_id: The client ID for context
 
     Returns:
-        Marcus's market analysis relevant to the compliance review
+        Market Analyst's analysis relevant to the compliance review
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
-    logger.info(f"Cross-agent: consulting Marcus (Market Analyst) for client {client_id}")
+    logger.info(f"Cross-agent: consulting Market Analyst for client {client_id}")
     return invoke_peer_agent('marcus', query, client_id)
 
 
 @tool
 def consult_financial_planner(query: str, client_id: str = "") -> str:
-    """Consult Sophia (Financial Planner) for portfolio allocation details, investment suitability,
+    """Consult the Financial Planner for portfolio allocation details, investment suitability,
     or client financial plans. Use when compliance review requires verifying that recommended
     allocations meet suitability requirements for the client's risk profile.
 
     Args:
-        query: The question to ask Sophia
+        query: The question to ask the Financial Planner
         client_id: The client ID for context
 
     Returns:
-        Sophia's portfolio planning details relevant to compliance
+        Financial Planner's portfolio planning details relevant to compliance
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
-    logger.info(f"Cross-agent: consulting Sophia (Financial Planner) for client {client_id}")
+    logger.info(f"Cross-agent: consulting Financial Planner for client {client_id}")
     return invoke_peer_agent('sophia', query, client_id)
 
 
 @tool
 def consult_tax_optimizer(query: str, client_id: str = "") -> str:
-    """Consult Olivia (Tax Optimizer) for tax compliance verification, wash sale rule checks,
+    """Consult the Tax Optimizer for tax compliance verification, wash sale rule checks,
     or tax reporting status. Use when compliance review involves tax-related regulatory requirements.
 
     Args:
-        query: The tax compliance question to ask Olivia
+        query: The tax compliance question to ask the Tax Optimizer
         client_id: The client ID for context
 
     Returns:
-        Olivia's tax compliance analysis
+        Tax Optimizer's compliance analysis
     """
     if not CROSS_AGENT_AVAILABLE:
         return "Cross-agent consultation is not available in this environment."
-    logger.info(f"Cross-agent: consulting Olivia (Tax Optimizer) for client {client_id}")
+    logger.info(f"Cross-agent: consulting Tax Optimizer for client {client_id}")
     return invoke_peer_agent('olivia', query, client_id)
 
 
@@ -939,7 +939,7 @@ def chatbot(state: State):
     logger.debug(f"State keys: {list(state.keys())}")
     logger.debug(f"Message count: {len(state.get('messages', []))}")
 
-    system_content = """You are Victor, a senior compliance officer at WealthAI Advisors.
+    system_content = """You are the Compliance Checker at WealthAI Advisors.
 
 Your expertise:
 - KYC (Know Your Customer) verification and identity management
@@ -970,9 +970,9 @@ Available tools:
 - check_compliance(client_id, action_type): Check regulatory compliance for an action
 - check_risk_limits(client_id, proposed_trade): Verify position and concentration limits
 - generate_audit_report(client_id, date_range): Generate comprehensive compliance audit report
-- consult_market_analyst(query, client_id): Ask Marcus for portfolio risk data or market conditions to assess compliance
-- consult_financial_planner(query, client_id): Ask Sophia for portfolio suitability details
-- consult_tax_optimizer(query, client_id): Ask Olivia for tax compliance verification
+- consult_market_analyst(query, client_id): Ask the Market Analyst for portfolio risk data or market conditions to assess compliance
+- consult_financial_planner(query, client_id): Ask the Financial Planner for portfolio suitability details
+- consult_tax_optimizer(query, client_id): Ask the Tax Optimizer for tax compliance verification
 
 Cross-agent consultation patterns:
 - When compliance review requires portfolio risk data → use consult_market_analyst
@@ -1031,7 +1031,7 @@ def health():
 def root():
     """Root endpoint with agent info"""
     return jsonify({
-        "agent": "Victor Compliance Checker Agent",
+        "agent": "Compliance Checker Agent",
         "description": "Regulatory compliance, KYC verification, and AML screening",
         "framework": "LangGraph",
         "tools": [t.name for t in tools],

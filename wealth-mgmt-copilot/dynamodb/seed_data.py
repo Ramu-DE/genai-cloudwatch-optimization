@@ -42,10 +42,10 @@ def seed_advisor_schedule():
     """Pre-populate advisor availability for the next 14 business days."""
     table = dynamodb.Table('wealth_mgmt_advisor_schedule')
     advisors = [
-        {'advisor_id': 'advisor_sophia', 'advisor_name': 'Sophia Martinez', 'specialization': 'Financial Planning'},
-        {'advisor_id': 'advisor_marcus', 'advisor_name': 'Marcus Thompson', 'specialization': 'Market Analysis'},
-        {'advisor_id': 'advisor_olivia', 'advisor_name': 'Olivia Park', 'specialization': 'Tax Strategy'},
-        {'advisor_id': 'advisor_victor', 'advisor_name': 'Victor Hayes', 'specialization': 'Compliance'},
+        {'advisor_id': 'advisor_sophia', 'advisor_name': 'Financial Planner', 'specialization': 'Financial Planning'},
+        {'advisor_id': 'advisor_marcus', 'advisor_name': 'Market Analyst', 'specialization': 'Market Analysis'},
+        {'advisor_id': 'advisor_olivia', 'advisor_name': 'Tax Optimizer', 'specialization': 'Tax Strategy'},
+        {'advisor_id': 'advisor_victor', 'advisor_name': 'Compliance Checker', 'specialization': 'Compliance'},
     ]
     base_date = datetime.now()
     for advisor in advisors:

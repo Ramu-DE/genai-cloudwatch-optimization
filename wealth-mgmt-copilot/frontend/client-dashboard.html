@@ -85,7 +85,7 @@
                 <div class="stat-card">
                     <div class="stat-label">Active Agents</div>
                     <div class="stat-value">4</div>
-                    <div class="stat-change">Marcus, Sophia, Olivia, Victor</div>
+                    <div class="stat-change">Market Analyst, Financial Planner, Tax Optimizer, Compliance Checker</div>
                 </div>
             </div>
 
@@ -133,22 +133,22 @@
 
             <div class="agent-tabs">
                 <button class="agent-tab active" data-agent="marcus" onclick="switchAgent('marcus', this)">
-                    <span class="agent-dot dot-marcus"></span>Marcus
+                    <span class="agent-dot dot-marcus"></span>Market Analyst
                 </button>
                 <button class="agent-tab" data-agent="sophia" onclick="switchAgent('sophia', this)">
-                    <span class="agent-dot dot-sophia"></span>Sophia
+                    <span class="agent-dot dot-sophia"></span>Financial Planner
                 </button>
                 <button class="agent-tab" data-agent="olivia" onclick="switchAgent('olivia', this)">
-                    <span class="agent-dot dot-olivia"></span>Olivia
+                    <span class="agent-dot dot-olivia"></span>Tax Optimizer
                 </button>
                 <button class="agent-tab" data-agent="victor" onclick="switchAgent('victor', this)">
-                    <span class="agent-dot dot-victor"></span>Victor
+                    <span class="agent-dot dot-victor"></span>Compliance Checker
                 </button>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h3 id="chat-agent-title">Marcus — Market Analyst</h3>
+                    <h3 id="chat-agent-title">Market Analyst</h3>
                     <div class="connection-status disconnected" id="chat-ws-status">
                         <span class="dot"></span> <span id="chat-ws-text">Offline</span>
                     </div>
@@ -156,8 +156,8 @@
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-messages">
                         <div class="chat-msg agent">
-                            <span class="sender">Marcus</span>
-                            <div class="bubble">Welcome! I'm Marcus, your market analyst. Ask me about market trends, sector analysis, or portfolio risk assessment.</div>
+                            <span class="sender">Market Analyst</span>
+                            <div class="bubble">Welcome! I'm your Market Analyst. Ask me about market trends, sector analysis, or portfolio risk assessment.</div>
                         </div>
                     </div>
                     <div class="typing-indicator" id="typing-indicator">
@@ -206,10 +206,10 @@
     let wsClient = null;
 
     const AGENT_INFO = {
-        marcus: { title: 'Marcus — Market Analyst', greeting: "Welcome! I'm Marcus, your market analyst. Ask me about market trends, sector analysis, or portfolio risk assessment." },
-        sophia: { title: 'Sophia — Financial Planner', greeting: "Hello! I'm Sophia, your financial planner. I can help with retirement planning, portfolio allocation, and scheduling consultations." },
-        olivia: { title: 'Olivia — Tax Optimizer', greeting: "Hi there! I'm Olivia, your tax strategy specialist. I can identify tax-loss harvesting opportunities and optimize your tax position." },
-        victor: { title: 'Victor — Compliance Checker', greeting: "Good day. I'm Victor, your compliance officer. I handle KYC verification, transaction screening, and regulatory compliance checks." }
+        marcus: { title: 'Market Analyst', greeting: "Welcome! I'm your Market Analyst. Ask me about market trends, sector analysis, or portfolio risk assessment." },
+        sophia: { title: 'Financial Planner', greeting: "Hello! I'm your Financial Planner. I can help with retirement planning, portfolio allocation, and scheduling consultations." },
+        olivia: { title: 'Tax Optimizer', greeting: "Hi there! I'm your Tax Optimizer. I can identify tax-loss harvesting opportunities and optimize your tax position." },
+        victor: { title: 'Compliance Checker', greeting: "Good day. I'm your Compliance Checker. I handle KYC verification, transaction screening, and regulatory compliance checks." }
     };
 
     // ---- Portfolio Data (populated from trading platform at runtime) ----

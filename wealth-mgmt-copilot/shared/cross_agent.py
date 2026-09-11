@@ -3,9 +3,9 @@ Cross-Agent Orchestration for WealthAI Copilot
 
 Allows any agent to delegate tasks to other agents via AgentCore runtime invocation.
 Enables multi-agent workflows like:
-  - Sophia (Planner) asks Marcus (Analyst) for market outlook before recommending allocation
-  - Olivia (Tax) asks Sophia for portfolio details before calculating tax impact
-  - Victor (Compliance) checks with all agents for audit completeness
+  - Financial Planner asks Market Analyst for market outlook before recommending allocation
+  - Tax Optimizer asks Financial Planner for portfolio details before calculating tax impact
+  - Compliance Checker checks with all agents for audit completeness
 
 Usage in a Strands agent:
     @tool

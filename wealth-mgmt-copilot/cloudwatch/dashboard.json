@@ -9,7 +9,7 @@
         "width": 24,
         "height": 1,
         "properties": {
-          "markdown": "# WealthAI Copilot - GenAI Observability Dashboard\n**Agents**: Marcus (Market Analyst) | Sophia (Financial Planner) | Olivia (Tax Optimizer) | Victor (Compliance Checker)"
+          "markdown": "# WealthAI Copilot - GenAI Observability Dashboard\n**Agents**: Market Analyst | Financial Planner | Tax Optimizer | Compliance Checker"
         }
       },
       {
@@ -162,7 +162,7 @@
           "period": 300,
           "stat": "Average",
           "region": "us-west-2",
-          "title": "Victor (Compliance) - ECS CPU/Memory",
+          "title": "Compliance Checker - ECS CPU/Memory",
           "view": "timeSeries"
         }
       },
@@ -318,7 +318,7 @@
           "period": 300,
           "stat": "Average",
           "region": "us-west-2",
-          "title": "Tool Latency - Marcus (Market Analyst)",
+          "title": "Tool Latency - Market Analyst",
           "view": "timeSeries"
         }
       },
@@ -356,7 +356,7 @@
           "period": 300,
           "stat": "Sum",
           "region": "us-west-2",
-          "title": "Compliance Events (Victor)",
+          "title": "Compliance Events",
           "view": "timeSeries"
         }
       },
