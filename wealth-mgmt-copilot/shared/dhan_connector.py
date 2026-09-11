@@ -110,6 +110,116 @@ INDIA_TAX_RATES = {
 }
 
 
+class NSEDataFeed:
+    """Fallback data feed from NSE India for index quotes and option chains."""
+
+    def __init__(self):
+        self._session = requests.Session()
+        self._session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+        })
+        self._cookies_loaded = False
+
+    def _ensure_cookies(self):
+        if not self._cookies_loaded:
+            try:
+                self._session.get('https://www.nseindia.com', timeout=10)
+                self._cookies_loaded = True
+            except Exception:
+                pass
+
+    def get_indices(self) -> dict:
+        self._ensure_cookies()
+        try:
+            r = self._session.get('https://www.nseindia.com/api/allIndices', timeout=10)
+            if r.status_code != 200:
+                return {}
+            result = {}
+            for idx in r.json().get('data', []):
+                result[idx.get('index', '')] = {
+                    'last': float(idx.get('last', 0)),
+                    'change': float(idx.get('percentChange', 0)),
+                    'high': float(idx.get('high', 0)),
+                    'low': float(idx.get('low', 0)),
+                    'prev_close': float(idx.get('previousClose', 0)),
+                    'open': float(idx.get('open', 0)),
+                }
+            return result
+        except Exception as e:
+            logger.error(f"NSE indices error: {e}")
+            return {}
+
+    def get_option_chain(self, symbol: str) -> dict:
+        self._ensure_cookies()
+        try:
+            url = f'https://www.nseindia.com/api/option-chain-indices?symbol={symbol}'
+            r = self._session.get(url, timeout=10)
+            if r.status_code != 200:
+                return {}
+            data = r.json()
+            records = data.get('records', {})
+            underlying = float(records.get('underlyingValue', 0))
+            expiries = records.get('expiryDates', [])
+            oc_data = records.get('data', [])
+
+            nearest_exp = expiries[0] if expiries else ''
+            nearest = [d for d in oc_data if d.get('expiryDate') == nearest_exp]
+
+            strikes = []
+            for item in nearest:
+                ce = item.get('CE', {})
+                pe = item.get('PE', {})
+                strikes.append({
+                    'strike_price': float(item.get('strikePrice', 0)),
+                    'ce_ltp': float(ce.get('lastPrice', 0)),
+                    'ce_oi': int(ce.get('openInterest', 0)),
+                    'ce_oi_change': int(ce.get('changeinOpenInterest', 0)),
+                    'ce_volume': int(ce.get('totalTradedVolume', 0)),
+                    'ce_iv': float(ce.get('impliedVolatility', 0)),
+                    'ce_bid': float(ce.get('bidprice', 0)),
+                    'ce_ask': float(ce.get('askPrice', 0)),
+                    'pe_ltp': float(pe.get('lastPrice', 0)),
+                    'pe_oi': int(pe.get('openInterest', 0)),
+                    'pe_oi_change': int(pe.get('changeinOpenInterest', 0)),
+                    'pe_volume': int(pe.get('totalTradedVolume', 0)),
+                    'pe_iv': float(pe.get('impliedVolatility', 0)),
+                    'pe_bid': float(pe.get('bidprice', 0)),
+                    'pe_ask': float(pe.get('askPrice', 0)),
+                })
+
+            total_ce_oi = sum(s['ce_oi'] for s in strikes)
+            total_pe_oi = sum(s['pe_oi'] for s in strikes)
+            pcr = round(total_pe_oi / total_ce_oi, 2) if total_ce_oi > 0 else 0
+            max_ce = max(strikes, key=lambda s: s['ce_oi']) if strikes else {}
+            max_pe = max(strikes, key=lambda s: s['pe_oi']) if strikes else {}
+            lot_size = FNO_LOT_SIZES.get(symbol, 0)
+
+            return {
+                'symbol': symbol,
+                'underlying_price': underlying,
+                'lot_size': lot_size,
+                'lot_value': round(underlying * lot_size, 2),
+                'expiry': nearest_exp,
+                'all_expiries': expiries[:8],
+                'total_ce_oi': total_ce_oi,
+                'total_pe_oi': total_pe_oi,
+                'pcr': pcr,
+                'pcr_interpretation': 'Bullish' if pcr > 1.2 else 'Bearish' if pcr < 0.8 else 'Neutral',
+                'max_ce_oi_strike': max_ce.get('strike_price', 0),
+                'max_pe_oi_strike': max_pe.get('strike_price', 0),
+                'resistance': max_ce.get('strike_price', 0),
+                'support': max_pe.get('strike_price', 0),
+                'strikes': strikes,
+                'strike_count': len(strikes),
+                'source': 'nse_direct',
+            }
+        except Exception as e:
+            logger.error(f"NSE option chain error: {e}")
+            return {}
+
+
 class DhanConnector:
     """Read-only connector to Dhan trading platform (official API)."""
 
@@ -126,6 +236,7 @@ class DhanConnector:
         })
 
         self.dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
+        self.nse = NSEDataFeed()
 
     def _get(self, endpoint: str, params: dict = None) -> dict:
         try:
@@ -275,10 +386,15 @@ class DhanConnector:
 
     # ── Option Chain ────────────────────────────────────────────────
 
+    def get_indices(self) -> dict:
+        """Get major index values (NIFTY, BANKNIFTY, VIX, sectoral)."""
+        return self.nse.get_indices()
+
     def get_option_chain(self, symbol: str, exchange_segment: str = "NSE_FNO",
                          expiry: str = None) -> dict:
         """
         Fetch option chain for an index or stock.
+        Uses Dhan Data API if subscribed, falls back to NSE direct.
 
         Args:
             symbol: Underlying symbol (NIFTY, BANKNIFTY, RELIANCE, etc.)
@@ -294,6 +410,9 @@ class DhanConnector:
 
         data = self._post("optionchain", payload)
         if not data:
+            nse_chain = self.nse.get_option_chain(symbol)
+            if nse_chain:
+                return nse_chain
             return {}
 
         chain = data.get('data', data)

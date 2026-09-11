@@ -944,7 +944,7 @@ def consult_tax_optimizer(query: str, client_id: str = ""):
 
 try:
     from dhan_connector import (
-        DhanConnector, calculate_fno_turnover, calculate_option_greeks,
+        DhanConnector, NSEDataFeed, calculate_fno_turnover, calculate_option_greeks,
         analyze_fno_strategy, get_indian_market_hours,
         NSE_SECTOR_MAP, FNO_LOT_SIZES, INDIA_TAX_RATES,
     )
@@ -978,6 +978,45 @@ def get_indian_market_status():
         'session': 'trading' if is_open else 'closed',
         'exchange': 'NSE/BSE',
     })
+
+
+@tool
+def get_index_dashboard():
+    """Get live NIFTY, BANKNIFTY, SENSEX, VIX, and sectoral index values from NSE.
+    Use this for real-time market overview and to assess market direction before F&O trades."""
+    if not DHAN_AVAILABLE:
+        return json.dumps({'error': 'Dhan connector not available.'})
+
+    try:
+        connector = DhanConnector()
+        indices = connector.get_indices()
+        if not indices:
+            return json.dumps({'message': 'Could not fetch index data. Market may be closed.'})
+
+        key_indices = {}
+        for name in ['NIFTY 50', 'NIFTY BANK', 'INDIA VIX', 'NIFTY FIN SERVICE',
+                      'NIFTY IT', 'NIFTY AUTO', 'NIFTY PHARMA', 'NIFTY METAL',
+                      'NIFTY FMCG', 'NIFTY MIDCAP 50', 'NIFTY NEXT 50']:
+            if name in indices:
+                key_indices[name] = indices[name]
+
+        nifty = indices.get('NIFTY 50', {})
+        vix = indices.get('INDIA VIX', {})
+        vix_val = vix.get('last', 0)
+
+        return json.dumps({
+            'indices': key_indices,
+            'nifty_spot': nifty.get('last', 0),
+            'nifty_change': nifty.get('change', 0),
+            'banknifty_spot': indices.get('NIFTY BANK', {}).get('last', 0),
+            'vix': vix_val,
+            'vix_signal': 'LOW - Sell strategies favorable' if vix_val < 14
+                         else 'MODERATE' if vix_val < 18
+                         else 'HIGH - Buy strategies / hedging',
+            'market_status': get_indian_market_hours(),
+        }, default=str)
+    except Exception as e:
+        return json.dumps({'error': str(e)})
 
 
 @tool
@@ -1365,6 +1404,7 @@ base_tools = [
     consult_financial_planner,
     consult_tax_optimizer,
     get_indian_market_status,
+    get_index_dashboard,
     get_nse_stock_quote,
     calculate_india_tax,
     analyze_indian_sector,
