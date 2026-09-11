@@ -1,0 +1,185 @@
+{
+    "taskDefinition": {
+        "taskDefinitionArn": "arn:aws:ecs:us-west-2:438327931823:task-definition/max-agent:1",
+        "containerDefinitions": [
+            {
+                "name": "max-agent",
+                "image": "438327931823.dkr.ecr.us-west-2.amazonaws.com/max-agent:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 8080,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "AGENT_OBSERVABILITY_ENABLED",
+                        "value": "true"
+                    },
+                    {
+                        "name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+                        "value": "http/protobuf"
+                    },
+                    {
+                        "name": "AWS_REGION",
+                        "value": "us-west-2"
+                    },
+                    {
+                        "name": "OTEL_TRACES_EXPORTER",
+                        "value": "otlp"
+                    },
+                    {
+                        "name": "AWS_DEFAULT_REGION",
+                        "value": "us-west-2"
+                    },
+                    {
+                        "name": "OTEL_PYTHON_CONFIGURATOR",
+                        "value": "aws_configurator"
+                    },
+                    {
+                        "name": "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+                        "value": "http://localhost:4316/v1/metrics"
+                    },
+                    {
+                        "name": "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+                        "value": "http://localhost:4316/v1/traces"
+                    },
+                    {
+                        "name": "OTEL_SERVICE_NAME",
+                        "value": "max-training-agent-fargate"
+                    },
+                    {
+                        "name": "OTEL_RESOURCE_ATTRIBUTES",
+                        "value": "service.name=max-training-agent-fargate,aws.log.group.names=/aws/bedrock-agentcore/runtimes/max-training-agent,cloud.resource_id=max-training-agent-fargate-fargate,deployment.environment=production"
+                    },
+                    {
+                        "name": "_AWS_XRAY_TRACING_NAME",
+                        "value": "max-training-agent-fargate"
+                    },
+                    {
+                        "name": "OTEL_EXPORTER_OTLP_LOGS_HEADERS",
+                        "value": "x-aws-log-group=/aws/bedrock-agentcore/runtimes/max-training-agent,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore"
+                    },
+                    {
+                        "name": "OTEL_PYTHON_DISTRO",
+                        "value": "aws_distro"
+                    },
+                    {
+                        "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                        "value": "http://localhost:4316"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "dependsOn": [
+                    {
+                        "containerName": "cloudwatch-agent",
+                        "condition": "START"
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/max-agent",
+                        "awslogs-region": "us-west-2",
+                        "awslogs-stream-prefix": "ecs"
+                    }
+                },
+                "healthCheck": {
+                    "command": [
+                        "CMD-SHELL",
+                        "curl -f http://localhost:8080/health || exit 1"
+                    ],
+                    "interval": 300,
+                    "timeout": 5,
+                    "retries": 3,
+                    "startPeriod": 60
+                },
+                "systemControls": []
+            },
+            {
+                "name": "cloudwatch-agent",
+                "image": "public.ecr.aws/cloudwatch-agent/cloudwatch-agent:latest",
+                "cpu": 0,
+                "portMappings": [],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "CW_CONFIG_CONTENT",
+                        "value": "{\"traces\": {\"traces_collected\": {\"application_signals\": {\"enabled\": true}}}, \"logs\": {\"metrics_collected\": {\"application_signals\": {\"enabled\": true}}}}"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/max-agent",
+                        "awslogs-region": "us-west-2",
+                        "awslogs-stream-prefix": "cloudwatch-agent"
+                    }
+                },
+                "systemControls": []
+            }
+        ],
+        "family": "max-agent",
+        "taskRoleArn": "arn:aws:iam::438327931823:role/MaxAgentTaskRole",
+        "executionRoleArn": "arn:aws:iam::438327931823:role/MaxAgentExecRole",
+        "networkMode": "awsvpc",
+        "revision": 1,
+        "volumes": [],
+        "status": "ACTIVE",
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+            },
+            {
+                "name": "ecs.capability.execution-role-awslogs"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.ecr-auth"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.task-iam-role"
+            },
+            {
+                "name": "ecs.capability.container-health-check"
+            },
+            {
+                "name": "ecs.capability.container-ordering"
+            },
+            {
+                "name": "ecs.capability.execution-role-ecr-pull"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            },
+            {
+                "name": "ecs.capability.task-eni"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+            }
+        ],
+        "placementConstraints": [],
+        "compatibilities": [
+            "EC2",
+            "MANAGED_INSTANCES",
+            "FARGATE"
+        ],
+        "requiresCompatibilities": [
+            "FARGATE"
+        ],
+        "cpu": "2048",
+        "memory": "4096",
+        "registeredAt": "2026-09-09T13:45:54.660000+00:00",
+        "registeredBy": "arn:aws:sts::438327931823:assumed-role/codebuild-cf-CodeBuildServiceRole-kymxLnvwh0Ej/AWSCodeBuild-824b4264-115c-4f8f-a6a7-bcc5c0791b69"
+    },
+    "tags": []
+}

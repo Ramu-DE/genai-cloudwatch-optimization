@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Testing - WealthAI Copilot</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .lt-container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+
+        /* Controls card */
+        .lt-controls {
+            background: var(--white); border-radius: var(--radius); padding: 1.5rem;
+            box-shadow: var(--shadow); margin-bottom: 1.5rem;
+        }
+        .lt-controls h2 { margin-bottom: 1rem; color: var(--navy); font-size: 1.25rem; }
+        .lt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+        .lt-field label { display: block; font-size: .85rem; font-weight: 600; color: var(--gray-700); margin-bottom: .35rem; }
+        .lt-field select,
+        .lt-field input,
+        .lt-field textarea {
+            width: 100%; padding: .55rem .75rem; border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm); font-size: .9rem; font-family: inherit;
+        }
+        .lt-field textarea { min-height: 60px; resize: vertical; }
+        .lt-range-row { display: flex; align-items: center; gap: .75rem; }
+        .lt-range-row input[type=range] { flex: 1; }
+        .lt-range-val {
+            min-width: 36px; text-align: center; font-weight: 700;
+            color: var(--gold-dark); font-size: 1.1rem;
+        }
+        .lt-actions { display: flex; gap: 1rem; margin-top: 1.25rem; }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: var(--white); border: none; padding: .65rem 1.5rem;
+            border-radius: var(--radius-sm); font-weight: 600; cursor: pointer;
+            font-size: .95rem; transition: opacity .2s;
+        }
+        .btn-gold:hover { opacity: .88; }
+        .btn-gold:disabled { opacity: .45; cursor: not-allowed; }
+        .btn-outline {
+            background: transparent; border: 2px solid var(--gray-300);
+            padding: .6rem 1.25rem; border-radius: var(--radius-sm);
+            font-weight: 600; cursor: pointer; font-size: .9rem; color: var(--gray-700);
+        }
+        .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+
+        /* Progress */
+        .lt-progress-wrap {
+            background: var(--white); border-radius: var(--radius); padding: 1.25rem;
+            box-shadow: var(--shadow); margin-bottom: 1.5rem; display: none;
+        }
+        .lt-progress-wrap.active { display: block; }
+        .lt-progress-bar-outer {
+            width: 100%; height: 22px; background: var(--gray-200);
+            border-radius: 11px; overflow: hidden; margin: .75rem 0;
+        }
+        .lt-progress-bar-inner {
+            height: 100%; width: 0%; border-radius: 11px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+            transition: width .4s ease;
+        }
+        .lt-progress-text { font-size: .85rem; color: var(--gray-500); }
+
+        /* Stats grid */
+        .lt-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .lt-stat-card {
+            background: var(--white); border-radius: var(--radius-sm); padding: 1rem;
+            text-align: center; box-shadow: var(--shadow-sm);
+        }
+        .lt-stat-card .val { font-size: 1.5rem; font-weight: 700; color: var(--navy); }
+        .lt-stat-card .lbl { font-size: .78rem; color: var(--gray-500); margin-top: .2rem; }
+        .lt-stat-card.success .val { color: var(--green); }
+        .lt-stat-card.fail .val { color: var(--red); }
+        .lt-stat-card.gold .val { color: var(--gold-dark); }
+
+        /* Results table */
+        .lt-results-card {
+            background: var(--white); border-radius: var(--radius);
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; display: none;
+        }
+        .lt-results-card.active { display: block; }
+        .lt-results-card h3 { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-200); font-size: 1rem; color: var(--navy); }
+        .lt-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        .lt-table th { background: var(--gray-50); text-align: left; padding: .6rem .75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200); }
+        .lt-table td { padding: .55rem .75rem; border-bottom: 1px solid var(--gray-100); }
+        .lt-table tr:hover td { background: var(--gray-50); }
+        .badge-ok { background: var(--green-light); color: #065f46; padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+        .badge-fail { background: var(--red-light); color: #991b1b; padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+        .lt-table-wrap { max-height: 400px; overflow-y: auto; }
+
+        .lt-export-row { padding: .75rem 1.25rem; border-top: 1px solid var(--gray-200); text-align: right; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="brand">
+            <span style="font-size:1.3rem;font-weight:700;color:var(--gold)">WealthAI</span>
+            <span style="margin-left:.5rem;font-size:.95rem;opacity:.8">Load Testing</span>
+        </div>
+        <div style="display:flex;gap:1.25rem;font-size:.9rem;">
+            <a href="client-dashboard.html" style="color:var(--gray-300);text-decoration:none;">Dashboard</a>
+            <a href="observability.html" style="color:var(--gray-300);text-decoration:none;">Observability</a>
+            <a href="performance-tuning.html" style="color:var(--gray-300);text-decoration:none;">Performance Lab</a>
+            <a href="loadtest.html" style="color:var(--gold);text-decoration:none;font-weight:600;">Load Test</a>
+        </div>
+    </nav>
+
+    <div class="lt-container">
+        <!-- Controls -->
+        <div class="lt-controls">
+            <h2>Agent Load Test Configuration</h2>
+            <div class="lt-grid">
+                <div class="lt-field">
+                    <label>Target Agent</label>
+                    <select id="agentSelect" onchange="updatePrompt()">
+                        <option value="marcus">Marcus — Market Analyst</option>
+                        <option value="sophia">Sophia — Financial Planner</option>
+                        <option value="olivia">Olivia — Tax Optimizer</option>
+                        <option value="victor">Victor — Compliance Checker</option>
+                    </select>
+                </div>
+                <div class="lt-field">
+                    <label>Client ID</label>
+                    <select id="clientSelect">
+                        <option value="client_sarah_chen">Sarah Chen (Aggressive)</option>
+                        <option value="client_james_wilson">James Wilson (Moderate)</option>
+                        <option value="client_priya_patel">Priya Patel (Conservative)</option>
+                        <option value="client_alex_rodriguez">Alex Rodriguez (Aggressive)</option>
+                        <option value="client_maria_johnson">Maria Johnson (Moderate)</option>
+                    </select>
+                </div>
+                <div class="lt-field" style="grid-column:span 2;">
+                    <label>Concurrent Requests</label>
+                    <div class="lt-range-row">
+                        <input type="range" id="numRequests" min="1" max="50" value="10"
+                               oninput="document.getElementById('reqVal').textContent=this.value">
+                        <span class="lt-range-val" id="reqVal">10</span>
+                    </div>
+                </div>
+                <div class="lt-field" style="grid-column:1/-1;">
+                    <label>Prompt</label>
+                    <textarea id="promptInput">Analyze NVDA stock performance and tech sector trends</textarea>
+                </div>
+            </div>
+            <div class="lt-actions">
+                <button class="btn-gold" id="btnStart" onclick="startTest()">Start Load Test</button>
+                <button class="btn-outline" id="btnStop" onclick="stopPolling()" disabled>Stop Polling</button>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="lt-progress-wrap" id="progressWrap">
+            <strong id="progressLabel">Running...</strong>
+            <div class="lt-progress-bar-outer">
+                <div class="lt-progress-bar-inner" id="progressBar"></div>
+            </div>
+            <div class="lt-progress-text" id="progressText">0 / 0 completed</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="lt-stats" id="statsGrid" style="display:none;"></div>
+
+        <!-- Results table -->
+        <div class="lt-results-card" id="resultsCard">
+            <h3>Per-Request Results</h3>
+            <div class="lt-table-wrap">
+                <table class="lt-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Status</th><th>Duration (ms)</th><th>Response Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+            <div class="lt-export-row">
+                <button class="btn-outline" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.template.js"></script>
+    <script>
+        const PROMPTS = {
+            marcus:  'Analyze NVDA stock performance and tech sector trends',
+            sophia:  'Review my portfolio allocation and recommend rebalancing for retirement',
+            olivia:  'Find tax-loss harvesting opportunities in my current portfolio',
+            victor:  'Run compliance check on recent transactions for suspicious activity',
+        };
+
+        let pollTimer = null;
+        let currentTestId = null;
+        let finalResults = null;
+
+        function updatePrompt() {
+            const agent = document.getElementById('agentSelect').value;
+            document.getElementById('promptInput').value = PROMPTS[agent] || '';
+        }
+
+        function getApiBase() {
+            if (typeof CONFIG !== 'undefined' && CONFIG.REST_API_URL) return CONFIG.REST_API_URL;
+            return '';
+        }
+
+        async function startTest() {
+            const agent   = document.getElementById('agentSelect').value;
+            const num     = parseInt(document.getElementById('numRequests').value, 10);
+            const prompt  = document.getElementById('promptInput').value.trim();
+            const client  = document.getElementById('clientSelect').value;
+
+            if (!prompt) { alert('Prompt is required'); return; }
+
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('progressWrap').classList.add('active');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').textContent = `0 / ${num} completed`;
+            document.getElementById('progressLabel').textContent = `Testing ${agent} with ${num} requests...`;
+            document.getElementById('statsGrid').style.display = 'none';
+            document.getElementById('resultsCard').classList.remove('active');
+            finalResults = null;
+
+            const base = getApiBase();
+            try {
+                const resp = await fetch(`${base}/load-test`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ agent, numRequests: num, prompt, client_id: client, async: true }),
+                });
+                const data = await resp.json();
+                if (data.test_id) {
+                    currentTestId = data.test_id;
+                    pollTimer = setInterval(() => pollResults(data.test_id, num), 2000);
+                } else if (data.stats) {
+                    showSyncResults(data);
+                }
+            } catch (e) {
+                alert('Failed to start test: ' + e.message);
+                resetUI();
+            }
+        }
+
+        async function pollResults(testId, total) {
+            const base = getApiBase();
+            try {
+                const resp = await fetch(`${base}/load-test/${testId}`);
+                const data = await resp.json();
+                const completed = data.completed || 0;
+                const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                document.getElementById('progressBar').style.width = pct + '%';
+                document.getElementById('progressText').textContent = `${completed} / ${total} completed`;
+
+                if (data.status === 'completed') {
+                    stopPolling();
+                    finalResults = data;
+                    renderStats(data);
+                    document.getElementById('progressLabel').textContent = 'Completed!';
+                }
+            } catch (e) {
+                console.error('Poll error', e);
+            }
+        }
+
+        function stopPolling() {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+        }
+
+        function resetUI() {
+            stopPolling();
+            document.getElementById('progressWrap').classList.remove('active');
+        }
+
+        function showSyncResults(data) {
+            finalResults = data;
+            renderStats(data);
+            document.getElementById('progressWrap').classList.remove('active');
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+        }
+
+        function renderStats(data) {
+            const stats = data.stats || {};
+            const total = data.num_requests || data.total || 0;
+            const ok    = data.successful || 0;
+            const fail  = data.failed || 0;
+
+            const cards = [
+                { val: total, lbl: 'Total Requests', cls: '' },
+                { val: ok,   lbl: 'Success',         cls: 'success' },
+                { val: fail, lbl: 'Failed',           cls: fail > 0 ? 'fail' : '' },
+                { val: fmt(stats.avg_ms),    lbl: 'Avg (ms)',  cls: 'gold' },
+                { val: fmt(stats.min_ms),    lbl: 'Min (ms)',  cls: '' },
+                { val: fmt(stats.max_ms),    lbl: 'Max (ms)',  cls: '' },
+                { val: fmt(stats.p95_ms),    lbl: 'P95 (ms)',  cls: 'gold' },
+                { val: fmt(stats.p99_ms),    lbl: 'P99 (ms)',  cls: '' },
+            ];
+
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = cards.map(c =>
+                `<div class="lt-stat-card ${c.cls}">
+                    <div class="val">${c.val}</div>
+                    <div class="lbl">${c.lbl}</div>
+                </div>`
+            ).join('');
+            grid.style.display = 'grid';
+
+            // Per-request table (from durations array)
+            const durations = (data.durations || []).map(Number);
+            const errors = data.errors || [];
+            if (durations.length || errors.length) {
+                const tbody = document.getElementById('resultsBody');
+                const rows = [];
+                for (let i = 0; i < Math.max(durations.length, durations.length + errors.length); i++) {
+                    if (i < durations.length) {
+                        rows.push(`<tr><td>${i + 1}</td><td><span class="badge-ok">OK</span></td><td>${fmt(durations[i])}</td><td style="color:var(--gray-500);font-size:.8rem;">—</td></tr>`);
+                    }
+                }
+                errors.forEach((e, idx) => {
+                    rows.push(`<tr><td>${durations.length + idx + 1}</td><td><span class="badge-fail">FAIL</span></td><td>—</td><td style="color:var(--red);font-size:.8rem;">${esc(e).substring(0, 120)}</td></tr>`);
+                });
+                tbody.innerHTML = rows.join('');
+                document.getElementById('resultsCard').classList.add('active');
+            }
+        }
+
+        function fmt(v) { return v != null ? Math.round(v).toLocaleString() : '—'; }
+        function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        function exportCSV() {
+            if (!finalResults) return;
+            const durations = (finalResults.durations || []).map(Number);
+            const errors = finalResults.errors || [];
+            let csv = 'Index,Status,Duration_ms,Error\n';
+            durations.forEach((d, i) => { csv += `${i + 1},OK,${d.toFixed(1)},\n`; });
+            errors.forEach((e, i) => { csv += `${durations.length + i + 1},FAIL,,${e.replace(/,/g, ';')}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `loadtest_${finalResults.agent_name || 'agent'}_${new Date().toISOString().slice(0,19)}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Wealth Management Copilot - Tax Optimizer Agent (Olivia)
+# Supports: Strands entrypoint + CrewAI deep analysis
+
+# Core AWS SDK
+boto3>=1.40.0
+botocore>=1.40.0
+
+# Bedrock AgentCore Runtime
+bedrock-agentcore>=0.1.7
+bedrock-agentcore-starter-toolkit>=0.1.22
+
+# HTTP Requests & Networking
+requests>=2.32.0
+urllib3>=2.0.0
+
+# Data Processing
+pydantic>=2.9.0
+python-dateutil>=2.9.0
+
+# Strands Framework (entrypoint + tools)
+strands-agents>=1.12.0
+strands-agents-tools>=0.2.11
+
+# CrewAI Framework (deep tax analysis)
+crewai==1.3.0
+opentelemetry-instrumentation-crewai>=0.47.5
+
+websocket-client>=1.6.0
+aws-xray-sdk>=2.12.0
+
+# ADOT (AWS Distro for OpenTelemetry)
+aws-opentelemetry-distro>=0.12.0

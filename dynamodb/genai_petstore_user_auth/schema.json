@@ -1,0 +1,38 @@
+{
+    "Table": {
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "customer_id",
+                "AttributeType": "S"
+            }
+        ],
+        "TableName": "genai_petstore_user_auth",
+        "KeySchema": [
+            {
+                "AttributeName": "customer_id",
+                "KeyType": "HASH"
+            }
+        ],
+        "TableStatus": "ACTIVE",
+        "CreationDateTime": "2026-09-09T13:29:53.719000+00:00",
+        "ProvisionedThroughput": {
+            "NumberOfDecreasesToday": 0,
+            "ReadCapacityUnits": 0,
+            "WriteCapacityUnits": 0
+        },
+        "TableSizeBytes": 537958,
+        "ItemCount": 849,
+        "TableArn": "arn:aws:dynamodb:us-west-2:438327931823:table/genai_petstore_user_auth",
+        "TableId": "2041a03c-311f-4225-a2eb-a3ef65e6d528",
+        "BillingModeSummary": {
+            "BillingMode": "PAY_PER_REQUEST",
+            "LastUpdateToPayPerRequestDateTime": "2026-09-09T13:29:53.719000+00:00"
+        },
+        "DeletionProtectionEnabled": false,
+        "WarmThroughput": {
+            "ReadUnitsPerSecond": 12000,
+            "WriteUnitsPerSecond": 4000,
+            "Status": "ACTIVE"
+        }
+    }
+}

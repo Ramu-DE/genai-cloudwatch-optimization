@@ -1,0 +1,27 @@
+{
+    "events": [
+        {
+            "logStreamName": "ecs/max-agent/2bf0092a863e4870a89c4f52901ebc52",
+            "timestamp": 1789054599801,
+            "message": "2026-09-10 15:36:39,801 INFO [werkzeug] [_internal.py:97] [trace_id=0 span_id=0 resource.service.name=max-training-agent-fargate trace_sampled=False] - 127.0.0.1 - - [10/Sep/2026 15:36:39] \"GET /health HTTP/1.1\" 200 -",
+            "ingestionTime": 1789054604592,
+            "eventId": "39897250776421276279886168139012019237818650238041522176"
+        },
+        {
+            "logStreamName": "ecs/max-agent/2bf0092a863e4870a89c4f52901ebc52",
+            "timestamp": 1789054899812,
+            "message": "2026-09-10 15:41:39,812 INFO [werkzeug] [_internal.py:97] [trace_id=0 span_id=0 resource.service.name=max-training-agent-fargate trace_sampled=False] - 127.0.0.1 - - [10/Sep/2026 15:41:39] \"GET /health HTTP/1.1\" 200 -",
+            "ingestionTime": 1789054904588,
+            "eventId": "39897257466890144036256947816957155719911219140328751104"
+        },
+        {
+            "logStreamName": "ecs/max-agent/2bf0092a863e4870a89c4f52901ebc52",
+            "timestamp": 1789055199822,
+            "message": "2026-09-10 15:46:39,822 INFO [werkzeug] [_internal.py:97] [trace_id=0 span_id=0 resource.service.name=max-training-agent-fargate trace_sampled=False] - 127.0.0.1 - - [10/Sep/2026 15:46:39] \"GET /health HTTP/1.1\" 200 -",
+            "ingestionTime": 1789055204586,
+            "eventId": "39897264157336711047429196871763450520722472961412890624"
+        }
+    ],
+    "searchedLogStreams": [],
+    "nextToken": "Bxkq6kVGFtq2y_MoigeqscPOdhXVbhiVtLoAmXb5jCrvYszs4kjcG1HgtcQu5L7OtFRnW0AAndRYf0mp48nCf0ixcQP5_Nkp_djCjbnRhr-jFy1WSrXFnuc-WqkMsQYeXKvUGD8atkeMEn8iWmjrqwVRp8W1itIUHxbcgKEFRz4pReepdPBuws9K9i44geg1YZB5EFbpwDHXDT4TBEJ_JqFkbT_KVZBtBJQXml6i1icNzHlGpeH7pCswCsTdEijCl3lzUJX1bkxIgD7gBfVmROdR8ZlvpNShRjRyh9zdSV7nZlH6VBCMAO-6n9N5VXF-lLwUDZp0Ts8hXj3fBxSNZw"
+}

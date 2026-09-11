@@ -1,0 +1,38 @@
+{
+    "Table": {
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "appointmentId",
+                "AttributeType": "S"
+            }
+        ],
+        "TableName": "genai_petstore_appointments",
+        "KeySchema": [
+            {
+                "AttributeName": "appointmentId",
+                "KeyType": "HASH"
+            }
+        ],
+        "TableStatus": "ACTIVE",
+        "CreationDateTime": "2026-09-09T13:28:53.484000+00:00",
+        "ProvisionedThroughput": {
+            "NumberOfDecreasesToday": 0,
+            "ReadCapacityUnits": 0,
+            "WriteCapacityUnits": 0
+        },
+        "TableSizeBytes": 1232584,
+        "ItemCount": 3972,
+        "TableArn": "arn:aws:dynamodb:us-west-2:438327931823:table/genai_petstore_appointments",
+        "TableId": "e256a023-66ca-401c-8d8c-d468938f9071",
+        "BillingModeSummary": {
+            "BillingMode": "PAY_PER_REQUEST",
+            "LastUpdateToPayPerRequestDateTime": "2026-09-09T13:28:53.484000+00:00"
+        },
+        "DeletionProtectionEnabled": false,
+        "WarmThroughput": {
+            "ReadUnitsPerSecond": 12000,
+            "WriteUnitsPerSecond": 4000,
+            "Status": "ACTIVE"
+        }
+    }
+}

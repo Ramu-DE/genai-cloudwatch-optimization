@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Optimization Lab - WealthAI Copilot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a2332;
+            --navy-light: #243447;
+            --navy-dark: #0f1923;
+            --gold: #c9a84c;
+            --gold-light: #e0c675;
+            --gold-dark: #a8893d;
+            --white: #ffffff;
+            --gray-50: #f8f9fa;
+            --gray-100: #e9ecef;
+            --gray-200: #dee2e6;
+            --gray-300: #ced4da;
+            --gray-500: #6c757d;
+            --gray-700: #495057;
+            --green: #28a745;
+            --green-bg: #d4edda;
+            --red: #dc3545;
+            --red-bg: #f8d7da;
+            --blue: #2196f3;
+            --blue-bg: #d1ecf1;
+            --orange: #fd7e14;
+            --validation-gray: #6c757d;
+            --validation-bg: #e2e3e5;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--navy);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .top-nav {
+            background: var(--navy);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 2rem;
+        }
+        .top-nav .brand {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .top-nav .nav-links {
+            display: flex;
+            gap: 0.25rem;
+        }
+        .top-nav .nav-links a {
+            color: var(--gray-300);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .top-nav .nav-links a:hover { color: var(--white); background: var(--navy-light); }
+        .top-nav .nav-links a.active { color: var(--gold); background: var(--navy-light); }
+
+        /* Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            padding: 2rem 2rem 1.5rem;
+            color: var(--white);
+        }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .page-header .subtitle { color: var(--gold-light); font-size: 0.9rem; }
+
+        /* Container */
+        .container { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+        /* Controls Bar */
+        .controls-bar {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 0.35rem; }
+        .control-group label { font-size: 0.75rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; }
+        .control-group select, .control-group input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: var(--white);
+            min-width: 180px;
+        }
+        .control-group select:focus, .control-group input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
+        .control-group.prompt-group { flex: 1; min-width: 250px; }
+        .control-group.prompt-group input { width: 100%; }
+
+        .btn {
+            padding: 0.55rem 1.25rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .btn-primary { background: var(--gold); color: var(--navy); }
+        .btn-primary:hover { background: var(--gold-light); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: var(--navy-light); color: var(--white); }
+        .btn-secondary:hover { background: var(--navy); }
+        .btn-outline { background: transparent; border: 1px solid var(--gray-300); color: var(--gray-700); }
+        .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+        .btn-group { display: flex; gap: 0.5rem; align-items: flex-end; }
+
+        /* Scenario Grid */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .scenario-card {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .scenario-card:hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+        .scenario-card.selected { border-color: var(--gold); background: #fdf8ec; box-shadow: 0 0 0 3px rgba(201,168,76,0.15); }
+        .scenario-card.running { border-color: var(--blue); }
+        .scenario-card.completed { border-color: var(--green); }
+
+        .scenario-card .card-id {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--gray-100);
+            color: var(--gray-500);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        .scenario-card .card-type {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            margin-bottom: 0.4rem;
+        }
+        .type-baseline { background: var(--green-bg); color: var(--green); }
+        .type-fault { background: var(--red-bg); color: var(--red); }
+        .type-optimization { background: var(--blue-bg); color: var(--blue); }
+        .type-validation { background: var(--validation-bg); color: var(--validation-gray); }
+
+        .scenario-card .card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; line-height: 1.3; padding-right: 1.5rem; }
+        .scenario-card .card-desc { font-size: 0.7rem; color: var(--gray-500); line-height: 1.4; }
+        .scenario-card .card-impact {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .impact-badge {
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        /* Scenario Info Panel */
+        .scenario-info-panel {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        .scenario-info-panel.visible { display: block; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+        .info-column { padding: 0.75rem; background: var(--gray-50); border-radius: 6px; }
+        .info-column .col-header { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 0.4rem; letter-spacing: 0.5px; }
+        .info-column .col-body { font-size: 0.8rem; color: var(--gray-700); line-height: 1.5; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+
+        /* Execution Panels */
+        .execution-section { display: none; margin-bottom: 1.5rem; }
+        .execution-section.visible { display: block; }
+        .exec-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .exec-panel {
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .exec-panel-header {
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exec-panel-header h3 { font-size: 0.9rem; color: var(--white); }
+        .baseline-header { background: linear-gradient(135deg, #1b7a3d 0%, #28a745 100%); }
+        .fault-header { background: linear-gradient(135deg, #a71d2a 0%, #dc3545 100%); }
+        .status-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            color: var(--white);
+        }
+        .exec-panel-body { padding: 1rem 1.25rem; min-height: 120px; }
+        .exec-panel-body .progress-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 0;
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--gray-200);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .exec-panel-body .response-box {
+            background: var(--gray-50);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .exec-panel-body .response-box.visible { display: block; }
+        .exec-panel-body .activity-log { font-size: 0.75rem; color: var(--gray-500); margin-top: 0.5rem; }
+        .exec-panel-body .activity-log li { margin-bottom: 0.25rem; list-style: none; }
+
+        /* Metrics Comparison Section */
+        .metrics-section { display: none; margin-bottom: 1.5rem; }
+        .metrics-section.visible { display: block; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .metric-card-wrap {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .metric-card-wrap .metric-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .metric-card-wrap .metric-name { font-size: 0.75rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.75rem; }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0;
+            font-size: 0.8rem;
+        }
+        .metric-row .label { color: var(--gray-500); }
+        .metric-row .value { font-weight: 700; }
+        .metric-row .value.baseline { color: var(--green); }
+        .metric-row .value.fault { color: var(--red); }
+        .metric-bar-container { margin: 0.5rem 0; height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; position: relative; }
+        .metric-bar { height: 100%; border-radius: 3px; transition: width 1s ease; }
+        .metric-bar.baseline-bar { background: var(--green); }
+        .metric-bar.fault-bar { background: var(--red); position: absolute; top: 0; left: 0; opacity: 0.5; }
+        .delta-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+        .delta-badge.worse { background: var(--red-bg); color: var(--red); }
+        .delta-badge.better { background: var(--green-bg); color: var(--green); }
+        .delta-badge.neutral { background: var(--gray-100); color: var(--gray-500); }
+
+        /* Analysis Section */
+        .analysis-section { display: none; margin-bottom: 1.5rem; }
+        .analysis-section.visible { display: block; }
+        .analysis-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+        .analysis-item { padding: 0.75rem; background: var(--gray-50); border-radius: 6px; }
+        .analysis-item .analysis-header { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 0.4rem; }
+        .analysis-item .analysis-body { font-size: 0.8rem; color: var(--gray-700); line-height: 1.5; }
+        .cw-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .cw-link:hover { text-decoration: underline; }
+
+        /* History Table */
+        .history-section {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.75rem; }
+        .history-table th {
+            text-align: left;
+            padding: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .history-table td { padding: 0.5rem; border-bottom: 1px solid var(--gray-100); }
+        .history-table tr:hover td { background: var(--gray-50); }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .exec-panels { grid-template-columns: 1fr; }
+            .analysis-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+            .controls-bar { flex-direction: column; align-items: stretch; }
+            .info-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="top-nav">
+    <a href="client-dashboard.html" class="brand">WealthAI</a>
+    <div class="nav-links">
+        <a href="client-dashboard.html">Dashboard</a>
+        <a href="observability.html">Observability</a>
+        <a href="loadtest.html">Load Test</a>
+        <a href="performance-tuning.html" class="active">Performance Lab</a>
+    </div>
+</nav>
+
+<!-- Header -->
+<div class="page-header">
+    <h1>GenAI Performance Optimization Lab</h1>
+    <div class="subtitle">Fault Injection, Baseline Comparison &amp; Cost Optimization for AI Agents</div>
+</div>
+
+<div class="container">
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="control-group">
+            <label>Target Agent</label>
+            <select id="agentSelect">
+                <option value="sophia">Sophia (Financial Planner)</option>
+                <option value="marcus">Marcus (Market Analyst)</option>
+                <option value="olivia">Olivia (Tax Optimizer)</option>
+                <option value="victor">Victor (Compliance)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Client</label>
+            <select id="clientSelect">
+                <option value="client_sarah_chen">Sarah Chen (Aggressive)</option>
+                <option value="client_james_wilson">James Wilson (Moderate)</option>
+                <option value="client_priya_patel">Priya Patel (Conservative)</option>
+                <option value="client_alex_rodriguez">Alex Rodriguez (Aggressive)</option>
+                <option value="client_maria_johnson">Maria Johnson (Moderate)</option>
+            </select>
+        </div>
+        <div class="control-group prompt-group">
+            <label>Test Prompt</label>
+            <input type="text" id="userPrompt" placeholder="Review my portfolio allocation and recommend rebalancing" value="Review my portfolio allocation and recommend rebalancing for retirement">
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" id="runScenarioBtn" disabled>Run Selected</button>
+            <button class="btn btn-secondary" id="runAllBtn">Run All</button>
+            <button class="btn btn-outline" id="exportBtn">Export</button>
+        </div>
+    </div>
+
+    <!-- Scenario Grid -->
+    <div class="section-title">Select a Scenario</div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
+
+    <!-- Scenario Info Panel -->
+    <div class="scenario-info-panel" id="scenarioInfoPanel">
+        <div class="section-title" id="scenarioInfoTitle">Scenario Details</div>
+        <div class="info-grid">
+            <div class="info-column">
+                <div class="col-header">What This Tests</div>
+                <div class="col-body" id="infoExplanation"></div>
+            </div>
+            <div class="info-column">
+                <div class="col-header">Why This Matters</div>
+                <div class="col-body" id="infoWhyMatters"></div>
+            </div>
+            <div class="info-column">
+                <div class="col-header">Architectural Insight</div>
+                <div class="col-body" id="infoArchInsight"></div>
+            </div>
+            <div class="info-column">
+                <div class="col-header">Key Takeaway</div>
+                <div class="col-body" id="infoTakeaway"></div>
+            </div>
+        </div>
+        <div class="detail-grid">
+            <div class="info-column">
+                <div class="col-header">Fault Injection Mechanism</div>
+                <div class="col-body" id="infoFaultMechanism"></div>
+            </div>
+            <div class="info-column">
+                <div class="col-header">Expected Performance Impact</div>
+                <div class="col-body" id="infoExpectedImpact"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Panels -->
+    <div class="execution-section" id="executionSection">
+        <div class="section-title">Execution Results</div>
+        <div class="exec-panels">
+            <div class="exec-panel">
+                <div class="exec-panel-header baseline-header">
+                    <h3>Optimized Baseline</h3>
+                    <span class="status-badge" id="baselineStatus">Ready</span>
+                </div>
+                <div class="exec-panel-body">
+                    <div class="progress-area hidden" id="baselineProgress">
+                        <div class="spinner"></div>
+                        <div>
+                            <div id="baselineStatusText">Initializing...</div>
+                            <div class="activity-log" id="baselineElapsed"></div>
+                        </div>
+                    </div>
+                    <div class="response-box" id="baselineResponse"></div>
+                </div>
+            </div>
+            <div class="exec-panel">
+                <div class="exec-panel-header fault-header">
+                    <h3>Fault-Injected Scenario</h3>
+                    <span class="status-badge" id="faultStatus">Ready</span>
+                </div>
+                <div class="exec-panel-body">
+                    <div class="progress-area hidden" id="faultProgress">
+                        <div class="spinner"></div>
+                        <div>
+                            <div id="faultStatusText">Initializing...</div>
+                            <div class="activity-log" id="faultElapsed"></div>
+                        </div>
+                    </div>
+                    <div class="response-box" id="faultResponse"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Comparison -->
+    <div class="metrics-section" id="metricsSection">
+        <div class="section-title">Performance Metrics Comparison</div>
+        <div class="metrics-grid">
+            <div class="metric-card-wrap">
+                <div class="metric-icon">&#9889;</div>
+                <div class="metric-name">Latency</div>
+                <div class="metric-row"><span class="label">Baseline</span><span class="value baseline" id="latencyBaseline">--</span></div>
+                <div class="metric-bar-container"><div class="metric-bar baseline-bar" id="latencyBaselineBar" style="width:0%"></div><div class="metric-bar fault-bar" id="latencyFaultBar" style="width:0%"></div></div>
+                <div class="metric-row"><span class="label">Fault</span><span class="value fault" id="latencyFault">--</span></div>
+                <div class="delta-badge neutral" id="latencyDelta">--</div>
+            </div>
+            <div class="metric-card-wrap">
+                <div class="metric-icon">&#127919;</div>
+                <div class="metric-name">Tokens</div>
+                <div class="metric-row"><span class="label">Baseline</span><span class="value baseline" id="tokensBaseline">--</span></div>
+                <div class="metric-bar-container"><div class="metric-bar baseline-bar" id="tokensBaselineBar" style="width:0%"></div><div class="metric-bar fault-bar" id="tokensFaultBar" style="width:0%"></div></div>
+                <div class="metric-row"><span class="label">Fault</span><span class="value fault" id="tokensFault">--</span></div>
+                <div class="delta-badge neutral" id="tokensDelta">--</div>
+            </div>
+            <div class="metric-card-wrap">
+                <div class="metric-icon">&#128176;</div>
+                <div class="metric-name">Estimated Cost</div>
+                <div class="metric-row"><span class="label">Baseline</span><span class="value baseline" id="costBaseline">--</span></div>
+                <div class="metric-bar-container"><div class="metric-bar baseline-bar" id="costBaselineBar" style="width:0%"></div><div class="metric-bar fault-bar" id="costFaultBar" style="width:0%"></div></div>
+                <div class="metric-row"><span class="label">Fault</span><span class="value fault" id="costFault">--</span></div>
+                <div class="delta-badge neutral" id="costDelta">--</div>
+            </div>
+            <div class="metric-card-wrap">
+                <div class="metric-icon">&#128736;</div>
+                <div class="metric-name">Tool Calls</div>
+                <div class="metric-row"><span class="label">Baseline</span><span class="value baseline" id="toolsBaseline">--</span></div>
+                <div class="metric-bar-container"><div class="metric-bar baseline-bar" id="toolsBaselineBar" style="width:0%"></div><div class="metric-bar fault-bar" id="toolsFaultBar" style="width:0%"></div></div>
+                <div class="metric-row"><span class="label">Fault</span><span class="value fault" id="toolsFault">--</span></div>
+                <div class="delta-badge neutral" id="toolsDelta">--</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Section -->
+    <div class="analysis-section" id="analysisSection">
+        <div class="analysis-card">
+            <div class="section-title">Root Cause Analysis &amp; Recommendation</div>
+            <div class="analysis-grid">
+                <div class="analysis-item">
+                    <div class="analysis-header">Root Cause</div>
+                    <div class="analysis-body" id="rootCause">--</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-header">Impact Summary</div>
+                    <div class="analysis-body" id="impactSummary">--</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-header">Recommendation</div>
+                    <div class="analysis-body" id="recommendation">--</div>
+                </div>
+            </div>
+            <a class="cw-link" id="cwLink" href="#" target="_blank">&#x1F517; View in CloudWatch Dashboard &rarr;</a>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="history-section">
+        <div class="section-title" style="justify-content:space-between;">
+            <span>Execution History</span>
+            <button class="btn btn-outline" style="font-size:0.75rem; padding:0.3rem 0.75rem;" id="clearHistoryBtn">Clear</button>
+        </div>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Scenario</th>
+                    <th>Agent</th>
+                    <th>Latency &Delta;</th>
+                    <th>Token &Delta;</th>
+                    <th>Cost &Delta;</th>
+                    <th>Tool &Delta;</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// ============================================================================
+// SCENARIOS DATA
+// ============================================================================
+const SCENARIOS = [
+    { id: 1, name: "Optimized Base Case", type: "baseline", description: "Single optimal tool call for a portfolio query — establishes the best-case target.", expected_impact: { latency: "lowest", token_cost: "lowest", tool_calls: 1 } },
+    { id: 2, name: "Context Bloat: Raw Transaction History", type: "fault_injection", description: "Dumps full unfiltered trade history into the prompt instead of summarized data.", expected_impact: { latency: "high", token_cost: "very_high", tool_calls: 1 }, baseline_ref: 3 },
+    { id: 3, name: "Optimal RAG Summary", type: "baseline", description: "Pre-summarized portfolio facts — demonstrates cost savings of summarization vs raw history.", expected_impact: { latency: "low", token_cost: "low", tool_calls: 1 } },
+    { id: 4, name: "Irrelevant Context Bloat", type: "fault_injection", description: "Injects full CRM data (all client fields, compliance records, audit logs) into every prompt.", expected_impact: { latency: "high", token_cost: "very_high", tool_calls: 1 }, baseline_ref: 1 },
+    { id: 5, name: "Optimal Tool Call", type: "baseline", description: "Single bundled tool call that returns portfolio + risk + allocation in one response.", expected_impact: { latency: "lowest", token_cost: "lowest", tool_calls: 1 } },
+    { id: 6, name: "Redundant Tool Calls", type: "fault_injection", description: "Three separate sequential calls: get_portfolio, assess_risk, recommend_allocation.", expected_impact: { latency: "high", token_cost: "normal", tool_calls: 3 }, baseline_ref: 5 },
+    { id: 7, name: "Tool Failure & Recovery", type: "fault_injection", description: "Market data API fails on first call, agent retries — measures recovery cost.", expected_impact: { latency: "very_high", token_cost: "high", tool_calls: 2 }, baseline_ref: 5 },
+    { id: 8, name: "Raw Tool Output Bloat", type: "fault_injection", description: "Returns unprocessed 5000-token market data JSON instead of summarized insights.", expected_impact: { latency: "normal", token_cost: "very_high", tool_calls: 1 }, baseline_ref: 1 },
+    { id: 9, name: "Zero-Shot Response", type: "baseline", description: "Well-designed prompt that answers without any tool calls — validates prompt engineering.", expected_impact: { latency: "lowest", token_cost: "lowest", tool_calls: 0 } },
+    { id: 10, name: "DynamoDB Latency Spike", type: "fault_injection", description: "Injects 4-second delay on portfolio table read — simulates database slowdown.", expected_impact: { latency: "very_high", token_cost: "normal", tool_calls: 1 }, baseline_ref: 1 },
+    { id: 11, name: "Agent Refusal — Tool Unavailability", type: "fault_injection", description: "Removes all tools — tests graceful degradation when the agent can't access data.", expected_impact: { latency: "low", token_cost: "low", tool_calls: 0, functional_failure: true }, baseline_ref: 1 },
+    { id: 12, name: "Memory Misuse — Useless Summary", type: "fault_injection", description: "Injects irrelevant memory context proving poor RAG is worse than no RAG.", expected_impact: { latency: "high", token_cost: "high", tool_calls: 2 }, baseline_ref: 3 },
+    { id: 13, name: "Token Limit Breach", type: "fault_injection", description: "Pushes 15,000 tokens of conversation history — tests behavior at token boundaries.", expected_impact: { latency: "high", token_cost: "extreme", tool_calls: 1 }, baseline_ref: 3 },
+    { id: 14, name: "Observability Validation", type: "validation", description: "Validates all metrics emit to CloudWatch, X-Ray traces propagate, and logs are structured.", expected_impact: { latency: "normal", token_cost: "normal", tool_calls: 1 } },
+    { id: 15, name: "Model Comparison", type: "optimization", description: "Compare Haiku vs Sonnet vs Opus on cost, latency, and response quality.", expected_impact: { latency: "varies", token_cost: "varies", tool_calls: 1 } },
+    { id: 16, name: "Prompt Compression", type: "optimization", description: "Tests compressed prompts (remove redundancy, abbreviate) vs verbose prompts.", expected_impact: { latency: "reduced", token_cost: "reduced", tool_calls: 1 } }
+];
+
+const SCENARIO_DETAILS = {
+    1: { explanation: "Runs a single optimal tool call to fetch portfolio data. This is the gold standard — minimal tokens, minimal latency, correct answer.", whyMatters: "Establishes the cost floor. Every other scenario's overhead is measured against this baseline.", archInsight: "Well-designed tools that return exactly what's needed eliminate unnecessary LLM reasoning loops.", takeaway: "The best optimization is a single, well-structured tool call.", faultMechanism: "No fault — this is the optimized baseline execution path." },
+    2: { explanation: "Dumps 8,000+ tokens of raw transaction history (every buy/sell with full metadata) into the prompt instead of a 200-token summary.", whyMatters: "In financial services, clients may have thousands of transactions. Stuffing them all into context is the #1 cost multiplier.", archInsight: "Pre-summarize data before injection. A 40x context reduction translates directly to 40x cost savings on input tokens.", takeaway: "Summarize before you inject — raw history is the most expensive anti-pattern.", faultMechanism: "Injects full transaction log (8000 tokens) as additional context before the user query." },
+    3: { explanation: "Uses pre-summarized portfolio facts (key holdings, performance, risk level) instead of raw data.", whyMatters: "Demonstrates that smart RAG summarization can reduce costs by 80%+ while maintaining answer quality.", archInsight: "Build a summarization layer between your data store and the LLM. Cache summaries for frequently-accessed client data.", takeaway: "Invest in summarization pipelines — they pay for themselves in token savings.", faultMechanism: "No fault — baseline using pre-summarized context." },
+    4: { explanation: "Injects every field from the client CRM record (compliance history, audit logs, internal notes) into every prompt.", whyMatters: "Developers often dump entire database records into context 'just in case' — this shows the real cost.", archInsight: "Select only the fields the agent needs. A financial planner doesn't need audit logs for a portfolio question.", takeaway: "Targeted field selection beats dumping entire records.", faultMechanism: "Injects full CRM record (8000 tokens of irrelevant fields) alongside the user query." },
+    5: { explanation: "A single tool call that bundles portfolio holdings, risk metrics, and allocation data in one response.", whyMatters: "Each tool call adds an LLM reasoning round-trip. Bundling data reduces these expensive round-trips.", archInsight: "Design tools that return composite data objects rather than atomic fields to minimize LLM reasoning loops.", takeaway: "Bundle related data into single tool calls.", faultMechanism: "No fault — optimal bundled tool call." },
+    6: { explanation: "Forces three sequential tool calls: first get_portfolio, then assess_risk, then recommend_allocation.", whyMatters: "Each extra tool call adds 1-3 seconds of latency and additional input/output tokens for the LLM reasoning.", archInsight: "Tool decomposition that looks clean in code creates expensive serial dependencies at inference time.", takeaway: "Optimize for inference cost, not code aesthetics.", faultMechanism: "Splits the bundled tool into 3 separate sequential calls with forced tool selection." },
+    7: { explanation: "The market data tool fails with a timeout on the first call. The agent detects the error and retries.", whyMatters: "In production, external API failures are inevitable. Recovery adds cost — know what that cost is.", archInsight: "Implement circuit breakers and fallback data sources. The retry cost here is 2x the baseline.", takeaway: "Budget for failure recovery in your cost model.", faultMechanism: "First tool call raises ValueError; agent retry mechanism triggers a second successful call." },
+    8: { explanation: "Returns the raw JSON response from a market data API (5000+ tokens) instead of extracting the 3-4 relevant fields.", whyMatters: "Raw API responses are verbose. The LLM has to parse through all of it to find what matters, wasting output tokens.", archInsight: "Post-process tool outputs before returning to the LLM. Extract and format only what the agent needs.", takeaway: "Filter tool outputs — don't make the LLM be your data parser.", faultMechanism: "Tool returns 5000-token raw JSON instead of summarized 200-token response." },
+    9: { explanation: "A general financial knowledge question that the agent can answer from its training data, no tools needed.", whyMatters: "Well-designed prompts can avoid tool calls entirely for common questions, saving both latency and cost.", archInsight: "Use prompt engineering to help the agent distinguish when it already knows the answer vs when it needs tools.", takeaway: "Not every question needs a tool call.", faultMechanism: "No fault — validates zero-tool-call prompt design." },
+    10: { explanation: "Adds a 4-second artificial delay to the DynamoDB portfolio table read operation.", whyMatters: "Database slowdowns cascade through the agent — the LLM waits for the tool, and the user waits for everything.", archInsight: "Add DynamoDB DAX caching or read replicas for frequently-accessed portfolio data. Monitor DynamoDB latency in CloudWatch.", takeaway: "External service latency is the silent killer of agent performance.", faultMechanism: "Injects time.sleep(4.0) before the DynamoDB GetItem call." },
+    11: { explanation: "Removes all tool definitions from the agent, forcing it to answer without any data access.", whyMatters: "Tests whether the agent gracefully admits it can't help vs hallucinating financial data — critical for compliance.", archInsight: "Agents MUST refuse to fabricate financial data. A graceful 'I cannot access your portfolio right now' is the correct behavior.", takeaway: "Graceful degradation is non-negotiable in financial services.", faultMechanism: "Agent instantiated with tools=[] — no data access capability." },
+    12: { explanation: "Injects a fake memory summary about an unrelated topic (pet grooming preferences) as if it were the client's history.", whyMatters: "Poor RAG that returns irrelevant context is worse than no RAG — it confuses the agent and wastes tokens.", archInsight: "Implement relevance scoring on memory retrieval. If the score is below threshold, return nothing.", takeaway: "Bad memory is worse than no memory.", faultMechanism: "Memory retrieval returns fabricated irrelevant context; agent attempts to use it and makes an extra tool call." },
+    13: { explanation: "Pushes 15,000 tokens of conversation history into the context, approaching the model's limit.", whyMatters: "Long conversations accumulate context. Without pruning, you'll hit token limits and get truncated or failed responses.", archInsight: "Implement sliding window or summarization-based context management. Never let conversation history grow unbounded.", takeaway: "Manage context windows actively — don't let them overflow.", faultMechanism: "Injects 15,000 tokens of synthetic conversation history before the user query." },
+    14: { explanation: "Runs a normal query and validates that CloudWatch metrics, X-Ray traces, and structured logs all appear.", whyMatters: "Observability is useless if it's not actually working. This scenario is a smoke test for your monitoring pipeline.", archInsight: "Include observability validation in your CI/CD pipeline. If metrics stop flowing, you're flying blind.", takeaway: "Test your observability — it's a feature, not a side effect.", faultMechanism: "No fault — validates metric emission, trace propagation, and log structure." },
+    15: { explanation: "Runs the same query across Claude Haiku, Sonnet, and Opus to compare cost, latency, and response quality.", whyMatters: "Not every query needs the most expensive model. Routing by complexity can cut costs 80%+ with minimal quality loss.", archInsight: "Implement a model router that sends simple queries to Haiku and complex ones to Sonnet/Opus.", takeaway: "Match model capability to query complexity.", faultMechanism: "No fault — runs identical query against 3 models and compares results." },
+    16: { explanation: "Tests compressed prompts (removed redundancy, abbreviated instructions) vs standard verbose prompts.", whyMatters: "System prompts are included in every request. A 30% shorter system prompt saves 30% on input tokens across all calls.", archInsight: "Audit your system prompts quarterly. Remove examples the model no longer needs. Use structured formats over prose.", takeaway: "Compress your prompts — they're your biggest recurring cost.", faultMechanism: "No fault — compares standard vs compressed prompt versions." }
+};
+
+let selectedScenarioId = null;
+let executionHistory = [];
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderScenarioGrid();
+    initEventListeners();
+    loadHistory();
+});
+
+function renderScenarioGrid() {
+    const grid = document.getElementById('scenarioGrid');
+    grid.innerHTML = '';
+    SCENARIOS.forEach(s => {
+        const typeClass = s.type === 'baseline' ? 'type-baseline' :
+                          s.type === 'fault_injection' ? 'type-fault' :
+                          s.type === 'optimization' ? 'type-optimization' : 'type-validation';
+        const typeLabel = s.type === 'fault_injection' ? 'FAULT' :
+                          s.type === 'baseline' ? 'BASELINE' :
+                          s.type === 'optimization' ? 'OPTIMIZE' : 'VALIDATE';
+
+        const impactHtml = s.expected_impact ? Object.entries(s.expected_impact)
+            .filter(([k]) => k !== 'functional_failure')
+            .map(([k, v]) => `<span class="impact-badge">${k.replace('_',' ')}: ${v}</span>`).join('') : '';
+
+        const card = document.createElement('div');
+        card.className = 'scenario-card';
+        card.dataset.id = s.id;
+        card.innerHTML = `
+            <span class="card-id">#${s.id}</span>
+            <span class="card-type ${typeClass}">${typeLabel}</span>
+            <div class="card-title">${s.name}</div>
+            <div class="card-desc">${s.description}</div>
+            <div class="card-impact">${impactHtml}</div>
+        `;
+        card.addEventListener('click', () => selectScenario(s.id));
+        grid.appendChild(card);
+    });
+}
+
+function selectScenario(id) {
+    selectedScenarioId = id;
+    document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.scenario-card[data-id="${id}"]`);
+    if (card) card.classList.add('selected');
+    document.getElementById('runScenarioBtn').disabled = false;
+    showScenarioInfo(id);
+}
+
+function showScenarioInfo(id) {
+    const s = SCENARIOS.find(x => x.id === id);
+    const d = SCENARIO_DETAILS[id];
+    if (!s || !d) return;
+    const panel = document.getElementById('scenarioInfoPanel');
+    document.getElementById('scenarioInfoTitle').textContent = `#${s.id} ${s.name}`;
+    document.getElementById('infoExplanation').textContent = d.explanation;
+    document.getElementById('infoWhyMatters').textContent = d.whyMatters;
+    document.getElementById('infoArchInsight').textContent = d.archInsight;
+    document.getElementById('infoTakeaway').textContent = d.takeaway;
+    document.getElementById('infoFaultMechanism').textContent = d.faultMechanism;
+    const impactEl = document.getElementById('infoExpectedImpact');
+    if (s.expected_impact) {
+        impactEl.innerHTML = Object.entries(s.expected_impact)
+            .map(([k,v]) => `<div><strong>${k.replace('_',' ')}:</strong> ${v}</div>`).join('');
+    }
+    panel.classList.add('visible');
+}
+
+function initEventListeners() {
+    document.getElementById('runScenarioBtn').addEventListener('click', runSelectedScenario);
+    document.getElementById('runAllBtn').addEventListener('click', runAllScenarios);
+    document.getElementById('exportBtn').addEventListener('click', exportResults);
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        executionHistory = [];
+        localStorage.removeItem('perfTuningHistory');
+        renderHistory();
+    });
+}
+
+// ============================================================================
+// EXECUTION
+// ============================================================================
+async function runSelectedScenario() {
+    if (!selectedScenarioId) return;
+    const scenario = SCENARIOS.find(s => s.id === selectedScenarioId);
+    if (!scenario) return;
+    await executeScenario(scenario);
+}
+
+async function runAllScenarios() {
+    const faultScenarios = SCENARIOS.filter(s => s.type === 'fault_injection');
+    document.getElementById('runAllBtn').disabled = true;
+    document.getElementById('runAllBtn').textContent = 'Running...';
+    for (const s of faultScenarios) {
+        selectScenario(s.id);
+        await executeScenario(s);
+        await new Promise(r => setTimeout(r, 500));
+    }
+    document.getElementById('runAllBtn').disabled = false;
+    document.getElementById('runAllBtn').textContent = 'Run All';
+}
+
+async function executeScenario(scenario) {
+    const agent = document.getElementById('agentSelect').value;
+    const clientId = document.getElementById('clientSelect').value;
+    const prompt = document.getElementById('userPrompt').value;
+    const region = 'us-west-2';
+
+    // Show execution UI
+    document.getElementById('executionSection').classList.add('visible');
+    document.getElementById('metricsSection').classList.remove('visible');
+    document.getElementById('analysisSection').classList.remove('visible');
+
+    // Reset panels
+    resetPanels();
+
+    // Show progress
+    document.getElementById('baselineProgress').classList.remove('hidden');
+    document.getElementById('faultProgress').classList.remove('hidden');
+    document.getElementById('baselineStatus').textContent = 'Running';
+    document.getElementById('faultStatus').textContent = 'Running';
+    document.getElementById('runScenarioBtn').disabled = true;
+    document.getElementById('runScenarioBtn').textContent = 'Running...';
+
+    // Mark card as running
+    const card = document.querySelector(`.scenario-card[data-id="${scenario.id}"]`);
+    if (card) card.classList.add('running');
+
+    const startTime = Date.now();
+    const timer = setInterval(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        document.getElementById('baselineElapsed').textContent = `Elapsed: ${elapsed}s`;
+        document.getElementById('faultElapsed').textContent = `Elapsed: ${elapsed}s`;
+    }, 100);
+
+    let result;
+    try {
+        const apiUrl = (window.CONFIG && CONFIG.OPTIMIZATION_API_URL) || '';
+        if (apiUrl) {
+            // Real API call
+            const response = await fetch(`${apiUrl}/run`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario_id: scenario.id, client_id: clientId, agent: agent, prompt: prompt })
+            });
+            result = await response.json();
+        } else {
+            // Mock execution for demo
+            document.getElementById('baselineStatusText').textContent = 'Invoking baseline agent...';
+            document.getElementById('faultStatusText').textContent = 'Injecting fault and invoking agent...';
+            await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
+            result = generateMockResult(scenario, agent, clientId);
+        }
+    } catch (err) {
+        console.error('Execution error:', err);
+        result = generateMockResult(scenario, agent, clientId);
+    }
+
+    clearInterval(timer);
+
+    // Update UI with results
+    displayResults(scenario, result);
+
+    // Mark card as completed
+    if (card) { card.classList.remove('running'); card.classList.add('completed'); }
+
+    // Add to history
+    addToHistory(scenario, result);
+
+    document.getElementById('runScenarioBtn').disabled = false;
+    document.getElementById('runScenarioBtn').textContent = 'Run Selected';
+}
+
+function resetPanels() {
+    document.getElementById('baselineProgress').classList.add('hidden');
+    document.getElementById('faultProgress').classList.add('hidden');
+    document.getElementById('baselineResponse').classList.remove('visible');
+    document.getElementById('faultResponse').classList.remove('visible');
+    document.getElementById('baselineResponse').textContent = '';
+    document.getElementById('faultResponse').textContent = '';
+    document.getElementById('baselineStatusText').textContent = 'Initializing...';
+    document.getElementById('faultStatusText').textContent = 'Initializing...';
+}
+
+// ============================================================================
+// MOCK DATA GENERATOR
+// ============================================================================
+function generateMockResult(scenario, agent, clientId) {
+    const baseLatency = 800 + Math.random() * 400;
+    const baseTokens = 450 + Math.floor(Math.random() * 150);
+    const baseCost = baseTokens * 0.00025 / 1000 * 1000; // simplified
+    const baseTools = scenario.type === 'baseline' && scenario.expected_impact.tool_calls === 0 ? 0 : 1;
+
+    let faultLatency, faultTokens, faultTools;
+    const fType = scenario.expected_impact;
+
+    if (scenario.type === 'baseline' || scenario.type === 'validation') {
+        faultLatency = baseLatency + (Math.random() * 100 - 50);
+        faultTokens = baseTokens + Math.floor(Math.random() * 50 - 25);
+        faultTools = baseTools;
+    } else {
+        const latencyMult = fType.latency === 'very_high' ? 4.5 : fType.latency === 'high' ? 2.5 : 1.3;
+        const tokenMult = fType.token_cost === 'extreme' ? 8 : fType.token_cost === 'very_high' ? 4 : fType.token_cost === 'high' ? 2 : 1.1;
+        faultLatency = baseLatency * latencyMult + Math.random() * 200;
+        faultTokens = Math.floor(baseTokens * tokenMult + Math.random() * 100);
+        faultTools = typeof fType.tool_calls === 'number' ? fType.tool_calls : baseTools;
+    }
+    const faultCost = faultTokens * 0.00025 / 1000 * 1000;
+
+    const latencyDelta = ((faultLatency - baseLatency) / baseLatency * 100).toFixed(1);
+    const tokenDelta = ((faultTokens - baseTokens) / baseTokens * 100).toFixed(1);
+    const costDelta = baseTokens > 0 ? ((faultCost - baseCost) / baseCost * 100).toFixed(1) : '0.0';
+    const toolDelta = faultTools - baseTools;
+
+    const details = SCENARIO_DETAILS[scenario.id] || {};
+    return {
+        scenario_id: scenario.id,
+        scenario_name: scenario.name,
+        baseline: { latency_ms: baseLatency, total_tokens: baseTokens, estimated_cost_usd: baseCost, tool_calls: baseTools, response: `[Baseline] Portfolio analysis for ${clientId}: Your current allocation is 72% equities, 18% bonds, 10% alternatives with a YTD return of 14.2%.` },
+        fault: { latency_ms: faultLatency, total_tokens: faultTokens, estimated_cost_usd: faultCost, tool_calls: faultTools, response: `[Fault: ${scenario.name}] Portfolio analysis with injected fault — response generated with ${faultTools} tool call(s) in ${faultLatency.toFixed(0)}ms.` },
+        deltas: { latency_percent: parseFloat(latencyDelta), tokens_percent: parseFloat(tokenDelta), cost_percent: parseFloat(costDelta), tool_calls: toolDelta },
+        analysis: { root_cause: details.faultMechanism || 'Fault injection applied', impact_summary: details.whyMatters || 'Performance impact measured', recommendation: details.takeaway || 'Optimize based on results' }
+    };
+}
+
+// ============================================================================
+// DISPLAY RESULTS
+// ============================================================================
+function displayResults(scenario, result) {
+    // Execution panels
+    document.getElementById('baselineProgress').classList.add('hidden');
+    document.getElementById('faultProgress').classList.add('hidden');
+    document.getElementById('baselineStatus').textContent = 'Complete';
+    document.getElementById('faultStatus').textContent = 'Complete';
+    document.getElementById('baselineResponse').textContent = result.baseline.response;
+    document.getElementById('baselineResponse').classList.add('visible');
+    document.getElementById('faultResponse').textContent = result.fault.response;
+    document.getElementById('faultResponse').classList.add('visible');
+
+    // Metrics
+    const b = result.baseline, f = result.fault, d = result.deltas;
+    updateMetric('latency', b.latency_ms.toFixed(0) + ' ms', f.latency_ms.toFixed(0) + ' ms', d.latency_percent, b.latency_ms, f.latency_ms);
+    updateMetric('tokens', b.total_tokens.toLocaleString(), f.total_tokens.toLocaleString(), d.tokens_percent, b.total_tokens, f.total_tokens);
+    updateMetric('cost', '$' + b.estimated_cost_usd.toFixed(4), '$' + f.estimated_cost_usd.toFixed(4), d.cost_percent, b.estimated_cost_usd, f.estimated_cost_usd);
+    updateMetric('tools', b.tool_calls.toString(), f.tool_calls.toString(), d.tool_calls === 0 ? 0 : (d.tool_calls / Math.max(b.tool_calls, 1) * 100), b.tool_calls, f.tool_calls);
+
+    document.getElementById('metricsSection').classList.add('visible');
+
+    // Analysis
+    document.getElementById('rootCause').textContent = result.analysis.root_cause;
+    document.getElementById('impactSummary').textContent = result.analysis.impact_summary;
+    document.getElementById('recommendation').textContent = result.analysis.recommendation;
+    const region = 'us-west-2';
+    document.getElementById('cwLink').href = `https://${region}.console.aws.amazon.com/cloudwatch/home?region=${region}#dashboards:name=wealth_mgmt_copilot_dashboard`;
+    document.getElementById('analysisSection').classList.add('visible');
+}
+
+function updateMetric(prefix, baseText, faultText, deltaPct, baseVal, faultVal) {
+    document.getElementById(`${prefix}Baseline`).textContent = baseText;
+    document.getElementById(`${prefix}Fault`).textContent = faultText;
+
+    const maxVal = Math.max(baseVal, faultVal, 1);
+    document.getElementById(`${prefix}BaselineBar`).style.width = (baseVal / maxVal * 100) + '%';
+    document.getElementById(`${prefix}FaultBar`).style.width = (faultVal / maxVal * 100) + '%';
+
+    const deltaEl = document.getElementById(`${prefix}Delta`);
+    const sign = deltaPct > 0 ? '+' : '';
+    deltaEl.textContent = `${sign}${deltaPct.toFixed(1)}%`;
+    deltaEl.className = 'delta-badge ' + (Math.abs(deltaPct) < 5 ? 'neutral' : deltaPct > 0 ? 'worse' : 'better');
+}
+
+// ============================================================================
+// HISTORY
+// ============================================================================
+function addToHistory(scenario, result) {
+    const entry = {
+        id: executionHistory.length + 1,
+        scenario: scenario.name,
+        agent: document.getElementById('agentSelect').value,
+        latency_delta: result.deltas.latency_percent,
+        token_delta: result.deltas.tokens_percent,
+        cost_delta: result.deltas.cost_percent,
+        tool_delta: result.deltas.tool_calls,
+        time: new Date().toLocaleTimeString()
+    };
+    executionHistory.unshift(entry);
+    if (executionHistory.length > 20) executionHistory.pop();
+    localStorage.setItem('perfTuningHistory', JSON.stringify(executionHistory));
+    renderHistory();
+}
+
+function loadHistory() {
+    try {
+        const saved = localStorage.getItem('perfTuningHistory');
+        if (saved) executionHistory = JSON.parse(saved);
+    } catch(e) {}
+    renderHistory();
+}
+
+function renderHistory() {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+    executionHistory.forEach(h => {
+        const tr = document.createElement('tr');
+        const fmt = (v) => { const s = v > 0 ? '+' : ''; const c = Math.abs(v) < 5 ? '' : v > 0 ? 'color:var(--red)' : 'color:var(--green)'; return `<span style="${c}">${s}${v.toFixed(1)}%</span>`; };
+        tr.innerHTML = `<td>${h.id}</td><td>${h.scenario}</td><td>${h.agent}</td><td>${fmt(h.latency_delta)}</td><td>${fmt(h.token_delta)}</td><td>${fmt(h.cost_delta)}</td><td>${h.tool_delta > 0 ? '+' : ''}${h.tool_delta}</td><td>${h.time}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function exportResults() {
+    if (executionHistory.length === 0) { alert('No results to export'); return; }
+    const csv = ['#,Scenario,Agent,Latency Delta %,Token Delta %,Cost Delta %,Tool Delta,Time',
+        ...executionHistory.map(h => `${h.id},"${h.scenario}",${h.agent},${h.latency_delta},${h.token_delta},${h.cost_delta},${h.tool_delta},${h.time}`)
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `performance-tuning-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+}
+</script>
+</body>
+</html>

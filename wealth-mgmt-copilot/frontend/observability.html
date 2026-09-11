@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthAI Copilot — Observability</title>
+    <meta name="description" content="GenAI observability dashboard — logs, metrics, and traces">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="navbar">
+    <div class="brand">
+        <span class="icon">&#x1F4B0;</span>
+        <span>Wealth<span class="highlight">AI</span> Copilot</span>
+    </div>
+    <nav>
+        <a href="client-dashboard.html">Dashboard</a>
+        <a href="observability.html" class="active">Observability</a>
+        <a href="performance-tuning.html">Performance Lab</a>
+        <a href="loadtest.html">Load Test</a>
+    </nav>
+    <div class="user-info">
+        <span id="user-name">Admin</span>
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+</header>
+
+<div style="padding: 24px 28px; max-width: 1400px; margin: 0 auto;">
+
+    <div class="page-header">
+        <h2>GenAI Observability</h2>
+        <p>Monitor AI agent performance, Bedrock invocations, and system health with Amazon CloudWatch</p>
+    </div>
+
+    <!-- Agent Performance Cards -->
+    <div style="margin-bottom:12px; padding:8px 16px; background:#2a3544; border-radius:var(--radius-sm); display:flex; align-items:center; gap:8px;">
+        <span style="color:var(--gold); font-weight:600; font-size:0.8rem;">REFERENCE DATA</span>
+        <span style="color:var(--gray-400); font-size:0.8rem;">Baseline metrics shown below — live data available in the <a href="#" onclick="openCloudWatch()" style="color:var(--gold);">CloudWatch Dashboard</a> after deployment</span>
+        <button class="btn btn-outline btn-small" style="margin-left:auto;" onclick="openCloudWatch()">View Live Metrics</button>
+    </div>
+    <div class="obs-grid">
+        <div class="obs-card">
+            <h4>&#x1F4CA; Marcus — Market Analyst</h4>
+            <div class="obs-metric"><span class="label">Framework</span><span class="value">Strands (AgentCore)</span></div>
+            <div class="obs-metric"><span class="label">Avg Latency</span><span class="value" id="marcus-latency">3.2s</span></div>
+            <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value" id="marcus-tokens">~1,850</span></div>
+            <div class="obs-metric"><span class="label">Success Rate</span><span class="value text-green" id="marcus-success">98.5%</span></div>
+            <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/market-analyst</span></div>
+        </div>
+        <div class="obs-card">
+            <h4>&#x1F4C5; Sophia — Financial Planner</h4>
+            <div class="obs-metric"><span class="label">Framework</span><span class="value">Strands (AgentCore)</span></div>
+            <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">4.1s</span></div>
+            <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~2,200</span></div>
+            <div class="obs-metric"><span class="label">Success Rate</span><span class="value text-green">97.8%</span></div>
+            <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/financial-planner</span></div>
+        </div>
+        <div class="obs-card">
+            <h4>&#x1F4B5; Olivia — Tax Optimizer</h4>
+            <div class="obs-metric"><span class="label">Framework</span><span class="value">CrewAI (AgentCore)</span></div>
+            <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">5.8s</span></div>
+            <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~3,100</span></div>
+            <div class="obs-metric"><span class="label">Success Rate</span><span class="value text-green">96.2%</span></div>
+            <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/aws/bedrock-agentcore/runtimes/tax-optimizer</span></div>
+        </div>
+        <div class="obs-card">
+            <h4>&#x2705; Victor — Compliance Checker</h4>
+            <div class="obs-metric"><span class="label">Framework</span><span class="value">LangGraph (ECS Fargate)</span></div>
+            <div class="obs-metric"><span class="label">Avg Latency</span><span class="value">2.8s</span></div>
+            <div class="obs-metric"><span class="label">Avg Tokens/Request</span><span class="value">~1,400</span></div>
+            <div class="obs-metric"><span class="label">Success Rate</span><span class="value text-green">99.1%</span></div>
+            <div class="obs-metric"><span class="label">Log Group</span><span class="value" style="font-size:0.75rem">/ecs/compliance-checker</span></div>
+        </div>
+    </div>
+
+    <!-- Cost Tracker -->
+    <div class="grid-2 mb-16">
+        <div class="card">
+            <div class="card-header"><h3>&#x1F4B0; GenAI Cost Tracker</h3></div>
+            <div class="card-body">
+                <div class="obs-metric"><span class="label">Bedrock Invocations (Today)</span><span class="value">1,247</span></div>
+                <div class="obs-metric"><span class="label">Input Tokens (Today)</span><span class="value">2.1M</span></div>
+                <div class="obs-metric"><span class="label">Output Tokens (Today)</span><span class="value">890K</span></div>
+                <div class="obs-metric"><span class="label">Estimated Daily Cost</span><span class="value">$18.40</span></div>
+                <div class="obs-metric"><span class="label">Model</span><span class="value">Claude Haiku 4.5</span></div>
+                <div class="obs-metric"><span class="label">Month-to-Date</span><span class="value">$142.60</span></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>&#x26A0;&#xFE0F; Active Alarms</h3></div>
+            <div class="card-body">
+                <div class="obs-metric"><span class="label">Bedrock High Latency</span><span class="value badge badge-completed">OK</span></div>
+                <div class="obs-metric"><span class="label">Bedrock Throttling</span><span class="value badge badge-completed">OK</span></div>
+                <div class="obs-metric"><span class="label">Agent Router Errors</span><span class="value badge badge-completed">OK</span></div>
+                <div class="obs-metric"><span class="label">Compliance ECS CPU</span><span class="value badge badge-completed">OK</span></div>
+                <div class="obs-metric"><span class="label">High Token Usage</span><span class="value badge badge-completed">OK</span></div>
+                <div class="obs-metric"><span class="label">DynamoDB Throttle</span><span class="value badge badge-completed">OK</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CloudWatch Dashboard Embed -->
+    <div class="card mb-16">
+        <div class="card-header">
+            <h3>&#x1F4CA; CloudWatch Dashboard</h3>
+            <a href="#" class="btn btn-outline btn-small" onclick="openCloudWatch()">Open in CloudWatch Console</a>
+        </div>
+        <div class="card-body">
+            <div class="placeholder-box" id="cw-dashboard-placeholder">
+                <div class="icon">&#x1F4CA;</div>
+                <h3>CloudWatch Dashboard</h3>
+                <p style="margin-top:8px;">Dashboard: <strong>wealth_mgmt_copilot_dashboard</strong></p>
+                <p style="margin-top:4px; font-size:0.85rem; color:var(--gray-500);">After deployment, the dashboard will be embedded here showing Bedrock invocations, latency, token usage, Lambda metrics, and DynamoDB capacity.</p>
+                <a href="#" class="btn btn-outline btn-small" style="margin-top:16px;" onclick="openCloudWatch()">Open CloudWatch Console</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- X-Ray Traces & Logs -->
+    <div class="grid-2 mb-16">
+        <div class="card">
+            <div class="card-header">
+                <h3>&#x1F50D; X-Ray Traces</h3>
+                <a href="#" class="btn btn-outline btn-small" onclick="openXRay()">Open X-Ray Console</a>
+            </div>
+            <div class="card-body">
+                <p style="font-size:0.88rem; color:var(--gray-500); margin-bottom:12px;">End-to-end trace visibility: API Gateway → Lambda → AgentCore/ECS → Bedrock → DynamoDB</p>
+                <div class="obs-metric"><span class="label">Trace Propagation</span><span class="value">Enabled</span></div>
+                <div class="obs-metric"><span class="label">Sampling Rate</span><span class="value">100%</span></div>
+                <div class="obs-metric"><span class="label">Service Map Nodes</span><span class="value">8</span></div>
+                <div class="obs-metric"><span class="label">Avg Trace Duration</span><span class="value">4.2s</span></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>&#x1F4DD; Recent Log Events</h3>
+            </div>
+            <div class="card-body">
+                <div style="font-family: monospace; font-size:0.78rem; background: var(--gray-50); padding:12px; border-radius:var(--radius-sm); max-height:220px; overflow-y:auto; line-height:1.8;">
+                    <div><span style="color:var(--gray-500)">14:32:05</span> <span style="color:var(--green)">INFO</span> Marcus agent processed market analysis request (3.1s)</div>
+                    <div><span style="color:var(--gray-500)">14:31:58</span> <span style="color:var(--green)">INFO</span> Sophia retrieved client portfolio for allocation review</div>
+                    <div><span style="color:var(--gray-500)">14:31:42</span> <span style="color:var(--green)">INFO</span> Bedrock invocation: claude-haiku-4-5, 1240 input tokens, 580 output tokens</div>
+                    <div><span style="color:var(--gray-500)">14:31:15</span> <span style="color:var(--orange)">WARN</span> Victor flagged transaction txn_008 — concentration limit exceeded</div>
+                    <div><span style="color:var(--gray-500)">14:30:48</span> <span style="color:var(--green)">INFO</span> Agent router: request routed to olivia (tax-optimizer)</div>
+                    <div><span style="color:var(--gray-500)">14:30:22</span> <span style="color:var(--green)">INFO</span> WebSocket connection established: client_sarah_chen</div>
+                    <div><span style="color:var(--gray-500)">14:29:55</span> <span style="color:var(--green)">INFO</span> DynamoDB: GetItem wealth_mgmt_client_profiles (12ms)</div>
+                    <div><span style="color:var(--gray-500)">14:29:30</span> <span style="color:var(--green)">INFO</span> Memory saved to AgentCore: /summaries/marcus/client_sarah_chen</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CloudWatch Insights Queries -->
+    <div class="card mb-16">
+        <div class="card-header"><h3>&#x1F4CB; Useful CloudWatch Insights Queries</h3></div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div style="background:var(--gray-50); padding:14px; border-radius:var(--radius-sm);">
+                    <h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--navy);">Bedrock Invocation Summary</h4>
+                    <code style="font-size:0.75rem; color:var(--gray-700); white-space:pre-wrap;">SOURCE '/aws/bedrock/modelinvocations'
+| stats count() as invocations,
+  avg(inputTokenCount) as avg_input,
+  avg(outputTokenCount) as avg_output,
+  avg(invocationLatency) as avg_latency
+  by modelId
+| sort invocations desc</code>
+                </div>
+                <div style="background:var(--gray-50); padding:14px; border-radius:var(--radius-sm);">
+                    <h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--navy);">Agent Performance by Type</h4>
+                    <code style="font-size:0.75rem; color:var(--gray-700); white-space:pre-wrap;">SOURCE '/aws/lambda/wealth_mgmt_agent_router_lambda'
+| filter @message like /AgentCore invocation/
+| parse @message "Agent: * | Client: *" as agent, client
+| stats count() as requests,
+  avg(@duration) as avg_duration
+  by agent</code>
+                </div>
+                <div style="background:var(--gray-50); padding:14px; border-radius:var(--radius-sm);">
+                    <h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--navy);">Error Analysis</h4>
+                    <code style="font-size:0.75rem; color:var(--gray-700); white-space:pre-wrap;">SOURCE '/aws/lambda/wealth_mgmt_agent_router_lambda'
+| filter @message like /Error|Exception|FAIL/
+| fields @timestamp, @message
+| sort @timestamp desc
+| limit 50</code>
+                </div>
+                <div style="background:var(--gray-50); padding:14px; border-radius:var(--radius-sm);">
+                    <h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--navy);">Compliance Audit Trail</h4>
+                    <code style="font-size:0.75rem; color:var(--gray-700); white-space:pre-wrap;">SOURCE '/ecs/compliance-checker'
+| filter @message like /FLAGGED|KYC|AML|compliance/
+| fields @timestamp, @message
+| sort @timestamp desc
+| limit 100</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="config.template.js"></script>
+<script>
+    document.getElementById('user-name').textContent = localStorage.getItem('wm_name') || 'Admin';
+
+    function openCloudWatch() {
+        const region = (typeof CONFIG !== 'undefined' && CONFIG.REGION) || 'us-west-2';
+        const url = `https://${region}.console.aws.amazon.com/cloudwatch/home?region=${region}#dashboards/dashboard/wealth_mgmt_copilot_dashboard`;
+        window.open(url, '_blank');
+    }
+
+    function openXRay() {
+        const region = (typeof CONFIG !== 'undefined' && CONFIG.REGION) || 'us-west-2';
+        window.open(`https://${region}.console.aws.amazon.com/xray/home?region=${region}#/service-map`, '_blank');
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+    "Items": [
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "4ke7ls9",
+            "RouteKey": "$disconnect",
+            "Target": "integrations/m1xbtdk"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "7ddv40i",
+            "RouteKey": "sendMessage",
+            "Target": "integrations/m1xbtdk"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "z7juaqd",
+            "RouteKey": "$connect",
+            "Target": "integrations/m1xbtdk"
+        }
+    ]
+}

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Petstore - Welcome</title>
+    <meta name="description" content="AI-powered pet care services - Please login to continue">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-sage: #A8C69F;
+            --secondary-sand: #F5E6D3;
+            --accent-rose: #E8B4B8;
+            --neutral-cream: #FFFBF6;
+            --neutral-charcoal: #2D3436;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--primary-sage), var(--secondary-sand));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2.5rem;
+            color: var(--neutral-charcoal);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .auth-button {
+            background: var(--primary-sage);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .auth-button:hover {
+            background: #8fb085;
+            transform: translateY(-2px);
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .feature-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .version {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="logo">🐾</div>
+        <h1>GenAI Petstore</h1>
+        <p class="subtitle">AI-Powered Pet Care Services</p>
+        
+        <a href="auth.html" class="auth-button">Login to Continue</a>
+        
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">🤖</span>
+                <span>AI-powered pet care specialists</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📅</span>
+                <span>Real-time appointment booking</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🏥</span>
+                <span>Veterinary, grooming, nutrition & training</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📱</span>
+                <span>Mobile-friendly interface</span>
+            </div>
+        </div>
+        
+        <div class="version">
+            Version 2.1.0 - GenAI Pet Store
+        </div>
+    </div>
+
+    <!-- Configuration script - loaded first -->
+    <script src="config.js"></script>
+    
+    <script>
+        // Clear any existing session data
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Redirect to auth if not already there
+        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+            // Stay on welcome page - user needs to click login
+        }
+    </script>
+</body>
+</html>

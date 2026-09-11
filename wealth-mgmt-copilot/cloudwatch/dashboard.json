@@ -1,0 +1,401 @@
+{
+  "dashboardName": "wealth_mgmt_copilot_dashboard",
+  "dashboardBody": {
+    "widgets": [
+      {
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "width": 24,
+        "height": 1,
+        "properties": {
+          "markdown": "# WealthAI Copilot - GenAI Observability Dashboard\n**Agents**: Marcus (Market Analyst) | Sophia (Financial Planner) | Olivia (Tax Optimizer) | Victor (Compliance Checker)"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 1,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Bedrock", "Invocations", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"],
+            ["AWS/Bedrock", "Invocations", "ModelId", "us.anthropic.claude-sonnet-4-20250514-v1:0"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Bedrock Model Invocations",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 6,
+        "y": 1,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Bedrock", "InvocationLatency", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"],
+            ["AWS/Bedrock", "InvocationLatency", "ModelId", "us.anthropic.claude-sonnet-4-20250514-v1:0"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Bedrock Invocation Latency (ms)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 1,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Bedrock", "InputTokenCount", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"],
+            ["AWS/Bedrock", "OutputTokenCount", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Token Usage (Input/Output)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 18,
+        "y": 1,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Bedrock", "InvocationServerErrors", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"],
+            ["AWS/Bedrock", "InvocationThrottles", "ModelId", "us.anthropic.claude-haiku-4-5-20251001-v1:0"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Errors & Throttles",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 7,
+        "width": 24,
+        "height": 1,
+        "properties": {
+          "markdown": "## Agent Performance"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 8,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Lambda", "Duration", "FunctionName", "wealth_mgmt_agent_router_lambda"],
+            ["AWS/Lambda", "Duration", "FunctionName", "wealth_mgmt_auth_lambda"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Lambda Duration (Agent Router & Auth)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 6,
+        "y": 8,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Lambda", "Errors", "FunctionName", "wealth_mgmt_agent_router_lambda"],
+            ["AWS/Lambda", "Invocations", "FunctionName", "wealth_mgmt_agent_router_lambda"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Agent Router - Invocations vs Errors",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 8,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "wealth_mgmt_agent_router_lambda"],
+            ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", "wealth_mgmt_websocket_lambda"]
+          ],
+          "period": 60,
+          "stat": "Maximum",
+          "region": "us-west-2",
+          "title": "Concurrent Executions",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 18,
+        "y": 8,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ECS", "CPUUtilization", "ClusterName", "compliance-checker-cluster", "ServiceName", "compliance-checker-service"],
+            ["AWS/ECS", "MemoryUtilization", "ClusterName", "compliance-checker-cluster", "ServiceName", "compliance-checker-service"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Victor (Compliance) - ECS CPU/Memory",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 14,
+        "width": 24,
+        "height": 1,
+        "properties": {
+          "markdown": "## API Gateway & Data Layer"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 15,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApiGateway", "Count", "ApiName", "wealth_mgmt_api"],
+            ["AWS/ApiGateway", "4XXError", "ApiName", "wealth_mgmt_api"],
+            ["AWS/ApiGateway", "5XXError", "ApiName", "wealth_mgmt_api"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "API Gateway - Requests & Errors",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 8,
+        "y": 15,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApiGateway", "Latency", "ApiName", "wealth_mgmt_api"],
+            ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "wealth_mgmt_api"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "API Gateway Latency",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 16,
+        "y": 15,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "wealth_mgmt_client_profiles"],
+            ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "wealth_mgmt_client_profiles"],
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "wealth_mgmt_portfolios"],
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "wealth_mgmt_transactions"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "DynamoDB Consumed Capacity",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 21,
+        "width": 24,
+        "height": 1,
+        "properties": {
+          "markdown": "## Custom Agent Metrics (WealthMgmt/Agents namespace)"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 22,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "AgentResponseTime", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "AgentResponseTime", "AgentName", "sophia"],
+            ["WealthMgmt/Agents", "AgentResponseTime", "AgentName", "olivia"],
+            ["WealthMgmt/Agents", "AgentResponseTime", "AgentName", "victor"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Agent Response Time by Agent (ms)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 8,
+        "y": 22,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "EstimatedCostUSD", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "EstimatedCostUSD", "AgentName", "sophia"],
+            ["WealthMgmt/Agents", "EstimatedCostUSD", "AgentName", "olivia"],
+            ["WealthMgmt/Agents", "EstimatedCostUSD", "AgentName", "victor"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Estimated Cost Per Agent ($)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 16,
+        "y": 22,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "ToolCallsPerRequest", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "ToolCallsPerRequest", "AgentName", "sophia"],
+            ["WealthMgmt/Agents", "ToolCallsPerRequest", "AgentName", "olivia"],
+            ["WealthMgmt/Agents", "ToolCallsPerRequest", "AgentName", "victor"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Avg Tool Calls Per Request",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 28,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "ToolLatency", "ToolName", "get_client_portfolio", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "ToolLatency", "ToolName", "assess_portfolio_risk", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "ToolLatency", "ToolName", "analyze_market_sector", "AgentName", "marcus"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Tool Latency - Marcus (Market Analyst)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 8,
+        "y": 28,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "MemoryHitRatePercent", "AgentName", "marcus"],
+            ["WealthMgmt/Agents", "MemoryHitRatePercent", "AgentName", "sophia"],
+            ["WealthMgmt/Agents", "MemoryHitRatePercent", "AgentName", "olivia"]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-west-2",
+          "title": "Memory Hit Rate (%)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "metric",
+        "x": 16,
+        "y": 28,
+        "width": 8,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["WealthMgmt/Agents", "ComplianceEvents", "Status", "FLAGGED", "EventType", "TRANSACTION_REVIEW"],
+            ["WealthMgmt/Agents", "ComplianceEvents", "Status", "APPROVED", "EventType", "KYC_VERIFICATION"],
+            ["WealthMgmt/Agents", "ComplianceEvents", "Status", "FLAGGED", "EventType", "KYC_VERIFICATION"]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-west-2",
+          "title": "Compliance Events (Victor)",
+          "view": "timeSeries"
+        }
+      },
+      {
+        "type": "text",
+        "x": 0,
+        "y": 34,
+        "width": 24,
+        "height": 1,
+        "properties": {
+          "markdown": "## GenAI Observability - Logs & Traces"
+        }
+      },
+      {
+        "type": "log",
+        "x": 0,
+        "y": 35,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "query": "SOURCE '/aws/bedrock/modelinvocations' | fields @timestamp, modelId, inputTokenCount, outputTokenCount, invocationLatency | sort @timestamp desc | limit 20",
+          "region": "us-west-2",
+          "title": "Recent Bedrock Model Invocations",
+          "view": "table"
+        }
+      },
+      {
+        "type": "log",
+        "x": 12,
+        "y": 35,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "query": "SOURCE '/aws/lambda/wealth_mgmt_agent_router_lambda' | filter @message like /AgentCore invocation/ | fields @timestamp, @message | sort @timestamp desc | limit 20",
+          "region": "us-west-2",
+          "title": "Agent Router Activity",
+          "view": "table"
+        }
+      }
+    ]
+  }
+}

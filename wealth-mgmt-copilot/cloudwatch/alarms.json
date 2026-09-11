@@ -1,0 +1,179 @@
+{
+  "anomaly_detection_alarms": [
+    {
+      "AlarmName": "wealth-mgmt-latency-anomaly",
+      "AlarmDescription": "Bedrock invocation latency is anomalous — potential model degradation or prompt issue",
+      "MetricName": "InvocationLatency",
+      "Namespace": "AWS/Bedrock",
+      "ComparisonOperator": "GreaterThanUpperThreshold",
+      "ThresholdMetricId": "ad1",
+      "EvaluationPeriods": 3,
+      "Metrics": [
+        {
+          "Id": "m1",
+          "MetricStat": {
+            "Metric": {
+              "MetricName": "InvocationLatency",
+              "Namespace": "AWS/Bedrock"
+            },
+            "Period": 300,
+            "Stat": "Average"
+          }
+        },
+        {
+          "Id": "ad1",
+          "Expression": "ANOMALY_DETECTION_BAND(m1, 2)"
+        }
+      ],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-token-usage-anomaly",
+      "AlarmDescription": "Token usage anomaly detected — possible prompt injection or runaway agent loop",
+      "MetricName": "InputTokenCount",
+      "Namespace": "AWS/Bedrock",
+      "ComparisonOperator": "GreaterThanUpperThreshold",
+      "ThresholdMetricId": "ad1",
+      "EvaluationPeriods": 2,
+      "Metrics": [
+        {
+          "Id": "m1",
+          "MetricStat": {
+            "Metric": {
+              "MetricName": "InputTokenCount",
+              "Namespace": "AWS/Bedrock"
+            },
+            "Period": 300,
+            "Stat": "Sum"
+          }
+        },
+        {
+          "Id": "ad1",
+          "Expression": "ANOMALY_DETECTION_BAND(m1, 3)"
+        }
+      ],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-agent-response-time-anomaly",
+      "AlarmDescription": "Custom agent response time anomaly — per-agent monitoring via custom metrics",
+      "MetricName": "AgentResponseTime",
+      "Namespace": "WealthMgmt/Agents",
+      "ComparisonOperator": "GreaterThanUpperThreshold",
+      "ThresholdMetricId": "ad1",
+      "EvaluationPeriods": 3,
+      "Metrics": [
+        {
+          "Id": "m1",
+          "MetricStat": {
+            "Metric": {
+              "MetricName": "AgentResponseTime",
+              "Namespace": "WealthMgmt/Agents"
+            },
+            "Period": 300,
+            "Stat": "Average"
+          }
+        },
+        {
+          "Id": "ad1",
+          "Expression": "ANOMALY_DETECTION_BAND(m1, 2)"
+        }
+      ],
+      "TreatMissingData": "notBreaching"
+    }
+  ],
+  "alarms": [
+    {
+      "AlarmName": "wealth-mgmt-bedrock-high-latency",
+      "AlarmDescription": "Bedrock model invocation latency exceeds 10 seconds",
+      "MetricName": "InvocationLatency",
+      "Namespace": "AWS/Bedrock",
+      "Statistic": "Average",
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 10000,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Dimensions": [{"Name": "ModelId", "Value": "us.anthropic.claude-haiku-4-5-20251001-v1:0"}],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-bedrock-throttling",
+      "AlarmDescription": "Bedrock throttling detected — agents may be impacted",
+      "MetricName": "InvocationThrottles",
+      "Namespace": "AWS/Bedrock",
+      "Statistic": "Sum",
+      "Period": 60,
+      "EvaluationPeriods": 3,
+      "Threshold": 5,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-agent-router-errors",
+      "AlarmDescription": "Agent router Lambda error rate exceeds 5%",
+      "MetricName": "Errors",
+      "Namespace": "AWS/Lambda",
+      "Statistic": "Sum",
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 5,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Dimensions": [{"Name": "FunctionName", "Value": "wealth_mgmt_agent_router_lambda"}],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-agent-router-duration",
+      "AlarmDescription": "Agent router Lambda duration exceeds 25 seconds",
+      "MetricName": "Duration",
+      "Namespace": "AWS/Lambda",
+      "Statistic": "Average",
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 25000,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Dimensions": [{"Name": "FunctionName", "Value": "wealth_mgmt_agent_router_lambda"}],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-compliance-ecs-cpu",
+      "AlarmDescription": "Compliance Checker ECS service CPU exceeds 80%",
+      "MetricName": "CPUUtilization",
+      "Namespace": "AWS/ECS",
+      "Statistic": "Average",
+      "Period": 300,
+      "EvaluationPeriods": 3,
+      "Threshold": 80,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Dimensions": [
+        {"Name": "ClusterName", "Value": "compliance-checker-cluster"},
+        {"Name": "ServiceName", "Value": "compliance-checker-service"}
+      ],
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-high-token-usage",
+      "AlarmDescription": "Token usage spike — potential prompt injection or runaway agent",
+      "MetricName": "InputTokenCount",
+      "Namespace": "AWS/Bedrock",
+      "Statistic": "Sum",
+      "Period": 300,
+      "EvaluationPeriods": 1,
+      "Threshold": 500000,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "wealth-mgmt-dynamodb-throttle",
+      "AlarmDescription": "DynamoDB read throttling on client profiles table",
+      "MetricName": "ReadThrottleEvents",
+      "Namespace": "AWS/DynamoDB",
+      "Statistic": "Sum",
+      "Period": 60,
+      "EvaluationPeriods": 3,
+      "Threshold": 1,
+      "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+      "Dimensions": [{"Name": "TableName", "Value": "wealth_mgmt_client_profiles"}],
+      "TreatMissingData": "notBreaching"
+    }
+  ]
+}

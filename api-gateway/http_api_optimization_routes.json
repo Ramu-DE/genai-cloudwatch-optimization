@@ -1,0 +1,46 @@
+{
+    "Items": [
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "0r18ro7",
+            "RouteKey": "GET /results/{execution_id}",
+            "Target": "integrations/wsf5lee"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "571ov1d",
+            "RouteKey": "POST /parallel",
+            "Target": "integrations/wsf5lee"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "ky1r0n1",
+            "RouteKey": "POST /execute-scenario",
+            "Target": "integrations/wsf5lee"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "o1k5v4c",
+            "RouteKey": "POST /optimize",
+            "Target": "integrations/wsf5lee"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "o1pctp1",
+            "RouteKey": "GET /health",
+            "Target": "integrations/wsf5lee"
+        },
+        {
+            "ApiKeyRequired": false,
+            "AuthorizationType": "NONE",
+            "RouteId": "vx4u6oa",
+            "RouteKey": "GET /scenarios",
+            "Target": "integrations/wsf5lee"
+        }
+    ]
+}

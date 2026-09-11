@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Comparison - Agent Optimization</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load centralized configuration -->
+    <script src="../config.js"></script>
+    <style>
+        :root {
+            --primary-sage: #A8C69F;
+            --secondary-sand: #F5E6D3;
+            --accent-rose: #E8B4B8;
+            --neutral-cream: #FFFBF6;
+            --neutral-charcoal: #2D3436;
+            --success-green: #27AE60;
+            --error-red: #E74C3C;
+            --warning-orange: #F39C12;
+            --focus-color: #4A90E2;
+            --baseline-blue: #3498db;
+            --fault-red: #e74c3c;
+            --optimization-green: #2ecc71;
+            --purple-accent: #9b59b6;
+            --teal-accent: #1abc9c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--neutral-charcoal);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .header h1 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .controls {
+            padding: 30px;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-bottom: 3px solid #667eea;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .control-item input,
+        .control-item select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #8ec5fc;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .control-item input:focus,
+        .control-item select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 28px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--neutral-charcoal);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #3d4446;
+        }
+
+        .progress-section {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-bottom: 3px solid #667eea;
+            display: none;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .results-section {
+            padding: 30px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .summary-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .summary-card p {
+            opacity: 0.9;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .comparison-table td {
+            font-size: 14px;
+        }
+
+        .scenario-name {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .metric-good {
+            color: var(--success-green);
+            font-weight: 600;
+        }
+
+        .metric-warning {
+            color: var(--warning-orange);
+            font-weight: 600;
+        }
+
+        .metric-bad {
+            color: var(--error-red);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-running {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #764ba2;
+        }
+
+        .status-success {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #27ae60;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #e74c3c;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .type-baseline {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .type-fault {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .type-optimization {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .impact-indicator {
+            display: inline-block;
+            width: 100px;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .impact-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-green) 0%, var(--warning-orange) 50%, var(--error-red) 100%);
+            transition: width 0.3s;
+        }
+
+        .export-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: var(--error-red);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--error-red);
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Performance Comparison Dashboard</h1>
+            <p>Automated testing and comparison of all optimization scenarios</p>
+        </div>
+
+        <div class="controls">
+            <div style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);">
+                <strong style="color: #764ba2;">📋 How to Use:</strong>
+                <span style="color: #2d3436; margin-left: 10px;">
+                    1. Configure test parameters below
+                    2. Choose scenario filter (optional)
+                    3. Click "Run All Tests" to start automated comparison
+                    4. Export results when complete
+                </span>
+            </div>
+            <div class="control-group">
+                <div class="control-item">
+                    <label for="customerIdInput">Customer ID:</label>
+                    <input type="text" id="customerIdInput" value="cust_matthewnguyen22" placeholder="Enter customer ID">
+                </div>
+                <div class="control-item">
+                    <label for="promptInput">Test Prompt:</label>
+                    <input type="text" id="promptInput" value="What nutrition plan do you recommend for my senior dog?" placeholder="Enter test prompt">
+                </div>
+                <div class="control-item">
+                    <label for="scenarioFilter">Filter Scenarios:</label>
+                    <select id="scenarioFilter">
+                        <option value="all">All Scenarios</option>
+                        <option value="baseline">Baseline Only</option>
+                        <option value="fault">Fault Injection Only</option>
+                        <option value="optimization">Optimization Only</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="executionMode">Execution Mode:</label>
+                    <select id="executionMode">
+                        <option value="sequential">Sequential (Slower, Safer)</option>
+                        <option value="parallel">Parallel (Faster)</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <button id="runAllBtn" class="btn btn-primary">
+                        <span id="runBtnText">▶️ Run All Tests</span>
+                        <span id="runBtnSpinner" class="loading-spinner hidden"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing...</div>
+        </div>
+
+        <div class="results-section">
+            <div class="summary-cards" id="summaryCards">
+                <div class="summary-card">
+                    <h3 id="totalTests">0</h3>
+                    <p>Total Tests</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="completedTests">0</h3>
+                    <p>Completed</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="avgLatency">-</h3>
+                    <p>Avg Latency</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="avgCost">-</h3>
+                    <p>Avg Cost</p>
+                </div>
+            </div>
+
+            <div class="export-buttons">
+                <button id="clearResultsBtn" class="btn btn-secondary">🗑️ Clear Results</button>
+                <button id="exportCsvBtn" class="btn btn-secondary">📥 Export CSV</button>
+                <button id="exportJsonBtn" class="btn btn-secondary">📥 Export JSON</button>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Latency (ms)</th>
+                        <th>Cost ($)</th>
+                        <th>Tokens</th>
+                        <th>Analysis</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <div style="color: var(--neutral-charcoal); font-size: 1.1em; margin-bottom: 15px;">
+                                <strong>Ready to Compare Performance</strong>
+                            </div>
+                            <div style="color: #6c757d; margin-bottom: 20px;">
+                                Configure your test parameters above, then click "Run All Tests" to begin automated testing
+                            </div>
+                            <div style="color: #6c757d; font-size: 0.9em;">
+                                💡 Tip: Use the scenario filter to test specific categories (baseline, fault, or optimization)
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="websocket-client.js"></script>
+    <script src="format-response.js"></script>
+    <script>
+        // Configuration - Use OPTIMIZATION_CONFIG from centralized config.js
+        const API_ENDPOINT = (typeof OPTIMIZATION_CONFIG !== 'undefined' && OPTIMIZATION_CONFIG.REST_API_URL) 
+            ? OPTIMIZATION_CONFIG.REST_API_URL 
+            : 'https://2iw6oqr926.execute-api.us-east-1.amazonaws.com/prod';
+        const WS_ENDPOINT = (typeof OPTIMIZATION_CONFIG !== 'undefined' && OPTIMIZATION_CONFIG.WEBSOCKET_URL) 
+            ? OPTIMIZATION_CONFIG.WEBSOCKET_URL 
+            : null;  // WebSocket not yet deployed for optimization
+        
+        // Verify config boundary
+        if (typeof verifyConfigBoundaries === 'function') {
+            verifyConfigBoundaries('OPTIMIZATION', 'OPTIMIZATION_CONFIG');
+        }
+
+        // Scenario definitions
+        const scenarios = [
+            { id: 1, name: "Optimized Base Case", type: "baseline", description: "Baseline performance with optimal configuration" },
+            { id: 2, name: "Context Bloat", type: "fault", description: "Excessive context injection (+500 tokens)" },
+            { id: 3, name: "Optimized Context", type: "optimization", description: "Minimal, focused context for efficiency" },
+            { id: 4, name: "Tool Failure", type: "fault", description: "Tool errors requiring retry logic" },
+            { id: 5, name: "Optimized Tool Handling", type: "optimization", description: "Robust error handling and validation" },
+            { id: 6, name: "Raw Output", type: "fault", description: "Unprocessed tool output sent to LLM" },
+            { id: 7, name: "Structured Output", type: "optimization", description: "Pre-processed, formatted tool responses" },
+            { id: 8, name: "No Caching", type: "fault", description: "Repeated queries without caching" },
+            { id: 9, name: "With Caching", type: "optimization", description: "Cached responses for repeated queries" },
+            { id: 10, name: "DynamoDB Latency Spike", type: "fault", description: "Slow database queries (+4s delay)" },
+            { id: 11, name: "Optimized DynamoDB", type: "optimization", description: "Fast, optimized database access" },
+            { id: 12, name: "Memory Misuse", type: "fault", description: "Retrieving irrelevant memory summaries" },
+            { id: 13, name: "Optimized Memory", type: "optimization", description: "Targeted, relevant memory retrieval" }
+        ];
+
+        // State
+        let results = [];
+        let isRunning = false;
+        let wsClient = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupEventListeners();
+            
+            // Only initialize WebSocket if URL is valid (not a placeholder)
+            if (WS_ENDPOINT && !WS_ENDPOINT.includes('[') && !WS_ENDPOINT.includes(']')) {
+                wsClient = new OptimizationWebSocketClient(WS_ENDPOINT);
+                
+                // Connect to WebSocket
+                try {
+                    await wsClient.connect();
+                    console.log('✅ WebSocket ready');
+                } catch (error) {
+                    console.error('❌ Failed to connect to WebSocket:', error);
+                    console.log('ℹ️  WebSocket unavailable - using REST API only');
+                }
+            } else {
+                console.log('ℹ️  WebSocket not configured - using REST API only');
+            }
+        });
+
+        function setupEventListeners() {
+            document.getElementById('runAllBtn').addEventListener('click', runAllTests);
+            document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+            document.getElementById('exportJsonBtn').addEventListener('click', exportToJson);
+        }
+
+        function clearResults() {
+            // Reset state
+            results = [];
+            
+            // Reset summary cards
+            document.getElementById('totalTests').textContent = '0';
+            document.getElementById('completedTests').textContent = '0';
+            document.getElementById('avgLatency').textContent = '-';
+            document.getElementById('avgCost').textContent = '-';
+            
+            // Reset progress
+            document.getElementById('progressSection').classList.remove('active');
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressFill').textContent = '0%';
+            
+            // Reset table
+            document.getElementById('resultsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px;">
+                        <div style="color: var(--neutral-charcoal); font-size: 1.1em; margin-bottom: 15px;">
+                            <strong>Ready to Compare Performance</strong>
+                        </div>
+                        <div style="color: #6c757d; margin-bottom: 20px;">
+                            Configure your test parameters above, then click "Run All Tests" to begin automated testing
+                        </div>
+                        <div style="color: #6c757d; font-size: 0.9em;">
+                            💡 Tip: Use the scenario filter to test specific categories (baseline, fault, or optimization)
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            console.log('✅ Results cleared');
+        }
+
+        async function runAllTests() {
+            if (isRunning) return;
+
+            isRunning = true;
+            results = [];
+            
+            const customerId = document.getElementById('customerIdInput').value;
+            const prompt = document.getElementById('promptInput').value;
+            const filter = document.getElementById('scenarioFilter').value;
+            const executionMode = document.getElementById('executionMode').value;
+
+            // Filter scenarios
+            const scenariosToRun = scenarios.filter(s => {
+                if (filter === 'all') return true;
+                return s.type === filter;
+            });
+
+            // Update UI
+            document.getElementById('runBtnText').textContent = 'Running...';
+            document.getElementById('runBtnSpinner').classList.remove('hidden');
+            document.getElementById('runAllBtn').disabled = true;
+            document.getElementById('progressSection').classList.add('active');
+            document.getElementById('totalTests').textContent = scenariosToRun.length;
+
+            // Clear table
+            document.getElementById('resultsTableBody').innerHTML = '';
+
+            if (executionMode === 'parallel') {
+                // Run all tests in parallel
+                await runTestsInParallel(scenariosToRun, customerId, prompt);
+            } else {
+                // Run tests sequentially
+                await runTestsSequentially(scenariosToRun, customerId, prompt);
+            }
+
+            // Complete
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('progressFill').textContent = '100%';
+            document.getElementById('progressText').textContent = 'All tests completed!';
+            document.getElementById('runBtnText').textContent = '▶️ Run All Tests';
+            document.getElementById('runBtnSpinner').classList.add('hidden');
+            document.getElementById('runAllBtn').disabled = false;
+            isRunning = false;
+        }
+
+        async function runTestsSequentially(scenariosToRun, customerId, prompt) {
+            for (let i = 0; i < scenariosToRun.length; i++) {
+                const scenario = scenariosToRun[i];
+                
+                // Update progress
+                const progress = ((i / scenariosToRun.length) * 100).toFixed(0);
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = progress + '%';
+                document.getElementById('progressText').textContent = `Testing: ${scenario.name} (${i + 1}/${scenariosToRun.length})`;
+
+                // Add row to table
+                addResultRow(scenario, 'running');
+
+                // Run test
+                try {
+                    const result = await runSingleTest(scenario.id, customerId, prompt);
+                    result.scenario = scenario;
+                    results.push(result);
+                    updateResultRow(scenario.id, result);
+                } catch (error) {
+                    console.error(`Error testing scenario ${scenario.id}:`, error);
+                    const errorResult = {
+                        scenario: scenario,
+                        status: 'error',
+                        error: error.message
+                    };
+                    results.push(errorResult);
+                    updateResultRow(scenario.id, errorResult);
+                }
+
+                // Update summary
+                updateSummary();
+            }
+        }
+
+        async function runTestsInParallel(scenariosToRun, customerId, prompt) {
+            // Add all rows first
+            scenariosToRun.forEach(scenario => {
+                addResultRow(scenario, 'running');
+            });
+
+            // Update progress
+            document.getElementById('progressText').textContent = `Running ${scenariosToRun.length} tests in parallel...`;
+
+            // Run all tests in parallel
+            const promises = scenariosToRun.map(scenario => 
+                runSingleTest(scenario.id, customerId, prompt)
+                    .then(result => {
+                        result.scenario = scenario;
+                        results.push(result);
+                        updateResultRow(scenario.id, result);
+                        updateSummary();
+                        
+                        // Update progress
+                        const completed = results.length;
+                        const progress = ((completed / scenariosToRun.length) * 100).toFixed(0);
+                        document.getElementById('progressFill').style.width = progress + '%';
+                        document.getElementById('progressFill').textContent = progress + '%';
+                        document.getElementById('progressText').textContent = `Completed ${completed}/${scenariosToRun.length} tests`;
+                        
+                        return result;
+                    })
+                    .catch(error => {
+                        console.error(`Error testing scenario ${scenario.id}:`, error);
+                        const errorResult = {
+                            scenario: scenario,
+                            status: 'error',
+                            error: error.message
+                        };
+                        results.push(errorResult);
+                        updateResultRow(scenario.id, errorResult);
+                        updateSummary();
+                        
+                        // Update progress
+                        const completed = results.length;
+                        const progress = ((completed / scenariosToRun.length) * 100).toFixed(0);
+                        document.getElementById('progressFill').style.width = progress + '%';
+                        document.getElementById('progressFill').textContent = progress + '%';
+                        
+                        return errorResult;
+                    })
+            );
+
+            // Wait for all tests to complete
+            await Promise.all(promises);
+        }
+
+        async function runSingleTest(scenarioId, customerId, prompt) {
+            try {
+                let result;
+                
+                // Use WebSocket if available, otherwise fall back to REST API
+                if (wsClient && wsClient.isConnected) {
+                    result = await wsClient.executeScenario(scenarioId, prompt, customerId);
+                } else {
+                    // Fall back to REST API
+                    console.log(`ℹ️  Using REST API for scenario ${scenarioId}`);
+                    const response = await fetch(`${API_ENDPOINT}/execute-scenario`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            scenario_id: scenarioId,
+                            customer_id: customerId,
+                            prompt: prompt
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    result = await response.json();
+                }
+                
+                console.log(`📊 Scenario ${scenarioId} result:`, result);
+                
+                // Handle both single scenario format {fault: {...}} and parallel format {fault_result: {...}}
+                // For single scenarios, use the fault data
+                // For parallel scenarios, ALWAYS use fault_result because that's the scenario being tested
+                // (baseline_result is always scenario 1 for comparison purposes)
+                let scenarioData;
+                
+                // Check if there's an error in the result
+                if (result.error) {
+                    console.error(`❌ Error in scenario ${scenarioId}:`, result.error);
+                    throw new Error(result.error);
+                }
+                
+                if (result.fault) {
+                    // Single scenario format (scenarios without baselines like scenario 1)
+                    scenarioData = result.fault;
+                    console.log(`📦 Single scenario data for ${scenarioId}:`, JSON.stringify(scenarioData, null, 2));
+                    console.log(`   - latency_ms: ${scenarioData.latency_ms} (type: ${typeof scenarioData.latency_ms})`);
+                    console.log(`   - cost_usd: ${scenarioData.cost_usd} (type: ${typeof scenarioData.cost_usd})`);
+                    console.log(`   - total_tokens: ${scenarioData.total_tokens} (type: ${typeof scenarioData.total_tokens})`);
+                    
+                    // If data is missing, check if it's an error response
+                    if (!scenarioData.latency_ms && !scenarioData.error) {
+                        console.warn(`⚠️ Single scenario data missing metrics for ${scenarioId}`);
+                    }
+                } else if (result.fault_result) {
+                    // Parallel format - fault_result contains the scenario being tested
+                    scenarioData = result.fault_result.metrics || result.fault_result;
+                    console.log(`📦 Parallel scenario data for ${scenarioId}:`, JSON.stringify(scenarioData, null, 2));
+                    console.log(`   - latency_ms: ${scenarioData.latency_ms} (type: ${typeof scenarioData.latency_ms})`);
+                    console.log(`   - estimated_cost_usd: ${scenarioData.estimated_cost_usd} (type: ${typeof scenarioData.estimated_cost_usd})`);
+                    console.log(`   - total_tokens: ${scenarioData.total_tokens} (type: ${typeof scenarioData.total_tokens})`);
+                } else {
+                    console.warn(`⚠️ No data found for scenario ${scenarioId}. Full result:`, JSON.stringify(result, null, 2));
+                    scenarioData = {};
+                }
+                
+                // Extract metrics from response - handle both formats
+                const metrics = {
+                    status: 'success',
+                    latency: scenarioData.latency_ms || scenarioData.latency || 0,
+                    cost: scenarioData.estimated_cost_usd || scenarioData.cost_usd || scenarioData.cost || 0,
+                    tokens: scenarioData.total_tokens || scenarioData.tokens || 0,
+                    input_tokens: scenarioData.input_tokens || 0,
+                    output_tokens: scenarioData.output_tokens || 0,
+                    response: scenarioData.response || result.fault_result?.response || result.baseline_result?.response || result.fault?.response || '',
+                    timestamp: result.timestamp || scenarioData.timestamp || new Date().toISOString(),
+                    // Include comparison data for analysis
+                    comparison: result.comparison,
+                    root_cause: result.root_cause_analysis
+                };
+                
+                console.log(`📈 Extracted metrics for scenario ${scenarioId}:`, metrics);
+                return metrics;
+            } catch (error) {
+                console.error('Error in runSingleTest:', error);
+                throw error;
+            }
+        }
+
+        function addResultRow(scenario, status) {
+            const tbody = document.getElementById('resultsTableBody');
+            const row = document.createElement('tr');
+            row.id = `row-${scenario.id}`;
+            const typeClass = `type-${scenario.type}`;
+            row.innerHTML = `
+                <td class="scenario-name">${scenario.name}</td>
+                <td style="font-size: 0.85em; color: #6c757d;">${scenario.description || '-'}</td>
+                <td><span class="type-badge ${typeClass}">${scenario.type.toUpperCase()}</span></td>
+                <td><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function updateResultRow(scenarioId, result) {
+            const row = document.getElementById(`row-${scenarioId}`);
+            if (!row) return;
+
+            const statusClass = result.status === 'success' ? 'status-success' : 'status-error';
+            const latencyClass = result.latency < 2000 ? 'metric-good' : result.latency < 5000 ? 'metric-warning' : 'metric-bad';
+            const costClass = result.cost < 0.01 ? 'metric-good' : result.cost < 0.05 ? 'metric-warning' : 'metric-bad';
+
+            const impact = calculateImpact(result);
+            const impactPercent = Math.min(100, Math.abs(impact));
+
+            // Generate analysis narrative
+            const analysis = generateAnalysisNarrative(result);
+            
+            const typeClass = `type-${result.scenario.type}`;
+            
+            row.innerHTML = `
+                <td class="scenario-name">${result.scenario.name}</td>
+                <td style="font-size: 0.85em; color: #6c757d;">${result.scenario.description || '-'}</td>
+                <td><span class="type-badge ${typeClass}">${result.scenario.type.toUpperCase()}</span></td>
+                <td><span class="status-badge ${statusClass}">${result.status.toUpperCase()}</span></td>
+                <td class="${latencyClass}">${result.latency ? result.latency.toFixed(0) : '-'}</td>
+                <td class="${costClass}">${result.cost ? result.cost.toFixed(4) : '-'}</td>
+                <td>${result.tokens || '-'}</td>
+                <td style="max-width: 600px;">${analysis || (result.response ? result.response.substring(0, 150) + '...' : '-')}</td>
+            `;
+        }
+
+        function calculateImpact(result) {
+            // Calculate impact compared to baseline (scenario 1)
+            const baseline = results.find(r => r.scenario && r.scenario.id === 1);
+            if (!baseline || !baseline.latency || !result.latency) return 0;
+            
+            return ((result.latency - baseline.latency) / baseline.latency) * 100;
+        }
+
+        function generateAnalysisNarrative(result) {
+            if (!result.comparison || !result.root_cause) return '';
+            
+            const comp = result.comparison;
+            const scenario = result.scenario;
+            
+            let narrative = `<div style="padding: 10px; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); border-radius: 8px; font-size: 0.9em; line-height: 1.6; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);">`;
+            
+            // Impact summary with color coding
+            narrative += `<div style="margin-bottom: 8px;"><strong style="color: #764ba2;">📊 Impact:</strong> `;
+            narrative += `<span style="color: ${comp.latency_delta_ms > 0 ? '#e74c3c' : '#27ae60'};">${comp.latency_delta_ms > 0 ? '+' : ''}${comp.latency_delta_ms.toFixed(0)}ms</span> | `;
+            narrative += `<span style="color: ${comp.token_delta > 0 ? '#e74c3c' : '#27ae60'};">${comp.token_delta > 0 ? '+' : ''}${comp.token_delta} tokens</span> | `;
+            narrative += `<span style="color: ${comp.cost_delta_usd > 0 ? '#e74c3c' : '#27ae60'};">$${comp.cost_delta_usd > 0 ? '+' : ''}${comp.cost_delta_usd.toFixed(4)}</span>`;
+            narrative += `</div>`;
+            
+            // Root cause
+            narrative += `<div style="margin-bottom: 8px;"><strong style="color: #764ba2;">🔍 Root Cause:</strong><br><span style="color: #2d3436;">${result.root_cause}</span></div>`;
+            
+            // Why this matters
+            narrative += `<div style="padding: 8px; background: rgba(255,255,255,0.7); border-radius: 4px; border-left: 3px solid #667eea;">`;
+            narrative += `<strong style="color: #667eea;">⚠️ Why This Matters:</strong><br>`;
+            
+            if (scenario.type === 'fault') {
+                if (comp.latency_delta_ms > 1000) {
+                    narrative += `<span style="color: #e74c3c;">❌ ${comp.latency_delta_ms.toFixed(0)}ms delay degrades UX</span> - Users expect <2s responses. `;
+                }
+                if (comp.token_delta_percent > 50) {
+                    narrative += `<span style="color: #e74c3c;">💰 ${comp.token_delta_percent.toFixed(0)}% token increase</span> = hundreds in monthly costs at scale. `;
+                }
+                if (comp.tool_call_delta > 0) {
+                    narrative += `<span style="color: #e74c3c;">🔧 +${comp.tool_call_delta} tool calls</span> = more failure points. `;
+                }
+            } else if (scenario.type === 'optimization') {
+                if (comp.latency_delta_ms < -500) {
+                    narrative += `<span style="color: #27ae60;">✅ ${Math.abs(comp.latency_delta_ms).toFixed(0)}ms faster</span> = better UX. `;
+                }
+                if (comp.token_delta_percent < -20) {
+                    narrative += `<span style="color: #27ae60;">💚 ${Math.abs(comp.token_delta_percent).toFixed(0)}% token savings</span> = significant cost reduction. `;
+                }
+            }
+            
+            narrative += `</div></div>`;
+            
+            return narrative;
+        }
+
+
+
+        function updateSummary() {
+            const completed = results.filter(r => r.status === 'success').length;
+            const avgLatency = results.reduce((sum, r) => sum + (r.latency || 0), 0) / (completed || 1);
+            const avgCost = results.reduce((sum, r) => sum + (r.cost || 0), 0) / (completed || 1);
+
+            document.getElementById('completedTests').textContent = completed;
+            document.getElementById('avgLatency').textContent = avgLatency.toFixed(0) + 'ms';
+            document.getElementById('avgCost').textContent = '$' + avgCost.toFixed(4);
+        }
+
+        function exportToCsv() {
+            if (results.length === 0) {
+                alert('No results to export');
+                return;
+            }
+
+            const headers = ['Scenario', 'Type', 'Status', 'Latency (ms)', 'Cost ($)', 'Tokens', 'Impact (%)', 'Response'];
+            const rows = results.map(r => [
+                r.scenario.name,
+                r.scenario.type,
+                r.status,
+                r.latency || '',
+                r.cost || '',
+                r.tokens || '',
+                calculateImpact(r).toFixed(2),
+                (r.response || r.error || '').replace(/"/g, '""')
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            downloadFile(csv, 'performance-comparison.csv', 'text/csv');
+        }
+
+        function exportToJson() {
+            if (results.length === 0) {
+                alert('No results to export');
+                return;
+            }
+
+            const json = JSON.stringify(results, null, 2);
+            downloadFile(json, 'performance-comparison.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

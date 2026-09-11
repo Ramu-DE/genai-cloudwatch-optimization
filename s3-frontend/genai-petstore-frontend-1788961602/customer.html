@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Petstore - Customer Portal</title>
+    <meta name="description"
+        content="AI-powered pet care services with real-time appointment booking and expert consultations">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+    <style>
+        :root {
+            --primary-sage: #A8C69F;
+            --secondary-sand: #F5E6D3;
+            --accent-rose: #E8B4B8;
+            --neutral-cream: #FFFBF6;
+            --neutral-charcoal: #2D3436;
+            --success-green: #27AE60;
+            --error-red: #E74C3C;
+            --warning-orange: #F39C12;
+            --focus-color: #4A90E2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--neutral-cream) 0%, var(--secondary-sand) 100%);
+            min-height: 100vh;
+            color: var(--neutral-charcoal);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-welcome {
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .pets-section,
+        .appointments-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neutral-charcoal);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-all-btn {
+            background: var(--primary-sage);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            background: var(--accent-rose);
+        }
+
+        .pet-card {
+            background: var(--neutral-cream);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-sage);
+            transition: all 0.3s ease;
+        }
+
+        .pet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .pet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pet-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--neutral-charcoal);
+        }
+
+        .pet-species {
+            background: var(--primary-sage);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .pet-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .pet-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .appointment-card {
+            background: var(--neutral-cream);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-rose);
+            transition: all 0.3s ease;
+        }
+
+        .appointment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .appointment-service {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neutral-charcoal);
+        }
+
+        .appointment-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-scheduled {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .status-completed {
+            background: var(--primary-sage);
+            color: white;
+        }
+
+        .status-cancelled {
+            background: var(--error-red);
+            color: white;
+        }
+
+        .appointment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .appointment-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+<!--
+        .quick-actions {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .quick-actions h2 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neutral-charcoal);
+            margin-bottom: 20px;
+        }
+
+-->
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .agents-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .agents-section h2 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.8rem;
+            color: var(--neutral-charcoal);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .agent-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, var(--neutral-cream) 0%, white 100%);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-sage), var(--accent-rose));
+        }
+
+        .agent-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-sage);
+        }
+
+        .agent-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .agent-name {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--neutral-charcoal);
+            margin-bottom: 8px;
+        }
+
+        .agent-specialty {
+            color: var(--primary-sage);
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .agent-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90%;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-content {
+            padding: 30px;
+        }
+
+        .appointment-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--neutral-charcoal);
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-sage);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .appointments-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .no-appointments {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+
+        .no-appointments .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-sage);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Chat Modal Styles */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .chat-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            height: 80%;
+            max-height: 700px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-agent-info h3 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-agent-info p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-chat:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--neutral-cream);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: var(--primary-sage);
+            color: white;
+        }
+
+        .message.agent .message-content {
+            background: white;
+            color: var(--neutral-charcoal);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+        }
+
+        /* Formatted response styles */
+        .message-content strong {
+            font-weight: 600;
+            color: var(--primary-sage);
+        }
+
+        .message-content em {
+            font-style: italic;
+            color: var(--neutral-charcoal);
+        }
+
+        .numbered-item,
+        .bullet-item {
+            margin: 2px 0;
+            padding-left: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .numbered-item .number {
+            font-weight: 600;
+            color: var(--primary-sage);
+            min-width: 24px;
+            flex-shrink: 0;
+        }
+
+        .bullet-item .bullet {
+            color: var(--primary-sage);
+            font-size: 1.2em;
+            min-width: 16px;
+            flex-shrink: 0;
+        }
+
+        .section-header {
+            font-weight: 600;
+            color: var(--primary-sage);
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-size: 1.05em;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--accent-rose);
+        }
+
+        .message.agent .message-avatar {
+            background: var(--primary-sage);
+            color: white;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 20px 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-sage);
+        }
+
+        .send-btn {
+            background: var(--primary-sage);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: var(--accent-rose);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 18px;
+            margin-bottom: 15px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-sage);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .agent-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-container {
+                width: 95%;
+            }
+
+            .chat-container {
+                width: 95%;
+                height: 90%;
+            }
+        }
+
+        .footer {
+            background: linear-gradient(135deg, var(--neutral-charcoal) 0%, #1a1a1a 100%);
+            color: white;
+            margin-top: 60px;
+            padding: 40px 0 20px 0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .footer-logo {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .footer-left p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .app-version {
+            text-align: right;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-sage);
+        }
+
+        .app-version strong {
+            color: var(--primary-sage);
+            font-size: 1.1rem;
+        }
+
+        .app-version small {
+            opacity: 0.7;
+            font-size: 0.8rem;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .app-version {
+                text-align: center;
+            }
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .appointment-card {
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .appointment-card.loading {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🐾 GenAI Pet Store</div>
+            <div class="user-info">
+                <div class="user-welcome" id="userWelcome">Welcome!</div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="dashboard-grid">
+            <div class="pets-section">
+                <div class="section-header">
+                    <h2 class="section-title">🐾 My Pets</h2>
+                    <button class="view-all-btn" onclick="managePets()">Manage</button>
+                </div>
+                <div id="petsContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading your pets...
+                    </div>
+                </div>
+            </div>
+
+            <div class="appointments-section">
+                <div class="section-header">
+                    <h2 class="section-title">📅 Upcoming Appointments</h2>
+                    <button class="view-all-btn" onclick="showAllAppointments()">View All</button>
+                </div>
+                <div id="appointmentsContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading appointments...
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- 
+        <div class="quick-actions">
+            <h2>⚡ Quick Actions</h2>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="debouncedBookAppointment()">
+                    ➕ Book Appointment
+                </button>
+                <button class="action-btn" onclick="debouncedShowAppointments()">
+                    📅 View All Appointments
+                </button>
+                <button class="action-btn" onclick="viewServiceHistory()">
+                    📋 Service History
+                </button>
+                <button class="action-btn" onclick="updateProfile()">
+                    👤 Update Profile
+                </button>
+            </div>
+        </div>
+-->
+        <div class="agents-section">
+            <h2>🤖 AI Pet Care Specialists</h2>
+            <div class="agent-cards">
+                <div class="agent-card" onclick="startChat('bella')">
+                    <span class="agent-icon">🐕</span>
+                    <div class="agent-name">Bella</div>
+                    <div class="agent-specialty">Grooming Specialist</div>
+                    <div class="agent-description">Expert grooming services, breed-specific care tips, and styling
+                        recommendations for your pet's perfect look.</div>
+                </div>
+
+                <div class="agent-card" onclick="startChat('oliver')">
+                    <span class="agent-icon">🏥</span>
+                    <div class="agent-name">Oliver</div>
+                    <div class="agent-specialty">Veterinary Specialist</div>
+                    <div class="agent-description">Professional health assessments, medical consultations, and wellness
+                        guidance for your pet's optimal health.</div>
+                </div>
+
+                <div class="agent-card" onclick="startChat('luna')">
+                    <span class="agent-icon">🥗</span>
+                    <div class="agent-name">Luna</div>
+                    <div class="agent-specialty">Nutrition Expert</div>
+                    <div class="agent-description">Personalized nutrition plans, dietary consultations, and feeding
+                        recommendations tailored to your pet's needs.</div>
+                </div>
+
+                <div class="agent-card" onclick="startChat('max')">
+                    <span class="agent-icon">🎾</span>
+                    <div class="agent-name">Max</div>
+                    <div class="agent-specialty">Training Specialist</div>
+                    <div class="agent-description">Behavioral training, obedience programs, and positive reinforcement
+                        techniques for well-behaved pets.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Booking Modal -->
+    <div class="modal" id="bookingModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 Book New Appointment</h2>
+                <button class="close-modal" onclick="closeBookingModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form class="appointment-form" id="appointmentForm" onsubmit="submitAppointment(event)">
+                    <div class="form-group">
+                        <label for="serviceType">Service Type</label>
+                        <select id="serviceType" name="serviceType" required>
+                            <option value="">Select a service</option>
+                            <option value="grooming">🐕 Grooming Services</option>
+                            <option value="veterinary">🏥 Veterinary Care</option>
+                            <option value="nutrition">🥗 Nutrition Consultation</option>
+                            <option value="training">🎾 Training Services</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="petSelect">Select Pet</label>
+                        <select id="petSelect" name="petSelect" required>
+                            <option value="">Choose your pet</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appointmentDate">Preferred Date</label>
+                            <input type="date" id="appointmentDate" name="appointmentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentTime">Preferred Time</label>
+                            <select id="appointmentTime" name="appointmentTime" required>
+                                <option value="">Select time</option>
+                                <option value="09:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                                <option value="13:00">1:00 PM</option>
+                                <option value="14:00">2:00 PM</option>
+                                <option value="15:00">3:00 PM</option>
+                                <option value="16:00">4:00 PM</option>
+                                <option value="17:00">5:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appointmentNotes">Additional Notes (Optional)</label>
+                        <textarea id="appointmentNotes" name="appointmentNotes" rows="3"
+                            placeholder="Any special requirements or concerns..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        📅 Book Appointment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Appointments Modal -->
+    <div class="modal" id="appointmentsModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 All Appointments</h2>
+                <button class="close-modal" onclick="closeAppointmentsModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="appointments-list" id="allAppointmentsList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading all appointments...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chatModal">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-agent-info">
+                    <h3 id="chatAgentName">Agent Name</h3>
+                    <p id="chatAgentSpecialty">Specialty</p>
+                </div>
+                <button class="close-chat" onclick="closeChat()">&times;</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be added here -->
+            </div>
+
+            <div class="chat-input-container">
+                <form class="chat-input-form" onsubmit="sendMessage(event)">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Type your message..." required>
+                    <button type="submit" class="send-btn">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-logo">🐾 GenAI Pet Store</div>
+                <p>AI-powered pet care services with professional specialists</p>
+            </div>
+            <div class="footer-right">
+                <div class="app-version">
+                    <strong>Version 3.2.0</strong><br>
+                    <small>Build: 2025.10.24</small>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 GenAI Pet Store. All rights reserved. | Powered by Amazon Bedrock AgentCore</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentAgent = null;
+        let userPets = [];
+        let userAppointments = [];
+
+        // Agent configurations
+        const agents = {
+            'bella': {
+                name: 'Bella',
+                specialty: 'Pet Grooming Specialist',
+                icon: '🐕',
+                greeting: 'Hi there! I\'m Bella, your grooming specialist. I can help you with grooming schedules, breed-specific care, nail trimming, bathing, and booking appointments. What grooming needs can I help you with today?'
+            },
+            'oliver': {
+                name: 'Oliver',
+                specialty: 'Veterinary Specialist',
+                icon: '🏥',
+                greeting: 'Hello! I\'m Oliver, your veterinary specialist. I can provide health assessments, wellness checkups, and medical guidance. If this is urgent, please contact your local emergency vet immediately. How can I help with your pet\'s health today?'
+            },
+            'luna': {
+                name: 'Luna',
+                specialty: 'Pet Nutrition Expert',
+                icon: '🥗',
+                greeting: 'Hi! I\'m Luna, your nutrition expert. I can help create personalized diet plans, manage weight, address food allergies, and recommend feeding schedules. What nutrition questions do you have about your pet?'
+            },
+            'max': {
+                name: 'Max',
+                specialty: 'Pet Training Specialist',
+                icon: '🎾',
+                greeting: 'Hello! I\'m Max, your training specialist. I use positive reinforcement methods to address behavioral issues and teach new skills. Whether it\'s basic obedience or specific behavioral concerns, I\'m here to help. What training goals do you have?'
+            }
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Check if user is logged in
+            currentUser = sessionStorage.getItem('currentUser');
+            const userName = sessionStorage.getItem('userName');
+
+            if (!currentUser) {
+                // Redirect to login if not authenticated
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Update welcome message
+            if (userName) {
+                document.getElementById('userWelcome').textContent = `Welcome, ${userName}!`;
+            }
+
+            // Set minimum date for appointment booking
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('appointmentDate').min = tomorrow.toISOString().split('T')[0];
+
+            // Load user data
+            loadUserPets();
+            loadUserAppointments();
+        }
+
+        async function loadUserPets() {
+            const petsContainer = document.getElementById('petsContainer');
+
+            try {
+                // Get customer data from API
+                const customerData = await getCustomerData(currentUser);
+
+                if (customerData && customerData.pets && customerData.pets.length > 0) {
+                    userPets = customerData.pets;
+                    displayPets(customerData.pets);
+                    populatePetSelect();
+                } else {
+                    petsContainer.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">🐾</div>
+                            <p>No pets found in your profile.</p>
+                            <button class="action-btn" onclick="managePets()" style="margin-top: 15px;">
+                                ➕ Add Your First Pet
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading pets:', error);
+                petsContainer.innerHTML = `
+                    <div class="no-appointments">
+                        <div class="icon">❌</div>
+                        <p>Unable to load pet information.</p>
+                        <button class="action-btn" onclick="loadUserPets()" style="margin-top: 15px;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadUserAppointments() {
+            const appointmentsContainer = document.getElementById('appointmentsContainer');
+
+            try {
+                // Get appointments data
+                const appointments = await getUserAppointments(currentUser);
+
+                if (appointments && appointments.length > 0) {
+                    userAppointments = appointments;
+                    displayUpcomingAppointments(appointments);
+                } else {
+                    appointmentsContainer.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">📅</div>
+                            <p>No upcoming appointments.</p>
+                            <button class="action-btn" onclick="bookAppointment()" style="margin-top: 15px;">
+                                ➕ Book Your First Appointment
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                appointmentsContainer.innerHTML = `
+                    <div class="no-appointments">
+                        <div class="icon">❌</div>
+                        <p>Unable to load appointments.</p>
+                        <button class="action-btn" onclick="loadUserAppointments()" style="margin-top: 15px;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function displayPets(pets) {
+            const petsContainer = document.getElementById('petsContainer');
+
+            const petsHtml = pets.slice(0, 2).map(pet => `
+                <div class="pet-card">
+                    <div class="pet-header">
+                        <div class="pet-name">${getSpeciesIcon(pet.species)} ${pet.name}</div>
+                        <div class="pet-species">${pet.species}</div>
+                    </div>
+                    <div class="pet-details">
+                        <div class="pet-detail">
+                            <span>🐕</span> <strong>Breed:</strong> ${pet.breed}
+                        </div>
+                        <div class="pet-detail">
+                            <span>🎂</span> <strong>Age:</strong> ${pet.age} years
+                        </div>
+                        <div class="pet-detail">
+                            <span>⚖️</span> <strong>Weight:</strong> ${pet.weight} lbs
+                        </div>
+                        <div class="pet-detail">
+                            <span>🎨</span> <strong>Color:</strong> ${pet.color || 'Not specified'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            if (pets.length > 2) {
+                petsContainer.innerHTML = petsHtml + `
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="view-all-btn" onclick="managePets()">
+                            View All ${pets.length} Pets
+                        </button>
+                    </div>
+                `;
+            } else {
+                petsContainer.innerHTML = petsHtml;
+            }
+        }
+
+        function displayUpcomingAppointments(appointments) {
+            const appointmentsContainer = document.getElementById('appointmentsContainer');
+
+            // Filter for upcoming appointments
+            const upcoming = appointments.filter(apt => {
+                const aptDate = new Date(apt.appointmentDate);
+                const today = new Date();
+                return aptDate >= today && apt.status === 'scheduled';
+            }).slice(0, 3);
+
+            if (upcoming.length === 0) {
+                appointmentsContainer.innerHTML = `
+                    <div class="no-appointments">
+                        <div class="icon">📅</div>
+                        <p>No upcoming appointments.</p>
+                        <button class="action-btn" onclick="bookAppointment()" style="margin-top: 15px;">
+                            ➕ Book Appointment
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const appointmentsHtml = upcoming.map(apt => `
+                <div class="appointment-card">
+                    <div class="appointment-header">
+                        <div class="appointment-service">${getServiceIcon(apt.service)} ${apt.service}</div>
+                        <div class="appointment-status status-${apt.status}">${apt.status}</div>
+                    </div>
+                    <div class="appointment-details">
+                        <div class="appointment-detail">
+                            <span>🐾</span> <strong>Pet:</strong> ${apt.petName}
+                        </div>
+                        <div class="appointment-detail">
+                            <span>📅</span> <strong>Date:</strong> ${formatDate(apt.appointmentDate)}
+                        </div>
+                        <div class="appointment-detail">
+                            <span>⏰</span> <strong>Time:</strong> ${apt.appointmentTime || 'TBD'}
+                        </div>
+                        <div class="appointment-detail">
+                            <span>🤖</span> <strong>Agent:</strong> ${capitalizeFirst(apt.agent)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            appointmentsContainer.innerHTML = appointmentsHtml;
+        }
+
+        function populatePetSelect() {
+            const petSelect = document.getElementById('petSelect');
+            petSelect.innerHTML = '<option value="">Choose your pet</option>';
+
+            userPets.forEach(pet => {
+                const option = document.createElement('option');
+                option.value = pet.name;
+                option.textContent = `${getSpeciesIcon(pet.species)} ${pet.name} (${pet.breed})`;
+                petSelect.appendChild(option);
+            });
+        }
+
+        function getSpeciesIcon(species) {
+            switch (species?.toLowerCase()) {
+                case 'dog': return '🐕';
+                case 'cat': return '🐱';
+                default: return '🐾';
+            }
+        }
+
+        function getServiceIcon(service) {
+            const serviceIcons = {
+                'grooming': '🐕',
+                'veterinary': '🏥',
+                'nutrition': '🥗',
+                'training': '🎾'
+            };
+            return serviceIcons[service?.toLowerCase()] || '📋';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function capitalizeFirst(str) {
+            if (!str || typeof str !== 'string') return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        async function getCustomerData(customerId) {
+            // Mock customer data lookup - in real app, this would call your API
+            const mockCustomerData = {
+                'cust_0145': {
+                    name: 'Avery Smith',
+                    pets: [
+                        {
+                            name: 'Maggie',
+                            species: 'Cat',
+                            breed: 'Ragdoll',
+                            age: '15',
+                            weight: '12',
+                            color: 'Cream and Brown',
+                            medical_notes: 'Senior cat, regular checkups needed',
+                            dietary_restrictions: 'Senior formula food'
+                        }
+                    ]
+                },
+                'cust-0080': {
+                    name: 'Ava Walker',
+                    pets: [
+                        {
+                            name: 'Maggie',
+                            species: 'Dog',
+                            breed: 'German Shepherd',
+                            age: '6',
+                            weight: '65',
+                            color: 'Black and Tan',
+                            medical_notes: 'Healthy, up to date on vaccinations',
+                            dietary_restrictions: 'High-protein diet'
+                        }
+                    ]
+                }
+            };
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            return mockCustomerData[customerId] || null;
+        }
+
+        async function getUserAppointments(customerId) {
+            // Mock appointments data - in real app, this would call your API
+            const mockAppointments = {
+                'cust_0145': [
+                    {
+                        appointmentId: 'apt_001',
+                        service: 'Grooming',
+                        petName: 'Maggie',
+                        appointmentDate: '2025-09-28',
+                        appointmentTime: '10:00',
+                        status: 'scheduled',
+                        agent: 'bella',
+                        notes: 'Senior cat grooming'
+                    }
+                ],
+                'cust-0080': [
+                    {
+                        appointmentId: 'apt_002',
+                        service: 'Veterinary',
+                        petName: 'Maggie',
+                        appointmentDate: '2025-09-30',
+                        appointmentTime: '14:00',
+                        status: 'scheduled',
+                        agent: 'oliver',
+                        notes: 'Regular checkup'
+                    },
+                    {
+                        appointmentId: 'apt_003',
+                        service: 'Training',
+                        petName: 'Maggie',
+                        appointmentDate: '2025-10-05',
+                        appointmentTime: '11:00',
+                        status: 'scheduled',
+                        agent: 'max',
+                        notes: 'Basic obedience training'
+                    }
+                ]
+            };
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            return mockAppointments[customerId] || [];
+        }
+
+        // Appointment booking functions
+        function bookAppointment() {
+            document.getElementById('bookingModal').style.display = 'block';
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').style.display = 'none';
+            document.getElementById('appointmentForm').reset();
+        }
+
+        async function submitAppointment(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const appointmentData = {
+                serviceType: formData.get('serviceType'),
+                petName: formData.get('petSelect'),
+                appointmentDate: formData.get('appointmentDate'),
+                appointmentTime: formData.get('appointmentTime'),
+                notes: formData.get('appointmentNotes'),
+                customerId: currentUser
+            };
+
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Show success message
+                alert(`Appointment booked successfully!\n\nService: ${appointmentData.serviceType}\nPet: ${appointmentData.petName}\nDate: ${appointmentData.appointmentDate}\nTime: ${appointmentData.appointmentTime}`);
+
+                closeBookingModal();
+                loadUserAppointments(); // Refresh appointments
+
+            } catch (error) {
+                console.error('Error booking appointment:', error);
+                alert('Failed to book appointment. Please try again.');
+            }
+        }
+
+        function showAllAppointments() {
+            const modal = document.getElementById('appointmentsModal');
+            const appointmentsList = document.getElementById('allAppointmentsList');
+
+            // Show modal immediately for better perceived performance
+            modal.style.display = 'block';
+
+            // Show loading state
+            appointmentsList.innerHTML = '<div class="loading-state">📅 Loading appointments...</div>';
+
+            // Use requestAnimationFrame for smooth rendering
+            requestAnimationFrame(() => {
+                if (userAppointments.length === 0) {
+                    appointmentsList.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">📅</div>
+                            <p>No appointments found.</p>
+                            <button class="action-btn" onclick="bookAppointment(); closeAppointmentsModal();" style="margin-top: 15px;">
+                                ➕ Book Your First Appointment
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Use DocumentFragment for efficient DOM manipulation
+                const fragment = document.createDocumentFragment();
+
+                // Process appointments in batches to avoid blocking
+                const batchSize = 10;
+                let currentIndex = 0;
+
+                function processBatch() {
+                    const endIndex = Math.min(currentIndex + batchSize, userAppointments.length);
+
+                    for (let i = currentIndex; i < endIndex; i++) {
+                        const apt = userAppointments[i];
+                        const appointmentCard = createAppointmentCard(apt);
+                        fragment.appendChild(appointmentCard);
+                    }
+
+                    currentIndex = endIndex;
+
+                    if (currentIndex < userAppointments.length) {
+                        // Process next batch on next frame
+                        requestAnimationFrame(processBatch);
+                    } else {
+                        // All done, update DOM once
+                        appointmentsList.innerHTML = '';
+                        appointmentsList.appendChild(fragment);
+                    }
+                }
+
+                processBatch();
+            });
+        }
+
+        // Helper function to create appointment card efficiently
+        function createAppointmentCard(apt) {
+            const card = document.createElement('div');
+            card.className = 'appointment-card';
+
+            const header = document.createElement('div');
+            header.className = 'appointment-header';
+            header.innerHTML = `
+                <div class="appointment-service">${getServiceIcon(apt.service)} ${apt.service}</div>
+                <div class="appointment-status status-${apt.status}">${apt.status}</div>
+            `;
+
+            const details = document.createElement('div');
+            details.className = 'appointment-details';
+            details.innerHTML = `
+                <div class="appointment-detail">
+                    <span>🐾</span> <strong>Pet:</strong> ${apt.petName}
+                </div>
+                <div class="appointment-detail">
+                    <span>📅</span> <strong>Date:</strong> ${formatDate(apt.appointmentDate)}
+                </div>
+                <div class="appointment-detail">
+                    <span>⏰</span> <strong>Time:</strong> ${apt.appointmentTime || 'TBD'}
+                </div>
+                <div class="appointment-detail">
+                    <span>🤖</span> <strong>Agent:</strong> ${capitalizeFirst(apt.agent)}
+                </div>
+                ${apt.notes ? `
+                <div class="appointment-detail" style="grid-column: 1 / -1;">
+                    <span>📝</span> <strong>Notes:</strong> ${apt.notes}
+                </div>
+                ` : ''}
+            `;
+
+            card.appendChild(header);
+            card.appendChild(details);
+            return card;
+        }
+
+
+        // Debounce utility to prevent rapid clicks
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Debounced versions of heavy functions
+        const debouncedShowAppointments = debounce(showAllAppointments, 300);
+        const debouncedBookAppointment = debounce(bookAppointment, 300);
+
+        function closeAppointmentsModal() {
+            document.getElementById('appointmentsModal').style.display = 'none';
+        }
+
+        // Chat functionality
+        function startChat(agentType) {
+            const modal = document.getElementById('chatModal');
+            const agent = agents[agentType];
+
+            if (agent) {
+                currentAgent = agentType;
+                document.getElementById('chatAgentName').textContent = agent.name;
+                document.getElementById('chatAgentSpecialty').textContent = agent.specialty;
+                document.getElementById('chatMessages').innerHTML = '';
+
+                // Add welcome message with pet context
+                const petContext = userPets.length > 0 ?
+                    ` I see you have ${userPets.length} pet${userPets.length > 1 ? 's' : ''}: ${userPets.map(p => p.name).join(', ')}.` : '';
+
+                addMessage('agent', agent.greeting + petContext);
+
+                modal.style.display = 'block';
+                document.getElementById('messageInput').focus();
+            }
+        }
+
+        function startNewConversation() {
+            // Clear the session ID to start fresh
+            sessionStorage.removeItem('agent_session_id');
+            console.log('🔄 Started new conversation - session cleared');
+
+            // Clear chat messages
+            const messagesContainer = document.getElementById('chatMessages');
+            if (messagesContainer) {
+                messagesContainer.innerHTML = '';
+            }
+
+            alert('New conversation started! Your next message will begin a fresh session.');
+        }
+
+        function closeChat() {
+            document.getElementById('chatModal').style.display = 'none';
+            currentAgent = null;
+        }
+
+        function formatAgentResponse(text) {
+            // Format agent responses to be more readable
+            let formatted = text;
+
+            // Convert **bold** to <strong>
+            formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Convert *italic* to <em>
+            formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+            // Convert numbered lists (1. 2. 3.) to proper HTML
+            formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="numbered-item"><span class="number">$1.</span> $2</div>');
+
+            // Convert bullet points (- or •) to proper HTML
+            formatted = formatted.replace(/^[-•]\s+(.+)$/gm, '<div class="bullet-item"><span class="bullet">•</span> $1</div>');
+
+            // Convert line breaks to <br>, but avoid double spacing around list items
+            formatted = formatted.replace(/\n/g, '<br>');
+
+            // Remove <br> tags immediately before and after list items to prevent extra spacing
+            formatted = formatted.replace(/<br>\s*<div class="(numbered-item|bullet-item)">/g, '<div class="$1">');
+            formatted = formatted.replace(/<\/div><br>/g, '</div>');
+
+            // Remove multiple consecutive <br> tags (more than 2)
+            formatted = formatted.replace(/(<br>\s*){3,}/g, '<br><br>');
+
+            // Wrap sections with headers (lines ending with :)
+            formatted = formatted.replace(/^([A-Z][^:<br>]+:)<br>/gm, '<div class="section-header">$1</div>');
+
+            return formatted;
+        }
+
+        function addMessage(sender, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const avatar = sender === 'user' ? '👤' : agents[currentAgent]?.icon || '🤖';
+
+            // Format agent responses for better readability
+            const formattedContent = sender === 'agent' ? formatAgentResponse(content) : content;
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${formattedContent}</div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'message agent typing';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">${agents[currentAgent]?.icon || '🤖'}</div>
+                <div class="typing-indicator">
+                    <span>Typing</span>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        async function callMaxFargateDirectly(message, customerId) {
+            // Call Max agent's Fargate endpoint directly
+            try {
+                const fargateUrl = window.PETSTORE_CONFIG.MAX_FARGATE_URL;
+                console.log(`📡 Calling Max Fargate directly: ${fargateUrl}`);
+
+                // Get or create session ID
+                let sessionId = sessionStorage.getItem('agent_session_id');
+                if (!sessionId) {
+                    const customerName = customerId.replace('cust_', '');
+                    const random = Math.random().toString(36).substring(2, 15);
+                    sessionId = `cust_${customerName}_${random}`;
+                    if (sessionId.length > 33) {
+                        sessionId = sessionId.substring(0, 33);
+                    }
+                    sessionStorage.setItem('agent_session_id', sessionId);
+                }
+
+                const response = await fetch(fargateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: message,
+                        customer_id: customerId,
+                        session_id: sessionId
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Max Fargate response:', result);
+                    return { response: result.response || result.message };
+                } else {
+                    throw new Error(`Fargate HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Max Fargate call failed:', error);
+                throw error;
+            }
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message || !currentAgent) return;
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+
+            // Add typing indicator
+            addTypingIndicator();
+
+            try {
+                // Call agent API with pet context
+                const response = await callAgent(currentAgent, message);
+
+                // Remove typing indicator
+                removeTypingIndicator();
+
+                // Add agent response
+                if (response && response.response) {
+                    let cleanResponse = response.response;
+                    if (cleanResponse.startsWith('"') && cleanResponse.endsWith('"')) {
+                        cleanResponse = cleanResponse.slice(1, -1);
+                    }
+                    cleanResponse = cleanResponse.replace(/\\n/g, '\n');
+                    addMessage('agent', cleanResponse);
+                } else {
+                    addMessage('agent', 'I apologize, but I\'m having trouble processing your request right now. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Error calling agent:', error);
+                removeTypingIndicator();
+                addMessage('agent', 'I\'m currently experiencing technical difficulties. Please try again in a moment.');
+            }
+        }
+
+        async function callAgent(agentType, message) {
+            const agent = agents[agentType];
+            if (!agent) return null;
+
+            try {
+                console.log(`Calling ${agentType} agent with message:`, message);
+
+                // Get customerId from userData instead of using username
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const customerId = userData.customerId || currentUser; // fallback to currentUser if customerId not found
+
+                console.log(`Using customerId: ${customerId} for agent call`);
+
+                // Check if Max agent has a direct Fargate endpoint (via API Gateway proxy)
+                if (agentType === 'max' && window.PETSTORE_CONFIG?.MAX_FARGATE_URL) {
+                    console.log('🚀 Using API Gateway proxy to Max Fargate:', window.PETSTORE_CONFIG.MAX_FARGATE_URL);
+                    return await callMaxFargateDirectly(message, customerId);
+                }
+
+                // Use API Gateway to invoke AgentCore (secure access)
+                const apiEndpoint = window.PETSTORE_CONFIG?.API_ENDPOINT || window.CONFIG?.AGENTS_ENDPOINT;
+                if (!apiEndpoint) {
+                    throw new Error('API endpoint not configured. Please check that config.js is loaded.');
+                }
+
+                // Get session ID created at login (reuse for all messages in this session)
+                let sessionId = sessionStorage.getItem('agent_session_id');
+
+                // Fallback: create if somehow missing (shouldn't happen after login)
+                if (!sessionId) {
+                    const customerName = customerId.replace('cust_', '');
+                    const random = Math.random().toString(36).substring(2, 15);
+                    sessionId = `cust_${customerName}_${random}`;
+
+                    if (sessionId.length > 33) {
+                        sessionId = sessionId.substring(0, 33);
+                    } else if (sessionId.length < 33) {
+                        const padding = Math.random().toString(36).substring(2, 35 - sessionId.length);
+                        sessionId = sessionId + padding;
+                    }
+
+                    sessionStorage.setItem('agent_session_id', sessionId);
+                    console.log('⚠️ Session missing, created fallback:', sessionId, `(${sessionId.length} chars)`);
+                } else {
+                    console.log('♻️ Using session from login:', sessionId, `(${sessionId.length} chars)`);
+                }
+
+                // Use WebSocket if available, fallback to REST API
+                if (window.wsClient && window.wsClient.isConnected()) {
+                    console.log('📡 Using WebSocket for agent call');
+                    
+                    // Send message via WebSocket
+                    await window.wsClient.sendMessage(agentType, message, customerId, sessionId);
+                    
+                    // Return a promise that resolves when we get the complete response
+                    return new Promise((resolve, reject) => {
+                        let fullResponse = '';
+                        
+                        const messageHandler = (data) => {
+                            if (data.type === 'acknowledgment') {
+                                console.log('✅ Message acknowledged by server');
+                            } else if (data.type === 'chunk') {
+                                fullResponse += data.content;
+                                console.log('📦 Received chunk:', data.content.substring(0, 50) + '...');
+                            } else if (data.type === 'complete') {
+                                console.log('✅ Message complete');
+                                resolve({ response: data.response || fullResponse });
+                            } else if (data.type === 'error') {
+                                console.error('❌ WebSocket error:', data.message);
+                                reject(new Error(data.message));
+                            }
+                        };
+                        
+                        window.wsClient.onMessage(messageHandler);
+                        
+                        // Timeout after 5 minutes
+                        setTimeout(() => {
+                            reject(new Error('Request timeout'));
+                        }, 300000);
+                    });
+                } else {
+                    // Fallback to REST API
+                    console.log('📡 Using REST API for agent call (WebSocket not available)');
+                    console.log(`Making API call to: ${apiEndpoint}`);
+                    
+                    const response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            agent: agentType,
+                            message: message,
+                            customer_id: customerId,
+                            session_id: sessionId
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        return result;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Agent API call failed:', error);
+
+                // Return a realistic response based on the agent type and message
+                const responses = {
+                    'bella': `Hello! I\'m Bella, your grooming specialist. I understand you\'re asking about "${message}". I can help you with grooming schedules, breed-specific care, nail trimming, bathing, and booking appointments. For your specific needs, I\'d recommend scheduling a consultation where I can assess your pet\'s coat type and create a personalized grooming plan.`,
+                    'oliver': `Hi! I\'m Oliver, your veterinary specialist. Regarding "${message}" - I can provide health assessments, wellness checkups, and medical guidance. If this is urgent, please contact your local emergency vet immediately. For routine care, I can help schedule appointments and provide preventive care recommendations based on your pet\'s age, breed, and health history.`,
+                    'luna': `Hello! I\'m Luna, your nutrition expert. About "${message}" - I can help create personalized diet plans, manage weight, address food allergies, and recommend feeding schedules. Each pet has unique nutritional needs based on their age, activity level, and health status. I\'d love to discuss your pet\'s current diet and create an optimized nutrition plan.`,
+                    'max': `Hi there! I\'m Max, your training specialist. Regarding "${message}" - I use positive reinforcement methods to address behavioral issues and teach new skills. Whether it\'s basic obedience, house training, or specific behavioral concerns, I can create a customized training program. Consistency and patience are key to successful training outcomes.`
+                };
+
+                return {
+                    response: responses[agentType] || `Thank you for your message. I\'m here to help with your pet care needs.`
+                };
+            }
+        }
+
+        // Other functions
+        function managePets() {
+            alert('Pet management feature coming soon! You\'ll be able to add, edit, and manage your pets here.');
+        }
+
+        function viewServiceHistory() {
+            alert('Service history feature coming soon! You\'ll be able to view all past appointments and services here.');
+        }
+
+        function updateProfile() {
+            alert('Profile update feature coming soon! You\'ll be able to update your contact information and preferences here.');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'auth.html';
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+            if (e.target.classList.contains('chat-modal')) {
+                closeChat();
+            }
+        });
+
+
+        // Performance monitoring
+        function measurePerformance(functionName, func) {
+            return function (...args) {
+                const start = performance.now();
+                const result = func.apply(this, args);
+                const end = performance.now();
+                const duration = end - start;
+
+                if (duration > 100) {
+                    console.warn(`Performance warning: ${functionName} took ${duration.toFixed(2)}ms`);
+                }
+
+                return result;
+            };
+        }
+
+        // Wrap performance-critical functions
+        const originalShowAppointments = showAllAppointments;
+        showAllAppointments = measurePerformance('showAllAppointments', originalShowAppointments);
+
+
+        // Fallback: Load data from sessionStorage if available
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                if (userData.pets && userData.pets.length > 0) {
+                    console.log('📊 Loading pets from sessionStorage');
+                    displayPets(userData.pets);
+                }
+                if (userData.appointments && userData.appointments.length > 0) {
+                    console.log('📊 Loading appointments from sessionStorage');
+                    displayUpcomingAppointments(userData.appointments);
+                }
+                if (userData.name) {
+                    const welcomeElement = document.getElementById('userWelcome');
+                    if (welcomeElement) {
+                        welcomeElement.textContent = `Welcome, ${userData.name}!`;
+                    }
+                }
+            }, 1000);
+        });
+
+
+
+        // Detailed console logging for user data
+        function logUserDataDetails() {
+            console.log('🔍 ===== COMPLETE USER DATA ANALYSIS =====');
+
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+
+                console.log('📊 Raw userData from sessionStorage:');
+                console.log(userData);
+
+                console.log('\n👤 USER PROFILE:');
+                console.log('  - Username:', userData.username || 'N/A');
+                console.log('  - Customer ID:', userData.customerId || 'N/A');
+                console.log('  - Name:', userData.name || 'N/A');
+                console.log('  - Full Name:', userData.full_name || 'N/A');
+                console.log('  - Email:', userData.email || 'N/A');
+                console.log('  - Phone:', userData.phone || 'N/A');
+                console.log('  - Membership Level:', userData.membership_level || 'N/A');
+
+                if (userData.address) {
+                    console.log('\n🏠 ADDRESS:');
+                    console.log('  - Street:', userData.address.street || 'N/A');
+                    console.log('  - City:', userData.address.city || 'N/A');
+                    console.log('  - State:', userData.address.state || 'N/A');
+                    console.log('  - ZIP:', userData.address.zip || 'N/A');
+                }
+
+                console.log('\n🐾 PETS INFORMATION:');
+                console.log('  - Total Pets:', userData.pets_count || userData.pets?.length || 0);
+                console.log('  - Has Pets:', userData.has_pets || false);
+
+                if (userData.pets && userData.pets.length > 0) {
+                    userData.pets.forEach((pet, index) => {
+                        console.log(`\n  Pet ${index + 1}:`);
+                        console.log('    - Name:', pet.name || 'N/A');
+                        console.log('    - Species:', pet.species || 'N/A');
+                        console.log('    - Breed:', pet.breed || 'N/A');
+                        console.log('    - Age:', pet.age || 'N/A');
+                        console.log('    - Weight:', pet.weight || 'N/A');
+                        console.log('    - Gender:', pet.gender || 'N/A');
+                        console.log('    - Color:', pet.color || 'N/A');
+                        console.log('    - Type:', pet.type || 'N/A');
+                    });
+                } else {
+                    console.log('  - No pets found');
+                }
+
+                console.log('\n📅 APPOINTMENTS INFORMATION:');
+                console.log('  - Total Appointments:', userData.appointments_count || userData.appointments?.length || 0);
+
+                if (userData.appointments && userData.appointments.length > 0) {
+                    userData.appointments.forEach((apt, index) => {
+                        console.log(`\n  Appointment ${index + 1}:`);
+                        console.log('    - ID:', apt.appointmentId || 'N/A');
+                        console.log('    - Service:', apt.service || 'N/A');
+                        console.log('    - Date:', apt.date || 'N/A');
+                        console.log('    - Time:', apt.time || 'N/A');
+                        console.log('    - Status:', apt.status || 'N/A');
+                        console.log('    - Pet Name:', apt.petName || 'N/A');
+                        console.log('    - Customer Name:', apt.customerName || 'N/A');
+                        console.log('    - Notes:', apt.notes || 'N/A');
+                        console.log('    - Created:', apt.createdAt || 'N/A');
+                        console.log('    - Updated:', apt.updatedAt || 'N/A');
+                    });
+                } else {
+                    console.log('  - No appointments found');
+                }
+
+                console.log('\n🔐 SESSION STORAGE INFO:');
+                console.log('  - isAuthenticated:', sessionStorage.getItem('isAuthenticated'));
+                console.log('  - currentUser:', sessionStorage.getItem('currentUser'));
+                console.log('  - userType:', sessionStorage.getItem('userType'));
+                console.log('  - userName:', sessionStorage.getItem('userName'));
+
+                console.log('\n📏 DATA SIZES:');
+                console.log('  - userData JSON length:', JSON.stringify(userData).length, 'characters');
+                console.log('  - Pets array length:', userData.pets?.length || 0);
+                console.log('  - Appointments array length:', userData.appointments?.length || 0);
+
+                console.log('\n🎯 SUMMARY:');
+                console.log(`  - User: ${userData.name} (${userData.username})`);
+                console.log(`  - Pets: ${userData.pets?.length || 0} pets`);
+                console.log(`  - Appointments: ${userData.appointments?.length || 0} appointments`);
+                console.log(`  - Membership: ${userData.membership_level || 'Standard'}`);
+
+                console.log('🔍 ===== END USER DATA ANALYSIS =====\n');
+
+            } catch (error) {
+                console.error('❌ Error analyzing user data:', error);
+            }
+        }
+
+        // Auto-log user data when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                logUserDataDetails();
+            }, 2000);
+        });
+
+        // Make function available globally for manual calls
+        window.logUserData = logUserDataDetails;
+
+        console.log('🔍 User data logging enabled. Call window.logUserData() anytime to see full details.');
+
+
+
+        // Enhanced appointments display function
+        function displayAppointmentsFromSessionStorage() {
+            console.log('📅 Displaying appointments from sessionStorage...');
+
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const appointments = userData.appointments || [];
+                const appointmentsContainer = document.getElementById('appointmentsContainer');
+
+                if (!appointmentsContainer) {
+                    console.error('❌ Appointments container not found');
+                    return;
+                }
+
+                console.log('📊 Found appointments:', appointments.length);
+
+                if (appointments.length === 0) {
+                    appointmentsContainer.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">📅</div>
+                            <p>No appointments found</p>
+                            <button class="action-btn" onclick="bookAppointment()" style="margin-top: 15px;">
+                                ➕ Book Your First Appointment
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Filter for upcoming appointments (future dates) and sort by date (latest first)
+                const now = new Date();
+                const upcomingAppointments = appointments
+                    .filter(apt => {
+                        if (!apt.date) return true; // Show appointments without dates
+                        try {
+                            const aptDate = new Date(apt.date);
+                            return aptDate >= now;
+                        } catch {
+                            return true; // Show appointments with invalid dates
+                        }
+                    })
+                    .sort((a, b) => {
+                        // Sort by date descending (latest first)
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        
+                        if (dateB - dateA !== 0) {
+                            return dateB - dateA;
+                        }
+                        
+                        // If dates are the same, sort by time descending
+                        const timeA = a.time || '00:00';
+                        const timeB = b.time || '00:00';
+                        return timeB.localeCompare(timeA);
+                    })
+                    .slice(0, 3); // Show only next 3
+
+                console.log('📊 Upcoming appointments:', upcomingAppointments.length);
+
+                if (upcomingAppointments.length === 0) {
+                    appointmentsContainer.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">📅</div>
+                            <p>No upcoming appointments</p>
+                            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                                You have ${appointments.length} past appointment${appointments.length !== 1 ? 's' : ''}
+                            </p>
+                            <button class="action-btn" onclick="bookAppointment()" style="margin-top: 15px;">
+                                ➕ Book New Appointment
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Display upcoming appointments
+                const appointmentsHTML = upcomingAppointments.map(apt => {
+                    const serviceIcon = getServiceIcon(apt.service || 'appointment');
+                    const serviceName = formatServiceName(apt.service || 'Appointment');
+                    const appointmentDate = formatAppointmentDate(apt.date);
+
+                    return `
+                        <div class="appointment-card">
+                            <div class="appointment-header">
+                                <div class="appointment-service">
+                                    ${serviceIcon} ${serviceName}
+                                </div>
+                                <div class="appointment-status status-${apt.status || 'scheduled'}">
+                                    ${apt.status || 'Scheduled'}
+                                </div>
+                            </div>
+                            <div class="appointment-details">
+                                <div class="appointment-detail">
+                                    <span>📅</span>
+                                    <span>${appointmentDate}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>⏰</span>
+                                    <span>${apt.time || 'TBD'}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>🐾</span>
+                                    <span>${apt.petName || 'Pet'}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>📍</span>
+                                    <span>Main Location</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                appointmentsContainer.innerHTML = appointmentsHTML;
+                console.log('✅ Appointments displayed successfully');
+
+            } catch (error) {
+                console.error('❌ Error displaying appointments:', error);
+                const appointmentsContainer = document.getElementById('appointmentsContainer');
+                if (appointmentsContainer) {
+                    appointmentsContainer.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">❌</div>
+                            <p>Error loading appointments</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Helper functions for appointments display
+        function getServiceIcon(service) {
+            const icons = {
+                'Wellness Checkup': '🏥',
+                'Nail Trim': '✂️',
+                'Vaccination': '💉',
+                'Heartworm Test': '🔬',
+                'Senior Pet Exam': '👴',
+                'Health Assessment': '🩺',
+                'Basic Bath': '🛁',
+                'Spay/Neuter': '🏥',
+                'grooming': '🐕',
+                'veterinary': '🏥',
+                'nutrition': '🥗',
+                'training': '🎾',
+                'appointment': '📅'
+            };
+            return icons[service] || '📅';
+        }
+
+        function formatServiceName(service) {
+            if (!service) return 'Appointment';
+            return service.charAt(0).toUpperCase() + service.slice(1);
+        }
+
+        function formatAppointmentDate(dateStr) {
+            if (!dateStr) return 'TBD';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // Force appointments display on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                console.log('🚀 Force loading appointments...');
+                displayAppointmentsFromSessionStorage();
+            }, 1500);
+        });
+
+        // Make function available globally
+        window.displayAppointments = displayAppointmentsFromSessionStorage;
+
+        console.log('📅 Appointments display enhanced. Call window.displayAppointments() to manually refresh.');
+
+
+
+        // Pets Management Functions
+        function managePets() {
+            console.log('🐾 Opening pets management modal...');
+            const modal = document.getElementById('petsModal');
+            modal.style.display = 'block';
+            loadAllPetsInModal();
+        }
+
+        function closePetsModal() {
+            const modal = document.getElementById('petsModal');
+            modal.style.display = 'none';
+        }
+
+        function loadAllPetsInModal() {
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const pets = userData.pets || [];
+                const container = document.getElementById('allPetsList');
+
+                if (pets.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">🐾</div>
+                            <p>No pets found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const petsHTML = pets.map((pet, index) => `
+                    <div class="pet-card" style="margin-bottom: 15px;">
+                        <div class="pet-header">
+                            <div class="pet-name">${pet.name || 'Unnamed Pet'}</div>
+                            <div class="pet-species">${pet.species || 'Unknown'}</div>
+                        </div>
+                        <div class="pet-details">
+                            <div class="pet-detail">
+                                <span>🏷️</span>
+                                <span>${pet.breed || 'Mixed'}</span>
+                            </div>
+                            <div class="pet-detail">
+                                <span>🎂</span>
+                                <span>${pet.age || 'Unknown'} years old</span>
+                            </div>
+                            <div class="pet-detail">
+                                <span>⚖️</span>
+                                <span>${pet.weight || 'Unknown'} lbs</span>
+                            </div>
+                            <div class="pet-detail">
+                                <span>🎨</span>
+                                <span>${pet.color || 'Unknown'} ${pet.gender || ''}</span>
+                            </div>
+                        </div>
+                        <button class="action-btn" onclick="editPet(${index})" style="margin-top: 10px; width: 100%;">
+                            ✏️ Edit Pet
+                        </button>
+                    </div>
+                `).join('');
+
+                container.innerHTML = petsHTML;
+                console.log('✅ All pets loaded in modal');
+
+            } catch (error) {
+                console.error('❌ Error loading pets in modal:', error);
+            }
+        }
+
+        function editPet(petIndex) {
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const pet = userData.pets[petIndex];
+
+                if (!pet) {
+                    console.error('Pet not found at index:', petIndex);
+                    return;
+                }
+
+                // Store current pet index for saving
+                window.currentEditingPetIndex = petIndex;
+
+                // Fill the edit form
+                document.getElementById('editPetName').value = pet.name || '';
+                document.getElementById('editPetSpecies').value = pet.species || 'Dog';
+                document.getElementById('editPetBreed').value = pet.breed || '';
+                document.getElementById('editPetAge').value = pet.age || '';
+                document.getElementById('editPetWeight').value = pet.weight || '';
+                document.getElementById('editPetGender').value = pet.gender || 'Male';
+                document.getElementById('editPetColor').value = pet.color || '';
+
+                // Show edit modal
+                document.getElementById('editPetModal').style.display = 'block';
+
+            } catch (error) {
+                console.error('❌ Error editing pet:', error);
+            }
+        }
+
+        function closeEditPetModal() {
+            document.getElementById('editPetModal').style.display = 'none';
+        }
+
+        function savePetChanges(event) {
+            event.preventDefault();
+
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const petIndex = window.currentEditingPetIndex;
+
+                if (petIndex === undefined || !userData.pets[petIndex]) {
+                    console.error('Invalid pet index for saving');
+                    return;
+                }
+
+                // Update pet data
+                const formData = new FormData(event.target);
+                const updatedPet = {
+                    ...userData.pets[petIndex],
+                    name: formData.get('name'),
+                    species: formData.get('species'),
+                    breed: formData.get('breed'),
+                    age: parseInt(formData.get('age')) || userData.pets[petIndex].age,
+                    weight: parseFloat(formData.get('weight')) || userData.pets[petIndex].weight,
+                    gender: formData.get('gender'),
+                    color: formData.get('color')
+                };
+
+                userData.pets[petIndex] = updatedPet;
+
+                // Save back to sessionStorage
+                sessionStorage.setItem('userData', JSON.stringify(userData));
+
+                console.log('✅ Pet updated successfully:', updatedPet);
+
+                // Close modal and refresh displays
+                closeEditPetModal();
+                loadAllPetsInModal();
+
+                // Refresh main pets display
+                if (typeof displayPets === 'function') {
+                    displayPets(userData.pets);
+                }
+
+                alert('Pet updated successfully!');
+
+            } catch (error) {
+                console.error('❌ Error saving pet changes:', error);
+                alert('Error saving pet changes. Please try again.');
+            }
+        }
+
+        // Appointments Management Functions
+        function showAllAppointments() {
+            console.log('📅 Opening appointments management modal...');
+            const modal = document.getElementById('appointmentsModal');
+            modal.style.display = 'block';
+            loadAllAppointmentsInModal();
+        }
+
+        function closeAppointmentsModal() {
+            const modal = document.getElementById('appointmentsModal');
+            modal.style.display = 'none';
+        }
+
+        function loadAllAppointmentsInModal() {
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const appointments = userData.appointments || [];
+                const container = document.getElementById('allAppointmentsList');
+
+                if (appointments.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-appointments">
+                            <div class="icon">📅</div>
+                            <p>No appointments found</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort appointments by date (latest first)
+                const sortedAppointments = [...appointments].sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    
+                    // Sort by date descending (latest first)
+                    if (dateB - dateA !== 0) {
+                        return dateB - dateA;
+                    }
+                    
+                    // If dates are the same, sort by time descending
+                    const timeA = a.time || '00:00';
+                    const timeB = b.time || '00:00';
+                    return timeB.localeCompare(timeA);
+                });
+
+                const appointmentsHTML = sortedAppointments.map((apt, index) => {
+                    // Find original index for editing
+                    const originalIndex = appointments.findIndex(original => 
+                        original.date === apt.date && 
+                        original.time === apt.time && 
+                        original.petName === apt.petName
+                    );
+                    const isScheduled = apt.status === 'scheduled';
+                    const serviceIcon = getServiceIcon(apt.service || 'appointment');
+
+                    return `
+                        <div class="appointment-card" style="margin-bottom: 15px;">
+                            <div class="appointment-header">
+                                <div class="appointment-service">
+                                    ${serviceIcon} ${apt.service || 'Appointment'}
+                                </div>
+                                <div class="appointment-status status-${apt.status || 'scheduled'}">
+                                    ${apt.status || 'Scheduled'}
+                                </div>
+                            </div>
+                            <div class="appointment-details">
+                                <div class="appointment-detail">
+                                    <span>📅</span>
+                                    <span>${formatAppointmentDate(apt.date)}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>⏰</span>
+                                    <span>${apt.time || 'TBD'}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>🐾</span>
+                                    <span>${apt.petName || 'Pet'}</span>
+                                </div>
+                                <div class="appointment-detail">
+                                    <span>📝</span>
+                                    <span>${apt.notes || 'No notes'}</span>
+                                </div>
+                            </div>
+                            ${isScheduled ? `
+                                <button class="action-btn" onclick="editAppointment(${originalIndex})" style="margin-top: 10px; width: 100%;">
+                                    ✏️ Edit Appointment
+                                </button>
+                            ` : `
+                                <div style="margin-top: 10px; text-align: center; color: #666; font-size: 0.9rem;">
+                                    Completed appointments cannot be edited
+                                </div>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = appointmentsHTML;
+                console.log('✅ All appointments loaded in modal');
+
+            } catch (error) {
+                console.error('❌ Error loading appointments in modal:', error);
+            }
+        }
+
+        function editAppointment(appointmentIndex) {
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const appointment = userData.appointments[appointmentIndex];
+
+                if (!appointment) {
+                    console.error('Appointment not found at index:', appointmentIndex);
+                    return;
+                }
+
+                if (appointment.status !== 'scheduled') {
+                    alert('Only scheduled appointments can be edited.');
+                    return;
+                }
+
+                // Store current appointment index for saving
+                window.currentEditingAppointmentIndex = appointmentIndex;
+
+                // Fill the edit form
+                document.getElementById('editAppointmentService').value = appointment.service || '';
+                document.getElementById('editAppointmentDate').value = appointment.date || '';
+
+                // Convert time format if needed
+                let timeValue = appointment.time || '';
+                if (timeValue.includes('AM') || timeValue.includes('PM')) {
+                    // Convert 12-hour to 24-hour format
+                    const time12h = timeValue.replace(/\s/g, '');
+                    const [time, modifier] = time12h.split(/(AM|PM)/);
+                    let [hours, minutes] = time.split(':');
+                    if (hours === '12') hours = '00';
+                    if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+                    timeValue = `${hours.padStart(2, '0')}:${minutes || '00'}`;
+                }
+                document.getElementById('editAppointmentTime').value = timeValue;
+
+                document.getElementById('editAppointmentPet').value = appointment.petName || '';
+                document.getElementById('editAppointmentNotes').value = appointment.notes || '';
+
+                // Show edit modal
+                document.getElementById('editAppointmentModal').style.display = 'block';
+
+            } catch (error) {
+                console.error('❌ Error editing appointment:', error);
+            }
+        }
+
+        function closeEditAppointmentModal() {
+            document.getElementById('editAppointmentModal').style.display = 'none';
+        }
+
+        function saveAppointmentChanges(event) {
+            event.preventDefault();
+
+            try {
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                const appointmentIndex = window.currentEditingAppointmentIndex;
+
+                if (appointmentIndex === undefined || !userData.appointments[appointmentIndex]) {
+                    console.error('Invalid appointment index for saving');
+                    return;
+                }
+
+                // Update appointment data
+                const formData = new FormData(event.target);
+
+                // Convert 24-hour time back to 12-hour format
+                const time24h = formData.get('time');
+                let time12h = time24h;
+                if (time24h) {
+                    const [hours, minutes] = time24h.split(':');
+                    const hour12 = hours % 12 || 12;
+                    const ampm = hours < 12 ? 'AM' : 'PM';
+                    time12h = `${hour12}:${minutes} ${ampm}`;
+                }
+
+                const updatedAppointment = {
+                    ...userData.appointments[appointmentIndex],
+                    date: formData.get('date'),
+                    time: time12h,
+                    notes: formData.get('notes'),
+                    updatedAt: new Date().toISOString()
+                };
+
+                userData.appointments[appointmentIndex] = updatedAppointment;
+
+                // Save back to sessionStorage
+                sessionStorage.setItem('userData', JSON.stringify(userData));
+
+                console.log('✅ Appointment updated successfully:', updatedAppointment);
+
+                // Close modal and refresh displays
+                closeEditAppointmentModal();
+                loadAllAppointmentsInModal();
+
+                // Refresh main appointments display
+                if (typeof displayAppointmentsFromSessionStorage === 'function') {
+                    displayAppointmentsFromSessionStorage();
+                }
+
+                alert('Appointment updated successfully!');
+
+            } catch (error) {
+                console.error('❌ Error saving appointment changes:', error);
+                alert('Error saving appointment changes. Please try again.');
+            }
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function (event) {
+            const petsModal = document.getElementById('petsModal');
+            const editPetModal = document.getElementById('editPetModal');
+            const appointmentsModal = document.getElementById('appointmentsModal');
+            const editAppointmentModal = document.getElementById('editAppointmentModal');
+
+            if (event.target === petsModal) closePetsModal();
+            if (event.target === editPetModal) closeEditPetModal();
+            if (event.target === appointmentsModal) closeAppointmentsModal();
+            if (event.target === editAppointmentModal) closeEditAppointmentModal();
+        });
+
+        console.log('🔧 View All modals functionality added');
+
+    </script>
+
+
+    <!-- Pets Management Modal -->
+    <div class="modal" id="petsModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">🐾 Manage Your Pets</h2>
+                <button class="close-modal" onclick="closePetsModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="allPetsList">
+                    <div class="loading">Loading pets...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pet Edit Modal -->
+    <div class="modal" id="editPetModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Edit Pet</h2>
+                <button class="close-modal" onclick="closeEditPetModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="editPetForm" onsubmit="savePetChanges(event)">
+                    <div class="form-group">
+                        <label for="editPetName">Pet Name</label>
+                        <input type="text" id="editPetName" name="name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPetSpecies">Species</label>
+                            <select id="editPetSpecies" name="species" required>
+                                <option value="Dog">Dog</option>
+                                <option value="Cat">Cat</option>
+                                <option value="Bird">Bird</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPetBreed">Breed</label>
+                            <input type="text" id="editPetBreed" name="breed">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPetAge">Age</label>
+                            <input type="number" id="editPetAge" name="age" min="0" max="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPetWeight">Weight (lbs)</label>
+                            <input type="number" id="editPetWeight" name="weight" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPetGender">Gender</label>
+                            <select id="editPetGender" name="gender">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPetColor">Color</label>
+                            <input type="text" id="editPetColor" name="color">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Management Modal -->
+    <div class="modal" id="appointmentsModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 Manage Your Appointments</h2>
+                <button class="close-modal" onclick="closeAppointmentsModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="allAppointmentsList">
+                    <div class="loading">Loading appointments...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Edit Modal -->
+    <div class="modal" id="editAppointmentModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Edit Appointment</h2>
+                <button class="close-modal" onclick="closeEditAppointmentModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="editAppointmentForm" onsubmit="saveAppointmentChanges(event)">
+                    <div class="form-group">
+                        <label for="editAppointmentService">Service</label>
+                        <input type="text" id="editAppointmentService" name="service" required readonly>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editAppointmentDate">Date</label>
+                            <input type="date" id="editAppointmentDate" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAppointmentTime">Time</label>
+                            <input type="time" id="editAppointmentTime" name="time" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAppointmentPet">Pet</label>
+                        <input type="text" id="editAppointmentPet" name="petName" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAppointmentNotes">Notes</label>
+                        <textarea id="editAppointmentNotes" name="notes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Client -->
+    <script src="websocket-client.js"></script>
+
+</body>
+
+</html>

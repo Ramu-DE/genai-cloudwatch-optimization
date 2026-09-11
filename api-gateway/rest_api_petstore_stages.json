@@ -1,0 +1,31 @@
+{
+    "item": [
+        {
+            "deploymentId": "mzwz3c",
+            "stageName": "prod",
+            "cacheClusterEnabled": false,
+            "cacheClusterStatus": "NOT_AVAILABLE",
+            "methodSettings": {
+                "*/*": {
+                    "metricsEnabled": true,
+                    "loggingLevel": "INFO",
+                    "dataTraceEnabled": true,
+                    "throttlingBurstLimit": 5000,
+                    "throttlingRateLimit": 10000.0,
+                    "cachingEnabled": false,
+                    "cacheTtlInSeconds": 300,
+                    "cacheDataEncrypted": false,
+                    "requireAuthorizationForCacheControl": true,
+                    "unauthorizedCacheControlHeaderStrategy": "SUCCEED_WITH_RESPONSE_HEADER"
+                }
+            },
+            "accessLogSettings": {
+                "format": "{\"requestId\": \"$context.requestId\", \"ip\": \"$context.identity.sourceIp\", \"caller\": \"$context.identity.caller\", \"user\": \"$context.identity.user\", \"requestTime\": \"$context.requestTime\", \"httpMethod\": \"$context.httpMethod\", \"resourcePath\": \"$context.resourcePath\", \"status\": \"$context.status\", \"protocol\": \"$context.protocol\", \"responseLength\": \"$context.responseLength\", \"integrationLatency\": \"$context.integration.latency\", \"responseLatency\": \"$context.responseLatency\", \"integrationStatus\": \"$context.integration.status\", \"error\": \"$context.error.message\", \"xrayTraceId\": \"$context.xrayTraceId\"}",
+                "destinationArn": "arn:aws:logs:us-west-2:438327931823:log-group:/aws/apigateway/genai_petstore"
+            },
+            "tracingEnabled": true,
+            "createdDate": "2026-09-09T13:48:40+00:00",
+            "lastUpdatedDate": "2026-09-09T13:49:07+00:00"
+        }
+    ]
+}

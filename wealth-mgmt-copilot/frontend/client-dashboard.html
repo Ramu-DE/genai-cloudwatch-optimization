@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthAI Copilot — Dashboard</title>
+    <meta name="description" content="Your AI-powered wealth management dashboard">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="navbar">
+    <div class="brand">
+        <span class="icon">&#x1F4B0;</span>
+        <span>Wealth<span class="highlight">AI</span> Copilot</span>
+    </div>
+    <nav>
+        <a href="client-dashboard.html" class="active">Dashboard</a>
+        <a href="observability.html">Observability</a>
+        <a href="performance-tuning.html">Performance Lab</a>
+        <a href="loadtest.html">Load Test</a>
+    </nav>
+    <div class="user-info">
+        <div class="connection-status disconnected" id="ws-status">
+            <span class="dot"></span>
+            <span id="ws-status-text">Offline</span>
+        </div>
+        <div class="avatar" id="user-avatar">--</div>
+        <span id="user-name">Client</span>
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+</header>
+
+<div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="client-card">
+            <div class="avatar-lg" id="sidebar-avatar">--</div>
+            <h3 id="sidebar-name">Loading...</h3>
+            <span class="risk-badge risk-moderate" id="sidebar-risk">MODERATE</span>
+        </div>
+
+        <div class="sidebar-stat"><span class="label">Total Value</span><span class="value" id="sidebar-value">--</span></div>
+        <div class="sidebar-stat"><span class="label">YTD Return</span><span class="value text-green" id="sidebar-ytd">--</span></div>
+        <div class="sidebar-stat"><span class="label">Client ID</span><span class="value" id="sidebar-id" style="font-size:0.78rem">--</span></div>
+        <div class="sidebar-stat"><span class="label">Risk Level</span><span class="value" id="sidebar-risk-text">--</span></div>
+
+        <div class="sidebar-nav">
+            <a href="#" class="active" onclick="showSection('overview')">&#x1F4CA; Overview</a>
+            <a href="#" onclick="showSection('chat')">&#x1F4AC; AI Advisors</a>
+            <a href="#" onclick="showSection('transactions')">&#x1F4B1; Transactions</a>
+            <a href="observability.html">&#x1F50D; Observability</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Overview Section -->
+        <section id="section-overview">
+            <div class="page-header">
+                <h2>Portfolio Overview</h2>
+                <p>Your AI-managed wealth at a glance</p>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total Portfolio Value</div>
+                    <div class="stat-value" id="stat-total">$0</div>
+                    <div class="stat-change positive" id="stat-total-change">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">YTD Return</div>
+                    <div class="stat-value text-green" id="stat-ytd">0%</div>
+                    <div class="stat-change positive">Since Jan 1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Asset Allocation</div>
+                    <div class="stat-value" id="stat-alloc">--</div>
+                    <div class="stat-change" id="stat-alloc-detail">Stocks / Bonds / Alt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Agents</div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-change">Marcus, Sophia, Olivia, Victor</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h3 style="margin-bottom:12px; color:var(--navy);">Quick Actions</h3>
+            <div class="quick-actions">
+                <button class="quick-action" onclick="quickChat('marcus', 'Give me a comprehensive analysis of my current portfolio holdings and market outlook.')">
+                    <span class="qa-icon">&#x1F4C8;</span> Analyze My Portfolio
+                </button>
+                <button class="quick-action" onclick="quickChat('sophia', 'I would like to schedule a financial planning consultation. What times are available?')">
+                    <span class="qa-icon">&#x1F4C5;</span> Schedule Consultation
+                </button>
+                <button class="quick-action" onclick="quickChat('olivia', 'Can you review my portfolio for tax-loss harvesting opportunities and provide a tax optimization strategy?')">
+                    <span class="qa-icon">&#x1F4B5;</span> Tax Review
+                </button>
+                <button class="quick-action" onclick="quickChat('victor', 'Please run a compliance check on my account including KYC status and recent transaction screening.')">
+                    <span class="qa-icon">&#x2705;</span> Compliance Check
+                </button>
+            </div>
+
+            <!-- Holdings -->
+            <div class="card mt-16">
+                <div class="card-header">
+                    <h3>Top Holdings</h3>
+                </div>
+                <div class="card-body">
+                    <table class="txn-table" id="holdings-table">
+                        <thead>
+                            <tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Current</th><th>Gain/Loss</th><th>Sector</th></tr>
+                        </thead>
+                        <tbody id="holdings-body">
+                            <tr><td colspan="6" style="text-align:center; color:var(--gray-500);">Loading holdings...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section id="section-chat" class="hidden">
+            <div class="page-header">
+                <h2>AI Advisors</h2>
+                <p>Chat with your AI wealth management team</p>
+            </div>
+
+            <div class="agent-tabs">
+                <button class="agent-tab active" data-agent="marcus" onclick="switchAgent('marcus', this)">
+                    <span class="agent-dot dot-marcus"></span>Marcus
+                </button>
+                <button class="agent-tab" data-agent="sophia" onclick="switchAgent('sophia', this)">
+                    <span class="agent-dot dot-sophia"></span>Sophia
+                </button>
+                <button class="agent-tab" data-agent="olivia" onclick="switchAgent('olivia', this)">
+                    <span class="agent-dot dot-olivia"></span>Olivia
+                </button>
+                <button class="agent-tab" data-agent="victor" onclick="switchAgent('victor', this)">
+                    <span class="agent-dot dot-victor"></span>Victor
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 id="chat-agent-title">Marcus — Market Analyst</h3>
+                    <div class="connection-status disconnected" id="chat-ws-status">
+                        <span class="dot"></span> <span id="chat-ws-text">Offline</span>
+                    </div>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-msg agent">
+                            <span class="sender">Marcus</span>
+                            <div class="bubble">Welcome! I'm Marcus, your market analyst. Ask me about market trends, sector analysis, or portfolio risk assessment.</div>
+                        </div>
+                    </div>
+                    <div class="typing-indicator" id="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Ask your AI advisor..." onkeypress="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" id="chat-send-btn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions Section -->
+        <section id="section-transactions" class="hidden">
+            <div class="page-header">
+                <h2>Transaction History</h2>
+                <p>Recent portfolio transactions and activity</p>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <table class="txn-table">
+                        <thead>
+                            <tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Total</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="txn-body">
+                            <tr><td colspan="7" style="text-align:center; color:var(--gray-500);">Loading transactions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="config.template.js"></script>
+<script src="websocket-client.js"></script>
+<script>
+    // ---- State ----
+    const clientId = localStorage.getItem('wm_client_id') || '';
+    const clientName = localStorage.getItem('wm_name') || 'Client';
+    let currentAgent = 'marcus';
+    let sessionIds = {};
+    let chatHistories = { marcus: [], sophia: [], olivia: [], victor: [] };
+    let wsClient = null;
+
+    const AGENT_INFO = {
+        marcus: { title: 'Marcus — Market Analyst', greeting: "Welcome! I'm Marcus, your market analyst. Ask me about market trends, sector analysis, or portfolio risk assessment." },
+        sophia: { title: 'Sophia — Financial Planner', greeting: "Hello! I'm Sophia, your financial planner. I can help with retirement planning, portfolio allocation, and scheduling consultations." },
+        olivia: { title: 'Olivia — Tax Optimizer', greeting: "Hi there! I'm Olivia, your tax strategy specialist. I can identify tax-loss harvesting opportunities and optimize your tax position." },
+        victor: { title: 'Victor — Compliance Checker', greeting: "Good day. I'm Victor, your compliance officer. I handle KYC verification, transaction screening, and regulatory compliance checks." }
+    };
+
+    // ---- Demo Data ----
+    const DEMO_DATA = {
+        client_sarah_chen: {
+            risk: 'aggressive', totalValue: 2100000, ytd: 18.5,
+            allocation: { stocks: 85, bonds: 10, alternatives: 5 },
+            holdings: [
+                { ticker: 'AAPL', shares: 150, avg: 145.50, current: 227.80, sector: 'Technology' },
+                { ticker: 'MSFT', shares: 100, avg: 280.00, current: 415.20, sector: 'Technology' },
+                { ticker: 'NVDA', shares: 200, avg: 45.00, current: 138.70, sector: 'Technology' },
+                { ticker: 'GOOGL', shares: 120, avg: 110.00, current: 175.30, sector: 'Technology' },
+                { ticker: 'AMZN', shares: 80, avg: 130.00, current: 186.50, sector: 'Consumer Disc.' },
+                { ticker: 'VTI', shares: 300, avg: 210.00, current: 265.80, sector: 'Broad Market ETF' }
+            ],
+            transactions: [
+                { date: '2024-09-10', type: 'BUY', ticker: 'MSFT', shares: 25, price: 405.00, total: 10125, status: 'COMPLETED' },
+                { date: '2024-09-05', type: 'SELL', ticker: 'TSLA', shares: 20, price: 255.00, total: 5100, status: 'COMPLETED' },
+                { date: '2024-09-01', type: 'BUY', ticker: 'NVDA', shares: 50, price: 120.50, total: 6025, status: 'COMPLETED' }
+            ]
+        },
+        client_james_wilson: {
+            risk: 'moderate', totalValue: 750000, ytd: 11.8,
+            allocation: { stocks: 58, bonds: 32, alternatives: 10 },
+            holdings: [
+                { ticker: 'VTI', shares: 400, avg: 200.00, current: 265.80, sector: 'Broad Market ETF' },
+                { ticker: 'BND', shares: 800, avg: 75.00, current: 72.50, sector: 'Bond ETF' },
+                { ticker: 'VIG', shares: 300, avg: 155.00, current: 182.30, sector: 'Dividend ETF' },
+                { ticker: 'SCHD', shares: 250, avg: 72.00, current: 81.50, sector: 'Dividend ETF' },
+                { ticker: 'GLD', shares: 50, avg: 180.00, current: 235.60, sector: 'Commodities' }
+            ],
+            transactions: [
+                { date: '2024-09-01', type: 'DIVIDEND', ticker: 'VIG', shares: 0, price: 0, total: 850, status: 'COMPLETED' },
+                { date: '2024-08-15', type: 'BUY', ticker: 'SCHD', shares: 100, price: 79.00, total: 7900, status: 'COMPLETED' }
+            ]
+        },
+        client_priya_patel: {
+            risk: 'conservative', totalValue: 5200000, ytd: 7.2,
+            allocation: { stocks: 28, bonds: 57, alternatives: 15 },
+            holdings: [
+                { ticker: 'BND', shares: 5000, avg: 76.00, current: 72.50, sector: 'Bond ETF' },
+                { ticker: 'MUB', shares: 2000, avg: 108.00, current: 106.80, sector: 'Muni Bond ETF' },
+                { ticker: 'VCIT', shares: 3000, avg: 82.00, current: 80.20, sector: 'Corp Bond ETF' },
+                { ticker: 'VIG', shares: 800, avg: 148.00, current: 182.30, sector: 'Dividend ETF' },
+                { ticker: 'SCHD', shares: 1000, avg: 68.00, current: 81.50, sector: 'Dividend ETF' },
+                { ticker: 'TLT', shares: 1500, avg: 98.00, current: 92.30, sector: 'Treasury Bond ETF' }
+            ],
+            transactions: [
+                { date: '2024-09-08', type: 'BUY', ticker: 'MUB', shares: 500, price: 107.00, total: 53500, status: 'COMPLETED' }
+            ]
+        },
+        client_alex_rodriguez: {
+            risk: 'aggressive', totalValue: 480000, ytd: 32.4,
+            allocation: { stocks: 97, bonds: 0, alternatives: 3 },
+            holdings: [
+                { ticker: 'NVDA', shares: 300, avg: 35.00, current: 138.70, sector: 'Technology' },
+                { ticker: 'AMD', shares: 200, avg: 95.00, current: 155.20, sector: 'Technology' },
+                { ticker: 'PLTR', shares: 500, avg: 18.00, current: 42.80, sector: 'Technology' },
+                { ticker: 'COIN', shares: 80, avg: 180.00, current: 165.30, sector: 'Financials' },
+                { ticker: 'SOFI', shares: 1000, avg: 8.50, current: 12.40, sector: 'Financials' }
+            ],
+            transactions: [
+                { date: '2024-09-14', type: 'BUY', ticker: 'COIN', shares: 30, price: 170.00, total: 5100, status: 'FLAGGED' },
+                { date: '2024-09-12', type: 'BUY', ticker: 'PLTR', shares: 200, price: 40.50, total: 8100, status: 'COMPLETED' }
+            ]
+        }
+    };
+
+    // ---- Init ----
+    function init() {
+        if (!clientId) { window.location.href = 'index.html'; return; }
+
+        const initials = clientName.split(' ').map(n => n[0]).join('');
+        document.getElementById('user-avatar').textContent = initials;
+        document.getElementById('user-name').textContent = clientName;
+        document.getElementById('sidebar-avatar').textContent = initials;
+        document.getElementById('sidebar-name').textContent = clientName;
+        document.getElementById('sidebar-id').textContent = clientId;
+
+        const data = DEMO_DATA[clientId] || DEMO_DATA.client_sarah_chen;
+        populateOverview(data);
+        populateHoldings(data.holdings);
+        populateTransactions(data.transactions);
+
+        // Generate session IDs
+        ['marcus', 'sophia', 'olivia', 'victor'].forEach(agent => {
+            sessionIds[agent] = `ws_${clientId}_${agent}_${Date.now().toString(36)}`;
+        });
+
+        initWebSocket();
+    }
+
+    function populateOverview(data) {
+        document.getElementById('stat-total').textContent = '$' + data.totalValue.toLocaleString();
+        document.getElementById('stat-ytd').textContent = '+' + data.ytd + '%';
+        document.getElementById('stat-alloc').textContent = `${data.allocation.stocks}/${data.allocation.bonds}/${data.allocation.alternatives}`;
+        document.getElementById('stat-alloc-detail').textContent = 'Stocks / Bonds / Alternatives';
+        document.getElementById('sidebar-value').textContent = '$' + data.totalValue.toLocaleString();
+        document.getElementById('sidebar-ytd').textContent = '+' + data.ytd + '%';
+
+        const riskBadge = document.getElementById('sidebar-risk');
+        const riskText = document.getElementById('sidebar-risk-text');
+        riskBadge.textContent = data.risk.toUpperCase();
+        riskBadge.className = 'risk-badge risk-' + data.risk;
+        riskText.textContent = data.risk.charAt(0).toUpperCase() + data.risk.slice(1);
+    }
+
+    function populateHoldings(holdings) {
+        const tbody = document.getElementById('holdings-body');
+        tbody.innerHTML = holdings.map(h => {
+            const gain = ((h.current - h.avg) / h.avg * 100).toFixed(1);
+            const gainClass = gain >= 0 ? 'positive' : 'negative';
+            const gainSign = gain >= 0 ? '+' : '';
+            return `<tr>
+                <td><strong>${h.ticker}</strong></td>
+                <td>${h.shares}</td>
+                <td>$${h.avg.toFixed(2)}</td>
+                <td>$${h.current.toFixed(2)}</td>
+                <td class="stat-change ${gainClass}">${gainSign}${gain}%</td>
+                <td>${h.sector}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function populateTransactions(transactions) {
+        const tbody = document.getElementById('txn-body');
+        tbody.innerHTML = transactions.map(t => {
+            const typeBadge = t.type === 'BUY' ? 'badge-buy' : t.type === 'SELL' ? 'badge-sell' : 'badge-dividend';
+            const statusBadge = t.status === 'FLAGGED' ? 'badge-flagged' : 'badge-completed';
+            return `<tr>
+                <td>${t.date}</td>
+                <td><span class="badge ${typeBadge}">${t.type}</span></td>
+                <td><strong>${t.ticker}</strong></td>
+                <td>${t.shares || '-'}</td>
+                <td>${t.price ? '$' + t.price.toFixed(2) : '-'}</td>
+                <td>$${t.total.toLocaleString()}</td>
+                <td><span class="badge ${statusBadge}">${t.status}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ---- Navigation ----
+    function showSection(name) {
+        document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+        document.getElementById('section-' + name).classList.remove('hidden');
+        document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // ---- WebSocket ----
+    function initWebSocket() {
+        if (typeof CONFIG === 'undefined' || !CONFIG.WEBSOCKET_URL || CONFIG.WEBSOCKET_URL.includes('{{')) {
+            updateWsStatus('disconnected', 'Demo Mode');
+            return;
+        }
+        wsClient = new WealthWSClient(CONFIG.WEBSOCKET_URL);
+        wsClient.onMessage(handleWsMessage);
+        wsClient.onStatus(handleWsStatus);
+        wsClient.connect(clientId).catch(() => {
+            updateWsStatus('disconnected', 'Connection failed');
+        });
+    }
+
+    function handleWsMessage(data) {
+        if (data.type === 'response') {
+            hideTyping();
+            addChatMessage(data.agent || currentAgent, data.message, 'agent');
+        } else if (data.type === 'status') {
+            // Status update from backend
+        } else if (data.type === 'error') {
+            hideTyping();
+            addChatMessage(currentAgent, 'Error: ' + data.message, 'agent');
+        }
+    }
+
+    function handleWsStatus(status) {
+        if (status === 'connected') updateWsStatus('connected', 'Connected');
+        else if (status === 'disconnected') updateWsStatus('disconnected', 'Disconnected');
+        else if (status === 'reconnecting') updateWsStatus('disconnected', 'Reconnecting...');
+    }
+
+    function updateWsStatus(state, text) {
+        ['ws-status', 'chat-ws-status'].forEach(id => {
+            const el = document.getElementById(id);
+            el.className = 'connection-status ' + state;
+        });
+        document.getElementById('ws-status-text').textContent = text;
+        document.getElementById('chat-ws-text').textContent = text;
+    }
+
+    // ---- Chat ----
+    function switchAgent(agent, tab) {
+        currentAgent = agent;
+        document.querySelectorAll('.agent-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('chat-agent-title').textContent = AGENT_INFO[agent].title;
+
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+
+        // Show greeting
+        addChatMessage(agent, AGENT_INFO[agent].greeting, 'agent');
+
+        // Restore history
+        chatHistories[agent].forEach(msg => {
+            addChatMessage(agent, msg.text, msg.role, false);
+        });
+    }
+
+    function addChatMessage(agent, text, role, save = true) {
+        const container = document.getElementById('chat-messages');
+        const senderName = role === 'user' ? clientName : AGENT_INFO[agent]?.title.split(' — ')[0] || agent;
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const div = document.createElement('div');
+        div.className = 'chat-msg ' + role;
+        div.innerHTML = `
+            <span class="sender">${senderName}</span>
+            <div class="bubble">${escapeHtml(text)}</div>
+            <span class="timestamp">${now}</span>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        if (save) {
+            chatHistories[agent].push({ text, role });
+        }
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        addChatMessage(currentAgent, msg, 'user');
+        input.value = '';
+
+        if (wsClient && wsClient.connected) {
+            showTyping();
+            wsClient.sendMessage(currentAgent, msg, sessionIds[currentAgent]).catch(err => {
+                hideTyping();
+                addChatMessage(currentAgent, 'Failed to send: ' + err.message, 'agent');
+            });
+        } else {
+            sendViaRest(currentAgent, msg);
+        }
+    }
+
+    async function sendViaRest(agent, message) {
+        const btn = document.getElementById('chat-send-btn');
+        btn.disabled = true;
+        showTyping();
+
+        try {
+            const apiUrl = CONFIG.REST_API_URL;
+            if (!apiUrl || apiUrl.includes('{{')) {
+                // Demo mode — simulate response
+                setTimeout(() => {
+                    hideTyping();
+                    const responses = {
+                        marcus: "Based on my analysis, your portfolio shows strong performance with a technology-heavy allocation. Current market indicators suggest maintaining positions in NVDA and MSFT while monitoring the Fed's next rate decision.",
+                        sophia: "Looking at your profile, I recommend reviewing your target allocation. With your time horizon and risk tolerance, we could optimize by adding international exposure through VXUS. Would you like to schedule a detailed consultation?",
+                        olivia: "I've identified 2 potential tax-loss harvesting opportunities in your portfolio. Your COIN position is currently showing unrealized losses that could offset gains from NVDA. This could save approximately $3,200 in taxes.",
+                        victor: "Your KYC status is VERIFIED and current. All recent transactions have passed AML screening. One note: the COIN purchase on 9/14 was flagged for review due to position concentration exceeding 15% threshold."
+                    };
+                    addChatMessage(agent, responses[agent] || "I'll look into that for you.", 'agent');
+                }, 1500);
+                return;
+            }
+
+            const resp = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agent: agent,
+                    message: message,
+                    client_id: clientId,
+                    session_id: sessionIds[agent]
+                })
+            });
+            const data = await resp.json();
+            hideTyping();
+            addChatMessage(agent, data.response || data.message || 'No response', 'agent');
+        } catch (err) {
+            hideTyping();
+            addChatMessage(agent, 'Connection error. Please try again.', 'agent');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function quickChat(agent, message) {
+        showSection('chat');
+        const tab = document.querySelector(`[data-agent="${agent}"]`);
+        if (tab) switchAgent(agent, tab);
+        document.getElementById('chat-input').value = message;
+        sendChat();
+
+        document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+        document.querySelectorAll('.sidebar-nav a')[1].classList.add('active');
+    }
+
+    function showTyping() { document.getElementById('typing-indicator').classList.add('visible'); }
+    function hideTyping() { document.getElementById('typing-indicator').classList.remove('visible'); }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function logout() {
+        localStorage.removeItem('wm_token');
+        localStorage.removeItem('wm_client_id');
+        localStorage.removeItem('wm_name');
+        localStorage.removeItem('wm_email');
+        localStorage.removeItem('wm_role');
+        if (wsClient) wsClient.disconnect();
+        window.location.href = 'index.html';
+    }
+
+    init();
+</script>
+</body>
+</html>

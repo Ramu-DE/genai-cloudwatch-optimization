@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentCore Load Tester - WebSocket Real-time</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-sage: #7FA876;
+            --secondary-sand: #F5E6D3;
+            --accent-rose: #E8B4B8;
+            --neutral-cream: #FFFBF6;
+            --neutral-charcoal: #2D3436;
+            --success-green: #1E8449;
+            --error-red: #E74C3C;
+            --warning-orange: #F39C12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--neutral-cream) 0%, var(--secondary-sand) 100%);
+            min-height: 100vh;
+            color: var(--neutral-charcoal);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            padding: 30px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .connection-status.connected {
+            background: rgba(30, 132, 73, 0.2);
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: rgba(231, 76, 60, 0.2);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .agent-info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-sage);
+        }
+
+        .agent-info-card h3 {
+            color: var(--primary-sage);
+            margin-bottom: 10px;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .agent-arn {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: var(--neutral-charcoal);
+            word-break: break-all;
+            background: var(--neutral-cream);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            color: var(--primary-sage);
+            margin-bottom: 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--neutral-charcoal);
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--secondary-sand);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-sage);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(168, 198, 159, 0.3);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 198, 159, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: rgba(39, 174, 96, 0.1);
+            border-left: 4px solid var(--success-green);
+            display: block;
+        }
+
+        .result.error {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--error-red);
+            display: block;
+        }
+
+        .result.info {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            display: block;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            color: var(--neutral-charcoal);
+        }
+
+        .result pre {
+            background: var(--neutral-cream);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .stats-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .stats-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--secondary-sand);
+        }
+
+        .stats-table td:first-child {
+            font-weight: 600;
+            color: var(--primary-sage);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--secondary-sand);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-sage) 0%, var(--accent-rose) 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🧪 AgentCore Load Tester</div>
+            <div class="subtitle">WebSocket Real-time Performance Monitoring</div>
+            <div class="connection-status" id="connectionStatus">Connecting...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Agent Selection -->
+        <div class="agent-info-card">
+            <h3>Select Agent to Test</h3>
+            <div class="form-group">
+                <select id="agentSelect" onchange="updateSelectedAgent()">
+                    <option value="">-- Select an Agent --</option>
+                    <option value="bella">🐕 Bella - Grooming Specialist</option>
+                    <option value="oliver">🏥 Oliver - Veterinary Expert</option>
+                    <option value="luna">🍖 Luna - Nutrition Advisor</option>
+                    <option value="max">🎓 Max - Training Coach (Fargate)</option>
+                </select>
+            </div>
+            <div class="agent-arn" id="agentArn">Please select an agent above</div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Single Invocation -->
+            <div class="card">
+                <h2>Single Invocation</h2>
+                <div class="form-group">
+                    <label for="prompt">Prompt:</label>
+                    <textarea id="prompt" placeholder="e.g., I need to schedule a grooming appointment"></textarea>
+                </div>
+                <button onclick="invokeSingle()">Invoke Agent</button>
+                <div id="singleResult" class="result"></div>
+            </div>
+
+            <!-- Parallel Load Test -->
+            <div class="card">
+                <h2>Parallel Load Test</h2>
+                <div class="form-group">
+                    <label for="numRequests">Number of Requests:</label>
+                    <input type="number" id="numRequests" value="10" min="1" max="100">
+                </div>
+                <button onclick="runLoadTest()">Run Load Test</button>
+                <div id="loadTestResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Sustained Load Test -->
+        <div class="dashboard-grid">
+            <div class="card full-width">
+                <h2>Sustained Load Test</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label for="tps">TPS (Transactions/Second):</label>
+                        <input type="number" id="tps" value="2" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration (seconds):</label>
+                        <input type="number" id="duration" value="60" min="10" max="300">
+                    </div>
+                </div>
+                <button onclick="startSustainedTest()">Start Sustained Test</button>
+                <div id="sustainedResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        let ws = null;
+        let selectedAgent = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+        
+        // Hardcoded WebSocket URL as fallback
+        const HARDCODED_WS_URL = 'wss://fsctxxhyia.execute-api.us-west-2.amazonaws.com/prod';
+
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            console.log('Config check:', {
+                PETSTORE_CONFIG: window.PETSTORE_CONFIG,
+                CONFIG: window.CONFIG,
+                LOADTEST_WEBSOCKET_URL_PETSTORE: window.PETSTORE_CONFIG?.LOADTEST_WEBSOCKET_URL,
+                LOADTEST_WEBSOCKET_URL_CONFIG: window.CONFIG?.LOADTEST_WEBSOCKET_URL,
+                HARDCODED: HARDCODED_WS_URL
+            });
+            
+            const wsUrl = window.PETSTORE_CONFIG?.LOADTEST_WEBSOCKET_URL || 
+                         window.CONFIG?.LOADTEST_WEBSOCKET_URL || 
+                         HARDCODED_WS_URL;
+            
+            if (!wsUrl) {
+                console.error('WebSocket URL not configured');
+                console.error('Available config:', window.CONFIG);
+                console.error('Available PETSTORE_CONFIG:', window.PETSTORE_CONFIG);
+                updateConnectionStatus('disconnected');
+                return;
+            }
+
+            console.log('Connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateConnectionStatus('connected');
+                reconnectAttempts = 0;
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus('disconnected');
+                
+                // Attempt reconnection
+                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectAttempts++;
+                    console.log(`Reconnecting... Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+                    setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('disconnected');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+        }
+
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${status}`;
+            statusEl.textContent = status === 'connected' ? '🟢 Connected' : '🔴 Disconnected';
+        }
+
+        function handleWebSocketMessage(data) {
+            console.log('WebSocket message:', data);
+
+            switch (data.type) {
+                case 'invoke_start':
+                    handleInvokeStart(data);
+                    break;
+                case 'invoke_complete':
+                    handleInvokeComplete(data);
+                    break;
+                case 'load_test_start':
+                    handleLoadTestStart(data);
+                    break;
+                case 'load_test_progress':
+                    handleLoadTestProgress(data);
+                    break;
+                case 'load_test_complete':
+                    handleLoadTestComplete(data);
+                    break;
+                case 'sustained_test_start':
+                    handleSustainedTestStart(data);
+                    break;
+                case 'sustained_test_progress':
+                    handleSustainedTestProgress(data);
+                    break;
+                case 'sustained_test_complete':
+                    handleSustainedTestComplete(data);
+                    break;
+                case 'error':
+                    handleError(data);
+                    break;
+            }
+        }
+
+        function updateSelectedAgent() {
+            const select = document.getElementById('agentSelect');
+            selectedAgent = select.value;
+            
+            if (!selectedAgent) {
+                document.getElementById('agentArn').textContent = 'Please select an agent above';
+                return;
+            }
+            
+            const agentNames = {
+                bella: '🐕 Bella - Grooming Specialist (AgentCore)',
+                oliver: '🏥 Oliver - Veterinary Expert (AgentCore)',
+                luna: '🍖 Luna - Nutrition Advisor (AgentCore)',
+                max: '🎓 Max - Training Coach (Fargate)'
+            };
+            
+            document.getElementById('agentArn').textContent = `Selected: ${agentNames[selectedAgent]}`;
+        }
+
+        function invokeSingle() {
+            if (!selectedAgent) {
+                alert('Please select an agent first');
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('WebSocket not connected. Please wait...');
+                return;
+            }
+
+            const prompt = document.getElementById('prompt').value || 'Hello, this is a test message';
+            const resultDiv = document.getElementById('singleResult');
+
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '<h3>⏳ Invoking agent...</h3>';
+
+            ws.send(JSON.stringify({
+                action: 'invoke',
+                agent: selectedAgent,
+                prompt: prompt
+            }));
+        }
+
+        function handleInvokeStart(data) {
+            const resultDiv = document.getElementById('singleResult');
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = `<h3>⏳ Invoking ${data.agent}...</h3>`;
+        }
+
+        function handleInvokeComplete(data) {
+            const resultDiv = document.getElementById('singleResult');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h3>✓ Success</h3>
+                <table class="stats-table">
+                    <tr><td>Agent:</td><td>${selectedAgent.toUpperCase()}</td></tr>
+                    <tr><td>Duration:</td><td>${data.duration_ms}ms</td></tr>
+                </table>
+                <pre>${JSON.stringify(data.response, null, 2)}</pre>
+            `;
+        }
+
+        function runLoadTest() {
+            if (!selectedAgent) {
+                alert('Please select an agent first');
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('WebSocket not connected. Please wait...');
+                return;
+            }
+
+            const numRequests = parseInt(document.getElementById('numRequests').value);
+            const resultDiv = document.getElementById('loadTestResult');
+
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '<h3>⏳ Starting load test...</h3>';
+
+            ws.send(JSON.stringify({
+                action: 'loadTest',
+                agent: selectedAgent,
+                numRequests: numRequests,
+                prompt: 'Hello, this is a load test message'
+            }));
+        }
+
+        function handleLoadTestStart(data) {
+            const resultDiv = document.getElementById('loadTestResult');
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = `
+                <h3>🚀 Load Test Running</h3>
+                <p>Test ID: ${data.test_id}</p>
+                <p>Requests: ${data.num_requests}</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="loadTestProgress" style="width: 0%">0%</div>
+                </div>
+                <p id="loadTestStats">Completed: 0/${data.num_requests}</p>
+            `;
+        }
+
+        function handleLoadTestProgress(data) {
+            const progress = (data.completed / data.total * 100).toFixed(0);
+            const progressFill = document.getElementById('loadTestProgress');
+            const statsP = document.getElementById('loadTestStats');
+            
+            if (progressFill) {
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+            }
+            
+            if (statsP) {
+                statsP.textContent = `Completed: ${data.completed}/${data.total} | Successful: ${data.successful} | Failed: ${data.failed}`;
+            }
+        }
+
+        function handleLoadTestComplete(data) {
+            const resultDiv = document.getElementById('loadTestResult');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h3>✓ Load Test Complete</h3>
+                <table class="stats-table">
+                    <tr><td>Agent:</td><td>${selectedAgent.toUpperCase()}</td></tr>
+                    <tr><td>Total Requests:</td><td>${data.num_requests}</td></tr>
+                    <tr><td>Successful:</td><td>${data.successful}</td></tr>
+                    <tr><td>Failed:</td><td>${data.failed}</td></tr>
+                    <tr><td>Avg Duration:</td><td>${data.stats.avg_duration?.toFixed(2)}ms</td></tr>
+                    <tr><td>Min Duration:</td><td>${data.stats.min_duration?.toFixed(2)}ms</td></tr>
+                    <tr><td>Max Duration:</td><td>${data.stats.max_duration?.toFixed(2)}ms</td></tr>
+                </table>
+            `;
+        }
+
+        function startSustainedTest() {
+            if (!selectedAgent) {
+                alert('Please select an agent first');
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('WebSocket not connected. Please wait...');
+                return;
+            }
+
+            const tps = parseInt(document.getElementById('tps').value);
+            const duration = parseInt(document.getElementById('duration').value);
+            const resultDiv = document.getElementById('sustainedResult');
+
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '<h3>⏳ Starting sustained test...</h3>';
+
+            ws.send(JSON.stringify({
+                action: 'sustainedLoad',
+                agent: selectedAgent,
+                tps: tps,
+                duration: duration,
+                prompt: 'Hello, this is a sustained load test message'
+            }));
+        }
+
+        function handleSustainedTestStart(data) {
+            const resultDiv = document.getElementById('sustainedResult');
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = `
+                <h3>🚀 Sustained Test Running</h3>
+                <p>Test ID: ${data.test_id}</p>
+                <p>Target: ${data.tps} TPS for ${data.duration} seconds (${data.num_requests} total requests)</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sustainedProgress" style="width: 0%">0%</div>
+                </div>
+                <p id="sustainedStats">Starting...</p>
+            `;
+        }
+
+        function handleSustainedTestProgress(data) {
+            const progress = (data.completed / data.total * 100).toFixed(0);
+            const progressFill = document.getElementById('sustainedProgress');
+            const statsP = document.getElementById('sustainedStats');
+            
+            if (progressFill) {
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+            }
+            
+            if (statsP) {
+                statsP.innerHTML = `
+                    Completed: ${data.completed}/${data.total} | 
+                    Successful: ${data.successful} | 
+                    Failed: ${data.failed}<br>
+                    Actual TPS: ${data.actual_tps} | 
+                    Avg Response: ${data.avg_response_time.toFixed(2)}ms | 
+                    Elapsed: ${data.elapsed_seconds}s
+                `;
+            }
+        }
+
+        function handleSustainedTestComplete(data) {
+            const resultDiv = document.getElementById('sustainedResult');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h3>✓ Sustained Test Complete</h3>
+                <table class="stats-table">
+                    <tr><td>Agent:</td><td>${selectedAgent.toUpperCase()}</td></tr>
+                    <tr><td>Total Requests:</td><td>${data.num_requests}</td></tr>
+                    <tr><td>Successful:</td><td>${data.successful}</td></tr>
+                    <tr><td>Failed:</td><td>${data.failed}</td></tr>
+                    <tr><td>Actual TPS:</td><td>${data.stats.actual_tps?.toFixed(2)}</td></tr>
+                    <tr><td>Total Duration:</td><td>${data.stats.total_duration?.toFixed(2)}s</td></tr>
+                    <tr><td>Avg Response:</td><td>${data.stats.avg_duration?.toFixed(2)}ms</td></tr>
+                    <tr><td>Min Response:</td><td>${data.stats.min_duration?.toFixed(2)}ms</td></tr>
+                    <tr><td>Max Response:</td><td>${data.stats.max_duration?.toFixed(2)}ms</td></tr>
+                </table>
+            `;
+        }
+
+        function handleError(data) {
+            alert('Error: ' + data.error);
+        }
+
+        // Connect on page load
+        window.addEventListener('load', () => {
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>

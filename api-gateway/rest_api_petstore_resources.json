@@ -1,0 +1,28 @@
+{
+    "items": [
+        {
+            "id": "kgv9mvhdl6",
+            "path": "/"
+        },
+        {
+            "id": "syp6ao",
+            "parentId": "kgv9mvhdl6",
+            "pathPart": "agents",
+            "path": "/agents",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "wh8dms",
+            "parentId": "kgv9mvhdl6",
+            "pathPart": "auth",
+            "path": "/auth",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        }
+    ]
+}

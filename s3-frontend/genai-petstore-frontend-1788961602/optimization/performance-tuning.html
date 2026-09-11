@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Tuning Dashboard - Luna Nutrition Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="performance-tuning.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo-icon">⚡</div>
+                    <div class="header-text">
+                        <h1>Performance Tuning Lab</h1>
+                        <p class="subtitle">Optimize Your AI Agent • Reduce Costs • Improve Speed</p>
+                    </div>
+                </div>
+                <div class="header-badge">
+                    <span class="badge-icon">🎯</span>
+                    <span class="badge-text">Luna Nutrition Agent</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scenario Selector Section -->
+        <section class="scenario-selector-section">
+            <div class="selector-controls">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="scenarioSelect">Select Fault Scenario to Test:</label>
+                        <select id="scenarioSelect" class="scenario-dropdown">
+                            <option value="">-- Choose a fault scenario --</option>
+                        </select>
+                        <p class="help-text">💡 Baseline comparison runs automatically</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPrompt">Test Prompt:</label>
+                        <input type="text" id="userPrompt" class="prompt-input" 
+                               placeholder="What nutrition plan do you recommend for Matthew?" 
+                               value="What nutrition plan do you recommend for Matthew?">
+                        <p class="help-text">👤 Testing as: <strong>cust_matthewnguyen22</strong></p>
+                    </div>
+                </div>
+                <button id="runScenarioBtn" class="btn-primary" disabled>Run Test</button>
+            </div>
+            
+            <!-- Scenario Description Panel - 4 Column Layout -->
+            <div id="scenarioDescription" class="scenario-description hidden">
+                <h3 id="scenarioName"></h3>
+                
+                <!-- Top Row: 4 Equal Columns -->
+                <div class="scenario-info-grid">
+                    <div class="info-column">
+                        <div class="column-header">🔬 What This Tests</div>
+                        <div class="column-content" id="scenarioExplanation"></div>
+                    </div>
+                    
+                    <div class="info-column">
+                        <div class="column-header">🎯 Why This Matters</div>
+                        <div class="column-content" id="whyMatters"></div>
+                    </div>
+                    
+                    <div class="info-column">
+                        <div class="column-header">🏗️ Architectural Insight</div>
+                        <div class="column-content" id="architecturalInsight"></div>
+                    </div>
+                    
+                    <div class="info-column">
+                        <div class="column-header">💡 Key Takeaway</div>
+                        <div class="column-content" id="keyTakeaway"></div>
+                    </div>
+                </div>
+                
+                <!-- Bottom Row: 2 Columns -->
+                <div class="scenario-details-grid">
+                    <div class="detail-column">
+                        <div class="detail-header">⚙️ Fault Injection Mechanism</div>
+                        <div class="detail-content" id="faultMechanism"></div>
+                    </div>
+                    
+                    <div class="detail-column">
+                        <div class="detail-header">📊 Expected Performance Impact</div>
+                        <div class="detail-content">
+                            <ul id="expectedImpactList"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dual Execution Panels - Baseline on Left, Fault on Right (Hidden until test runs) -->
+        <section class="execution-panels hidden" id="executionPanelsSection">
+            <div class="panel baseline-panel">
+                <div class="panel-header baseline-header">
+                    <h2>✅ Optimized Baseline</h2>
+                    <span id="baselineStatus" class="status-badge status-ready">Ready</span>
+                </div>
+                <div class="panel-body">
+                    <div id="baselineProgress" class="progress-info hidden">
+                        <div class="spinner"></div>
+                        <p class="status-text">Status: <span id="baselineStatusText">Initializing...</span></p>
+                        <p class="elapsed-time">⏱️ Elapsed: <span id="baselineElapsed">0.0s</span></p>
+                    </div>
+                    <div id="baselineResponse" class="response-container hidden">
+                        <h4>💬 Agent Response:</h4>
+                        <div class="response-text"></div>
+                    </div>
+                    <div id="baselineActivity" class="activity-log hidden">
+                        <h4>📋 Activity Log:</h4>
+                        <ul class="activity-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel fault-panel">
+                <div class="panel-header fault-header">
+                    <h2>⚠️ Fault Injected Scenario</h2>
+                    <span id="faultStatus" class="status-badge status-ready">Ready</span>
+                </div>
+                <div class="panel-body">
+                    <div id="faultProgress" class="progress-info hidden">
+                        <div class="spinner"></div>
+                        <p class="status-text">Status: <span id="faultStatusText">Initializing...</span></p>
+                        <p class="elapsed-time">⏱️ Elapsed: <span id="faultElapsed">0.0s</span></p>
+                    </div>
+                    <div id="faultResponse" class="response-container hidden">
+                        <h4>💬 Agent Response:</h4>
+                        <div class="response-text"></div>
+                    </div>
+                    <div id="faultActivity" class="activity-log hidden">
+                        <h4>📋 Activity Log:</h4>
+                        <ul class="activity-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics Comparison Section - 4 Column Cards -->
+        <section id="metricsSection" class="metrics-section hidden">
+            <h2>📊 Performance Metrics Comparison</h2>
+            <div class="metrics-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">⚡</div>
+                    <div class="metric-label">Latency</div>
+                    <div class="metric-values">
+                        <div class="metric-value baseline-value">
+                            <span class="value-label">Baseline:</span>
+                            <span id="latencyBaseline" class="value-number">--</span>
+                        </div>
+                        <div class="metric-value fault-value">
+                            <span class="value-label">Fault:</span>
+                            <span id="latencyFault" class="value-number">--</span>
+                        </div>
+                        <div class="metric-delta">
+                            <span id="latencyDelta" class="delta-number">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">🎯</div>
+                    <div class="metric-label">Tokens</div>
+                    <div class="metric-values">
+                        <div class="metric-value baseline-value">
+                            <span class="value-label">Baseline:</span>
+                            <span id="tokensBaseline" class="value-number">--</span>
+                        </div>
+                        <div class="metric-value fault-value">
+                            <span class="value-label">Fault:</span>
+                            <span id="tokensFault" class="value-number">--</span>
+                        </div>
+                        <div class="metric-delta">
+                            <span id="tokensDelta" class="delta-number">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">💰</div>
+                    <div class="metric-label">Cost</div>
+                    <div class="metric-values">
+                        <div class="metric-value baseline-value">
+                            <span class="value-label">Baseline:</span>
+                            <span id="costBaseline" class="value-number">--</span>
+                        </div>
+                        <div class="metric-value fault-value">
+                            <span class="value-label">Fault:</span>
+                            <span id="costFault" class="value-number">--</span>
+                        </div>
+                        <div class="metric-delta">
+                            <span id="costDelta" class="delta-number">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">🔧</div>
+                    <div class="metric-label">Tool Calls</div>
+                    <div class="metric-values">
+                        <div class="metric-value baseline-value">
+                            <span class="value-label">Baseline:</span>
+                            <span id="toolsBaseline" class="value-number">--</span>
+                        </div>
+                        <div class="metric-value fault-value">
+                            <span class="value-label">Fault:</span>
+                            <span id="toolsFault" class="value-number">--</span>
+                        </div>
+                        <div class="metric-delta">
+                            <span id="toolsDelta" class="delta-number">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Root Cause Analysis Section -->
+        <section id="rootCauseSection" class="root-cause-section hidden">
+            <h2>🔍 Root Cause Analysis</h2>
+            <div id="rootCauseContent" class="root-cause-content">
+                <!-- Root cause analysis will be inserted here -->
+            </div>
+            
+            <!-- Educational Content -->
+            <div class="educational-content">
+                <div class="key-takeaway">
+                    <h3>💡 Key Takeaway</h3>
+                    <p id="keyTakeaway"></p>
+                </div>
+                <div class="why-matters">
+                    <h3>🎯 Why This Matters</h3>
+                    <p id="whyMatters"></p>
+                </div>
+                <div class="aws-docs">
+                    <h3>📚 Learn More</h3>
+                    <ul id="awsDocsList"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Execution History Section (Hidden until test runs) -->
+        <section id="historySection" class="history-section hidden">
+            <div class="history-header">
+                <h2>📜 Execution History (Last 10 Runs)</h2>
+                <button id="clearHistoryBtn" class="btn-secondary">Clear History</button>
+            </div>
+            <div class="history-table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="timestamp">Time ▼</th>
+                            <th class="sortable" data-sort="scenario">Scenario</th>
+                            <th class="sortable" data-sort="latency">Latency (ms)</th>
+                            <th class="sortable" data-sort="tokens">Tokens</th>
+                            <th class="sortable" data-sort="cost">Cost</th>
+                            <th class="sortable" data-sort="status">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr class="empty-state">
+                            <td colspan="6">No execution history yet. Run a scenario to get started.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Export and Reporting Section -->
+        <section class="export-section">
+            <h2>📥 Export & Reporting</h2>
+            <div class="export-controls">
+                <button id="exportJsonBtn" class="btn-secondary" disabled>
+                    <span class="icon">💾</span> Export Results (JSON)
+                </button>
+                <button id="generateReportBtn" class="btn-secondary" disabled>
+                    <span class="icon">📄</span> Generate Report (HTML)
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="format-response.js?v=20251110"></script>
+    <script src="config.js?v=20251110"></script>
+    <script src="websocket-client.js?v=20251110"></script>
+    <script src="performance-tuning.js?v=20251110"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+    "Table": {
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "agencyId",
+                "AttributeType": "S"
+            }
+        ],
+        "TableName": "genai_petstore_customer_profiles",
+        "KeySchema": [
+            {
+                "AttributeName": "agencyId",
+                "KeyType": "HASH"
+            }
+        ],
+        "TableStatus": "ACTIVE",
+        "CreationDateTime": "2026-09-09T13:28:33.391000+00:00",
+        "ProvisionedThroughput": {
+            "NumberOfDecreasesToday": 0,
+            "ReadCapacityUnits": 0,
+            "WriteCapacityUnits": 0
+        },
+        "TableSizeBytes": 11070,
+        "ItemCount": 51,
+        "TableArn": "arn:aws:dynamodb:us-west-2:438327931823:table/genai_petstore_customer_profiles",
+        "TableId": "8c1e0040-74ad-4c54-ba3f-83dd2e3f9703",
+        "BillingModeSummary": {
+            "BillingMode": "PAY_PER_REQUEST",
+            "LastUpdateToPayPerRequestDateTime": "2026-09-09T13:28:33.391000+00:00"
+        },
+        "DeletionProtectionEnabled": false,
+        "WarmThroughput": {
+            "ReadUnitsPerSecond": 12000,
+            "WriteUnitsPerSecond": 4000,
+            "Status": "ACTIVE"
+        }
+    }
+}

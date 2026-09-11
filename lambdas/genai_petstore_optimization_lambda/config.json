@@ -1,0 +1,56 @@
+{
+    "FunctionName": "genai_petstore_optimization_lambda",
+    "FunctionArn": "arn:aws:lambda:us-west-2:438327931823:function:genai_petstore_optimization_lambda",
+    "Runtime": "python3.13",
+    "Role": "arn:aws:iam::438327931823:role/genai_petstore_optimization_lambda_role",
+    "Handler": "lambda_handler.lambda_handler",
+    "CodeSize": 60215,
+    "Description": "",
+    "Timeout": 900,
+    "MemorySize": 1024,
+    "LastModified": "2026-09-09T13:49:22.000+0000",
+    "CodeSha256": "suWmgusJ7U4YJdRNHT/PupoENQ4oUUzoduXlbKTfqiM=",
+    "Version": "$LATEST",
+    "Environment": {
+        "Variables": {
+            "SCENARIOS_CONFIG": "config/scenarios.json",
+            "WEBSOCKET_CONNECTIONS_TABLE": "genai_petstore_websocket_connections",
+            "DEPLOYMENT_REGION": "us-west-2",
+            "RESULTS_TABLE": "genai_petstore_optimization_results",
+            "LOAD_TEST_RESULTS_TABLE": "genai_petstore_load_test_results",
+            "APPOINTMENTS_TABLE": "genai_petstore_appointments",
+            "STAFF_SCHEDULE_TABLE": "genai_petstore_staff_schedule",
+            "LUNA_AGENT_ARN": "arn:aws:bedrock-agentcore:us-west-2:438327931823:runtime/genai_petstore_luna_nutrition_agent-KR72xTHy6A",
+            "DYNAMODB_TABLE": "genai_petstore_customers",
+            "AGENCIES_TABLE": "genai_petstore_agencies",
+            "CUSTOMER_PROFILES_TABLE": "genai_petstore_customer_profiles",
+            "BELLA_AGENT_ARN": "arn:aws:bedrock-agentcore:us-west-2:438327931823:runtime/genai_petstore_bella_grooming_agent-FsKTLB4zQe",
+            "LOG_LEVEL": "INFO",
+            "USER_AUTH_TABLE": "genai_petstore_user_auth"
+        }
+    },
+    "TracingConfig": {
+        "Mode": "Active"
+    },
+    "RevisionId": "4eb60873-b0ae-42dd-a690-45024f759074",
+    "State": "Active",
+    "LastUpdateStatus": "Successful",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:us-west-2::runtime:8b993aab9f05546fb8bbd006aab4afa21b3df8ffc81cb18683800e55613267c7"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/genai_petstore_optimization_lambda"
+    }
+}

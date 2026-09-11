@@ -1,0 +1,64 @@
+{
+  "queries": [
+    {
+      "name": "Token Usage Per Agent (Cost Analysis)",
+      "description": "Aggregate token usage and estimated cost per agent over time",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*"],
+      "query": "fields @timestamp, AgentName, input_tokens, output_tokens, total_tokens, estimated_cost_usd\n| filter event = 'agent_response'\n| stats sum(input_tokens) as TotalInput, sum(output_tokens) as TotalOutput, sum(estimated_cost_usd) as TotalCost, count(*) as Requests by AgentName\n| sort TotalCost desc"
+    },
+    {
+      "name": "Slowest Tool Invocations (P95)",
+      "description": "Find the slowest tool calls across all agents — indicates bottleneck tools",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*"],
+      "query": "fields @timestamp, agent, tool, duration_ms, success, client_id\n| filter event = 'tool_invocation'\n| stats avg(duration_ms) as AvgMs, pct(duration_ms, 95) as P95Ms, count(*) as Calls by tool, agent\n| sort P95Ms desc\n| limit 20"
+    },
+    {
+      "name": "Agent Error Patterns",
+      "description": "Classify and count errors by agent and error type",
+      "log_groups": ["/aws/lambda/wealth_mgmt_agent_router_lambda"],
+      "query": "fields @timestamp, @message\n| filter @message like /Error|error|ERROR|Exception|Failed/\n| parse @message /(?<error_type>ClientError|ValueError|TimeoutError|Exception|Error)/ as error_type\n| stats count(*) as ErrorCount by error_type\n| sort ErrorCount desc"
+    },
+    {
+      "name": "Memory Hit Rate Per Agent",
+      "description": "Track how often agent memory retrieval returns useful context vs empty",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*"],
+      "query": "fields @timestamp, agent, memory_hits, memory_misses\n| filter event = 'agent_response'\n| stats sum(memory_hits) as Hits, sum(memory_misses) as Misses, sum(memory_hits) / (sum(memory_hits) + sum(memory_misses)) * 100 as HitRatePercent by agent\n| sort HitRatePercent desc"
+    },
+    {
+      "name": "Compliance Flagging Rate",
+      "description": "Track ratio of flagged vs approved compliance events",
+      "log_groups": ["/ecs/wealth_mgmt_victor_compliance_checker"],
+      "query": "fields @timestamp, event_type, status, client_id\n| filter event = 'compliance_check'\n| stats count(*) as Total, sum(status = 'FLAGGED') as Flagged, sum(status = 'APPROVED') as Approved by event_type\n| sort Total desc"
+    },
+    {
+      "name": "Agent Response Time Distribution",
+      "description": "Latency percentiles per agent for SLA monitoring",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*", "/ecs/wealth_mgmt_victor_compliance_checker"],
+      "query": "fields @timestamp, agent, latency_ms\n| filter event = 'agent_response'\n| stats avg(latency_ms) as Avg, pct(latency_ms, 50) as P50, pct(latency_ms, 95) as P95, pct(latency_ms, 99) as P99, max(latency_ms) as Max by agent\n| sort P95 desc"
+    },
+    {
+      "name": "Top Clients by Token Spend",
+      "description": "Identify highest-cost clients for account management",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*"],
+      "query": "fields @timestamp, agent, client_id, total_tokens, estimated_cost_usd\n| filter event = 'agent_response'\n| stats sum(total_tokens) as TotalTokens, sum(estimated_cost_usd) as TotalCost, count(*) as Sessions by client_id\n| sort TotalCost desc\n| limit 10"
+    },
+    {
+      "name": "DynamoDB Latency per Table",
+      "description": "Track database operation latency to identify hot tables",
+      "log_groups": ["/aws/bedrock-agentcore/runtimes/wealth_mgmt_*"],
+      "query": "fields @timestamp, @message\n| filter @message like /DYNAMODB RESPONSE/\n| parse @message /Table: (?<table>[a-z_]+)/ as table\n| parse @message /Duration: (?<duration>[0-9.]+) seconds/ as duration\n| stats avg(duration * 1000) as AvgMs, pct(duration * 1000, 95) as P95Ms, count(*) as Ops by table\n| sort P95Ms desc"
+    },
+    {
+      "name": "Load Test Results Summary",
+      "description": "Aggregate load test metrics over time",
+      "log_groups": ["/aws/lambda/wealth_mgmt_load_tester_lambda"],
+      "query": "fields @timestamp, @message\n| filter @message like /Load test completed/\n| parse @message /total=(?<total>\\d+), success=(?<success>\\d+), fail=(?<fail>\\d+), avg=(?<avg>[0-9.]+)ms/ as total, success, fail, avg\n| stats sum(total) as TotalRequests, sum(success) as Successes, avg(avg) as AvgLatencyMs by bin(1h)"
+    },
+    {
+      "name": "Bedrock Model Invocation Analysis",
+      "description": "Analyze Bedrock model invocations with token and latency breakdown",
+      "log_groups": ["/aws/bedrock/modelinvocations"],
+      "query": "fields @timestamp, modelId, inputTokenCount, outputTokenCount, invocationLatency\n| stats avg(invocationLatency) as AvgLatency, avg(inputTokenCount) as AvgInput, avg(outputTokenCount) as AvgOutput, count(*) as Invocations by modelId\n| sort Invocations desc"
+    }
+  ]
+}

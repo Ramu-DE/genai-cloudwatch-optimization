@@ -1,0 +1,161 @@
+{
+    "services": [
+        {
+            "serviceArn": "arn:aws:ecs:us-west-2:438327931823:service/max-agent-cluster/max-agent-service",
+            "serviceName": "max-agent-service",
+            "clusterArn": "arn:aws:ecs:us-west-2:438327931823:cluster/max-agent-cluster",
+            "loadBalancers": [],
+            "serviceRegistries": [],
+            "status": "ACTIVE",
+            "desiredCount": 1,
+            "runningCount": 1,
+            "pendingCount": 0,
+            "launchType": "FARGATE",
+            "platformVersion": "LATEST",
+            "platformFamily": "Linux",
+            "taskDefinition": "arn:aws:ecs:us-west-2:438327931823:task-definition/max-agent:1",
+            "deploymentConfiguration": {
+                "deploymentCircuitBreaker": {
+                    "enable": false,
+                    "rollback": false,
+                    "resetOnHealthyTask": true,
+                    "thresholdConfiguration": {
+                        "type": "BOUNDED_PERCENT",
+                        "value": 50
+                    }
+                },
+                "maximumPercent": 200,
+                "minimumHealthyPercent": 100,
+                "strategy": "ROLLING",
+                "bakeTimeInMinutes": 0
+            },
+            "deployments": [
+                {
+                    "id": "ecs-svc/4115349405894760561",
+                    "status": "PRIMARY",
+                    "taskDefinition": "arn:aws:ecs:us-west-2:438327931823:task-definition/max-agent:1",
+                    "desiredCount": 1,
+                    "pendingCount": 0,
+                    "runningCount": 1,
+                    "failedTasks": 0,
+                    "createdAt": "2026-09-09T13:45:56.163000+00:00",
+                    "updatedAt": "2026-09-09T13:51:51.394000+00:00",
+                    "launchType": "FARGATE",
+                    "platformVersion": "1.4.0",
+                    "platformFamily": "Linux",
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-0b2bff4a2b8068b76",
+                                "subnet-0a681cdee2e6c395f",
+                                "subnet-0e8c0325c9a9cc0ef",
+                                "subnet-033e9e1bdc2f3ad95"
+                            ],
+                            "securityGroups": [
+                                "sg-0f9a236bf4ebed666"
+                            ],
+                            "assignPublicIp": "ENABLED"
+                        }
+                    },
+                    "rolloutState": "COMPLETED",
+                    "rolloutStateReason": "ECS deployment ecs-svc/4115349405894760561 completed."
+                }
+            ],
+            "roleArn": "arn:aws:iam::438327931823:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+            "events": [
+                {
+                    "id": "a80f8338-1bb8-4f09-89b5-b77c99fbab26",
+                    "createdAt": "2026-09-11T13:53:46.051000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "c6fc85a5-3c13-4e07-800a-083a1c41d8b4",
+                    "createdAt": "2026-09-11T07:53:43.415000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "abac5fe0-c7fe-433a-89e4-faf4f886749f",
+                    "createdAt": "2026-09-11T01:53:20.206000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "9d153f9f-a8a8-4f6b-9bbb-973452565507",
+                    "createdAt": "2026-09-10T19:53:13.947000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "db999162-f757-4679-ac70-03faa2d9f3f0",
+                    "createdAt": "2026-09-10T13:53:01.412000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "1a92a52b-a836-42de-b42d-14b602508d4c",
+                    "createdAt": "2026-09-10T07:52:41.274000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "e677e91f-7155-4940-96b8-280a359b58a4",
+                    "createdAt": "2026-09-10T01:52:14.728000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "2d8a2cb7-4df5-407b-ae5f-a187766d7868",
+                    "createdAt": "2026-09-09T19:51:54.192000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "001b66fe-82a3-4b53-8908-3b7188f05c5f",
+                    "createdAt": "2026-09-09T13:51:51.400000+00:00",
+                    "message": "(service max-agent-service) has reached a steady state."
+                },
+                {
+                    "id": "a7fdd832-0b27-4d01-9818-6d9e8dd3174e",
+                    "createdAt": "2026-09-09T13:51:51.399000+00:00",
+                    "message": "(service max-agent-service) (deployment ecs-svc/4115349405894760561) deployment completed."
+                },
+                {
+                    "id": "225f175c-e858-4c61-8d76-32b67676516b",
+                    "createdAt": "2026-09-09T13:46:14.132000+00:00",
+                    "message": "(service max-agent-service) has started 1 tasks: (task 2bf0092a863e4870a89c4f52901ebc52)."
+                }
+            ],
+            "createdAt": "2026-09-09T13:45:56.163000+00:00",
+            "currentServiceRevisions": [
+                {
+                    "arn": "arn:aws:ecs:us-west-2:438327931823:service-revision/max-agent-cluster/max-agent-service/4115349405894760561",
+                    "requestedTaskCount": 1,
+                    "runningTaskCount": 1,
+                    "pendingTaskCount": 0
+                }
+            ],
+            "placementConstraints": [],
+            "placementStrategy": [],
+            "networkConfiguration": {
+                "awsvpcConfiguration": {
+                    "subnets": [
+                        "subnet-0b2bff4a2b8068b76",
+                        "subnet-0a681cdee2e6c395f",
+                        "subnet-0e8c0325c9a9cc0ef",
+                        "subnet-033e9e1bdc2f3ad95"
+                    ],
+                    "securityGroups": [
+                        "sg-0f9a236bf4ebed666"
+                    ],
+                    "assignPublicIp": "ENABLED"
+                }
+            },
+            "healthCheckGracePeriodSeconds": 0,
+            "schedulingStrategy": "REPLICA",
+            "deploymentController": {
+                "type": "ECS"
+            },
+            "createdBy": "arn:aws:iam::438327931823:role/codebuild-cf-CodeBuildServiceRole-kymxLnvwh0Ej",
+            "enableECSManagedTags": false,
+            "propagateTags": "NONE",
+            "enableExecuteCommand": false,
+            "availabilityZoneRebalancing": "ENABLED",
+            "resourceManagementType": "CUSTOMER"
+        }
+    ],
+    "failures": []
+}

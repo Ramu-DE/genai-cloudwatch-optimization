@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test - Agent Optimization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #7FA876;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #7FA876;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #7FA876;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6a9265;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #7FA876;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left-color: #1E8449;
+            background: #E8F8F5;
+        }
+        .error {
+            border-left-color: #E74C3C;
+            background: #FADBD8;
+        }
+        .loading {
+            color: #7FA876;
+            font-style: italic;
+        }
+        .metric {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 5px 10px;
+            background: #E8F8F5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Frontend API Test - Agent Optimization</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Health Check</h2>
+        <button onclick="testHealth()">Run Health Check</button>
+        <div id="healthResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Load Scenarios</h2>
+        <button onclick="testLoadScenarios()">Load Scenarios</button>
+        <div id="scenariosResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Execute Baseline Scenario</h2>
+        <button onclick="testExecuteBaseline()">Execute Scenario 1 (Baseline)</button>
+        <div id="baselineResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Execute Fault Injection Scenario</h2>
+        <button onclick="testExecuteFault()">Execute Scenario 10 (Latency Spike)</button>
+        <div id="faultResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 5: Parallel Execution</h2>
+        <button onclick="testParallel()">Execute Parallel (Fault + Baseline)</button>
+        <div id="parallelResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing health endpoint...';
+            
+            try {
+                const response = await fetch(`${CONFIG.OPTIMIZATION_API_URL}/health`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Health Check Passed\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Health Check Failed\n\n${error.message}`;
+            }
+        }
+        
+        async function testLoadScenarios() {
+            const resultDiv = document.getElementById('scenariosResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Loading scenarios...';
+            
+            try {
+                const response = await fetch(`${CONFIG.OPTIMIZATION_API_URL}/scenarios`);
+                const data = await response.json();
+                
+                const scenarios = data.scenarios || [];
+                const types = {};
+                scenarios.forEach(s => {
+                    types[s.type] = (types[s.type] || 0) + 1;
+                });
+                
+                let summary = `✅ Loaded ${scenarios.length} Scenarios\n\n`;
+                summary += 'By Type:\n';
+                for (const [type, count] of Object.entries(types)) {
+                    summary += `  ${type}: ${count}\n`;
+                }
+                summary += '\nFirst 5 Scenarios:\n';
+                scenarios.slice(0, 5).forEach(s => {
+                    summary += `  ${s.id}. ${s.name} (${s.type})\n`;
+                });
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = summary;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Load Scenarios Failed\n\n${error.message}`;
+            }
+        }
+        
+        async function testExecuteBaseline() {
+            const resultDiv = document.getElementById('baselineResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Executing baseline scenario...';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${CONFIG.OPTIMIZATION_API_URL}/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'What nutrition plan do you recommend for Chester?',
+                        scenario_id: 1,
+                        customer_id: 'test_customer'
+                    })
+                });
+                const endTime = Date.now();
+                const data = await response.json();
+                
+                const metrics = data.metrics || {};
+                let result = `✅ Scenario 1: Optimized Base Case\n\n`;
+                result += `Request Time: ${endTime - startTime}ms\n\n`;
+                result += `Metrics:\n`;
+                result += `  Latency: ${metrics.latency_ms?.toFixed(0) || 0}ms\n`;
+                result += `  Input Tokens: ${metrics.input_tokens || 0}\n`;
+                result += `  Output Tokens: ${metrics.output_tokens || 0}\n`;
+                result += `  Total Tokens: ${metrics.total_tokens || 0}\n`;
+                result += `  Tool Calls: ${metrics.tool_calls || 0}\n`;
+                result += `  Cost: $${metrics.estimated_cost_usd?.toFixed(6) || 0}\n\n`;
+                result += `Response:\n${data.response || 'No response'}`;
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Execution Failed\n\n${error.message}`;
+            }
+        }
+        
+        async function testExecuteFault() {
+            const resultDiv = document.getElementById('faultResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Executing fault injection scenario (this will take ~5 seconds)...';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${CONFIG.OPTIMIZATION_API_URL}/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'What nutrition plan do you recommend for Chester?',
+                        scenario_id: 10,
+                        customer_id: 'test_customer'
+                    })
+                });
+                const endTime = Date.now();
+                const data = await response.json();
+                
+                const metrics = data.metrics || {};
+                let result = `✅ Scenario 10: DynamoDB Latency Spike\n\n`;
+                result += `Request Time: ${endTime - startTime}ms\n\n`;
+                result += `Metrics:\n`;
+                result += `  Latency: ${metrics.latency_ms?.toFixed(0) || 0}ms\n`;
+                result += `  Input Tokens: ${metrics.input_tokens || 0}\n`;
+                result += `  Output Tokens: ${metrics.output_tokens || 0}\n`;
+                result += `  Total Tokens: ${metrics.total_tokens || 0}\n`;
+                result += `  Tool Calls: ${metrics.tool_calls || 0}\n`;
+                result += `  Cost: $${metrics.estimated_cost_usd?.toFixed(6) || 0}\n\n`;
+                
+                if (metrics.latency_ms >= 4000) {
+                    result += `✅ Fault Injection Verified: ${metrics.latency_ms?.toFixed(0)}ms >= 4000ms\n\n`;
+                }
+                
+                result += `Response:\n${data.response || 'No response'}`;
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Execution Failed\n\n${error.message}`;
+            }
+        }
+        
+        async function testParallel() {
+            const resultDiv = document.getElementById('parallelResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Executing parallel scenarios (this will take ~5 seconds)...';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${CONFIG.OPTIMIZATION_API_URL}/parallel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'What nutrition plan do you recommend for Chester?',
+                        scenario_id: 10,
+                        customer_id: 'test_customer'
+                    })
+                });
+                const endTime = Date.now();
+                const data = await response.json();
+                
+                const faultMetrics = data.fault_result?.metrics || {};
+                const baselineMetrics = data.baseline_result?.metrics || {};
+                const comparison = data.comparison || {};
+                
+                let result = `✅ Parallel Execution Complete\n\n`;
+                result += `Total Request Time: ${endTime - startTime}ms\n\n`;
+                
+                result += `Fault Scenario:\n`;
+                result += `  Latency: ${faultMetrics.latency_ms?.toFixed(0) || 0}ms\n`;
+                result += `  Tokens: ${faultMetrics.total_tokens || 0}\n`;
+                result += `  Cost: $${faultMetrics.estimated_cost_usd?.toFixed(6) || 0}\n\n`;
+                
+                result += `Baseline Scenario:\n`;
+                result += `  Latency: ${baselineMetrics.latency_ms?.toFixed(0) || 0}ms\n`;
+                result += `  Tokens: ${baselineMetrics.total_tokens || 0}\n`;
+                result += `  Cost: $${baselineMetrics.estimated_cost_usd?.toFixed(6) || 0}\n\n`;
+                
+                result += `Comparison:\n`;
+                result += `  Latency Delta: ${comparison.latency_delta_ms?.toFixed(0) || 0}ms (${comparison.latency_delta_percent?.toFixed(1) || 0}%)\n`;
+                result += `  Token Delta: ${comparison.token_delta || 0} (${comparison.token_delta_percent?.toFixed(1) || 0}%)\n`;
+                result += `  Cost Delta: $${comparison.cost_delta_usd?.toFixed(6) || 0}\n`;
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Parallel Execution Failed\n\n${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

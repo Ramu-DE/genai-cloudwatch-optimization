@@ -1,0 +1,12 @@
+{
+    "Groups": [
+        {
+            "GroupName": "Default",
+            "GroupARN": "arn:aws:xray:us-west-2:438327931823:group/Default",
+            "InsightsConfiguration": {
+                "InsightsEnabled": false,
+                "NotificationsEnabled": false
+            }
+        }
+    ]
+}

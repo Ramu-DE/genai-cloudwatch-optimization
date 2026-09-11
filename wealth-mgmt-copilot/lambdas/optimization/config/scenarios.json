@@ -1,0 +1,274 @@
+{
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "Optimized Base Case",
+      "type": "baseline",
+      "fault_type": "none",
+      "description": "Establishes the target: single optimal tool call retrieves bundled portfolio summary for a client query",
+      "expected_impact": {
+        "latency": "lowest",
+        "token_cost": "lowest",
+        "tool_calls": 1
+      },
+      "baseline_scenario": true,
+      "sample_prompt": "What is client_sarah_chen's current portfolio allocation?"
+    },
+    {
+      "id": 2,
+      "name": "Context Bloat — Raw Transaction History",
+      "type": "fault_injection",
+      "fault_type": "context_bloat",
+      "description": "Dumps full raw trade history (thousands of transactions) into the context instead of a summary",
+      "expected_impact": {
+        "latency": "high",
+        "token_cost": "very_high",
+        "tool_calls": 1
+      },
+      "fault_config": {
+        "bloat_tokens": 8000,
+        "bloat_source": "raw_transaction_history"
+      },
+      "baseline_scenario": 3,
+      "sample_prompt": "Summarize recent trading activity for client_sarah_chen"
+    },
+    {
+      "id": 3,
+      "name": "Optimal RAG Summary",
+      "type": "baseline",
+      "fault_type": "none",
+      "description": "Pre-summarized portfolio facts injected as concise context — demonstrates cost savings vs raw history",
+      "expected_impact": {
+        "latency": "low",
+        "token_cost": "low",
+        "tool_calls": 1
+      },
+      "baseline_scenario": true,
+      "sample_prompt": "Given the client summary, what rebalancing is needed?"
+    },
+    {
+      "id": 4,
+      "name": "Irrelevant Context Bloat — Full CRM Dump",
+      "type": "fault_injection",
+      "fault_type": "context_bloat",
+      "description": "Measures cost of dumping all CRM fields (KYC docs, marketing prefs, login history) into a portfolio query prompt",
+      "expected_impact": {
+        "latency": "high",
+        "token_cost": "very_high",
+        "tool_calls": 1
+      },
+      "fault_config": {
+        "bloat_tokens": 8000,
+        "bloat_source": "irrelevant_crm_fields"
+      },
+      "baseline_scenario": 1,
+      "sample_prompt": "What is the current allocation for client_james_wilson?"
+    },
+    {
+      "id": 5,
+      "name": "Optimal Tool Call — Bundled Portfolio+Risk",
+      "type": "baseline",
+      "fault_type": "none",
+      "description": "Single tool call returns combined portfolio holdings, risk metrics, and allocation in one response",
+      "expected_impact": {
+        "latency": "lowest",
+        "token_cost": "lowest",
+        "tool_calls": 1
+      },
+      "baseline_scenario": true,
+      "sample_prompt": "Give me client_sarah_chen's full portfolio overview with risk analysis"
+    },
+    {
+      "id": 6,
+      "name": "Redundant Tool Calls — Separate Portfolio, Risk, Allocation",
+      "type": "fault_injection",
+      "fault_type": "tool_orchestration",
+      "description": "Three separate tool calls for portfolio, risk assessment, and allocation — latency penalty of poor orchestration",
+      "expected_impact": {
+        "latency": "high",
+        "token_cost": "normal",
+        "tool_calls": 3
+      },
+      "fault_config": {
+        "redundant_tools": ["get_client_portfolio", "assess_portfolio_risk", "recommend_allocation"]
+      },
+      "baseline_scenario": 5,
+      "sample_prompt": "Give me a complete view of client_sarah_chen's investments"
+    },
+    {
+      "id": 7,
+      "name": "Tool Failure — Market Data API Timeout + Retry",
+      "type": "fault_injection",
+      "fault_type": "tool_failure",
+      "description": "Simulates market data API failure forcing error recovery and retry — measures cost and latency impact",
+      "expected_impact": {
+        "latency": "very_high",
+        "token_cost": "high",
+        "tool_calls": 2
+      },
+      "fault_config": {
+        "failing_tool": "get_market_indicators",
+        "failure_type": "ConnectionTimeout",
+        "retry_count": 1
+      },
+      "baseline_scenario": 5,
+      "sample_prompt": "What are the current market conditions for client_sarah_chen's tech holdings?"
+    },
+    {
+      "id": 8,
+      "name": "Raw Tool Output Bloat — Unprocessed Market Data",
+      "type": "fault_injection",
+      "fault_type": "raw_output",
+      "description": "Returns full unprocessed market data feed (OHLCV, order book, tick data) instead of summarized output",
+      "expected_impact": {
+        "latency": "normal",
+        "token_cost": "very_high",
+        "tool_calls": 1
+      },
+      "fault_config": {
+        "raw_output_tokens": 5000,
+        "tool_name": "get_raw_market_feed"
+      },
+      "baseline_scenario": 1,
+      "sample_prompt": "What's the latest market data for NVDA?"
+    },
+    {
+      "id": 9,
+      "name": "Zero-Shot Response — Well-Designed Prompt",
+      "type": "baseline",
+      "fault_type": "none",
+      "description": "Validates that a well-designed prompt for general financial advice avoids unnecessary tool calls",
+      "expected_impact": {
+        "latency": "lowest",
+        "token_cost": "lowest",
+        "tool_calls": 0
+      },
+      "baseline_scenario": true,
+      "sample_prompt": "What is dollar-cost averaging and why is it useful?"
+    },
+    {
+      "id": 10,
+      "name": "DynamoDB Latency Spike — Portfolio Lookup",
+      "type": "fault_injection",
+      "fault_type": "latency_injection",
+      "description": "Simulates a 4-second DynamoDB read delay on the portfolios table — real-world impact of slow external service",
+      "expected_impact": {
+        "latency": "very_high",
+        "token_cost": "normal",
+        "tool_calls": 1
+      },
+      "fault_config": {
+        "delay_seconds": 4.0,
+        "delay_location": "portfolio_query"
+      },
+      "baseline_scenario": 1,
+      "sample_prompt": "Show me client_priya_patel's portfolio"
+    },
+    {
+      "id": 11,
+      "name": "Agent Refusal — Tool Unavailability",
+      "type": "fault_injection",
+      "fault_type": "tool_unavailable",
+      "description": "Removes all tools — tests graceful degradation when portfolio/market tools are unavailable",
+      "expected_impact": {
+        "latency": "low",
+        "token_cost": "low",
+        "tool_calls": 0,
+        "functional_failure": true
+      },
+      "fault_config": {
+        "remove_all_tools": true
+      },
+      "baseline_scenario": 1,
+      "sample_prompt": "What is client_sarah_chen's portfolio performance?"
+    },
+    {
+      "id": 12,
+      "name": "Memory Misuse — Useless Summary",
+      "type": "fault_injection",
+      "fault_type": "memory_misuse",
+      "description": "Injects a misleading memory summary that contradicts actual data — demonstrates bad RAG is worse than no RAG",
+      "expected_impact": {
+        "latency": "high",
+        "token_cost": "high",
+        "tool_calls": 2
+      },
+      "fault_config": {
+        "useless_summary": true,
+        "force_tool_call": true
+      },
+      "baseline_scenario": 3,
+      "sample_prompt": "Based on our previous conversation, what allocation did we agree on?"
+    },
+    {
+      "id": 13,
+      "name": "Maximum Token Limit Breach",
+      "type": "fault_injection",
+      "fault_type": "context_bloat",
+      "description": "Tests behavior at token limit boundaries — extreme context of full compliance history + all transactions",
+      "expected_impact": {
+        "latency": "high",
+        "token_cost": "extreme",
+        "tool_calls": 1,
+        "potential_failure": true
+      },
+      "fault_config": {
+        "bloat_tokens": 15000,
+        "bloat_source": "extreme_compliance_history"
+      },
+      "baseline_scenario": 3,
+      "sample_prompt": "Review client_priya_patel's complete compliance and transaction history"
+    },
+    {
+      "id": 14,
+      "name": "Observability Validation",
+      "type": "validation",
+      "fault_type": "none",
+      "description": "Validates all metrics are visible in CloudWatch, X-Ray, and Application Signals for wealth management agents",
+      "expected_impact": {
+        "latency": "normal",
+        "token_cost": "normal",
+        "tool_calls": 1
+      },
+      "baseline_scenario": 1,
+      "sample_prompt": "Check client_sarah_chen's current holdings"
+    },
+    {
+      "id": 15,
+      "name": "Model Comparison (Haiku vs Sonnet)",
+      "type": "optimization",
+      "fault_type": "none",
+      "description": "Compares cost, latency, and quality across Claude models for financial advisory tasks",
+      "expected_impact": {
+        "latency": "varies",
+        "token_cost": "varies",
+        "tool_calls": 1
+      },
+      "optimization_config": {
+        "models": [
+          "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+          "us.anthropic.claude-sonnet-4-20250514-v1:0"
+        ],
+        "compare_metrics": ["cost", "latency", "quality", "cost_per_quality"]
+      },
+      "sample_prompt": "Analyze the risk profile of a 60/30/10 stock/bond/alternatives portfolio"
+    },
+    {
+      "id": 16,
+      "name": "Prompt Compression — Financial Advisory",
+      "type": "optimization",
+      "fault_type": "none",
+      "description": "Tests token reduction through structured formatting, abbreviations, and redundancy removal in financial prompts",
+      "expected_impact": {
+        "latency": "normal",
+        "token_cost": "reduced",
+        "tool_calls": 1
+      },
+      "optimization_config": {
+        "techniques": ["remove_redundancy", "structured_format", "abbreviations"],
+        "compare_metrics": ["token_reduction_percent", "quality_degradation"]
+      },
+      "sample_prompt": "Generate a comprehensive retirement projection for client_james_wilson"
+    }
+  ]
+}
