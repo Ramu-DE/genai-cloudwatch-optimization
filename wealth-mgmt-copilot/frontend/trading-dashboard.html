@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WealthAI Copilot — F&amp;O Trading Dashboard</title>
+    <title>F&amp;O Trading Dashboard — Real-Time Analysis</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
     <style>
     :root {
         --bg-dark: #0d1117;
@@ -23,7 +22,21 @@
         --purple: #bc8cff;
         --mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
-    body { background: var(--bg-dark); color: var(--text-primary); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg-dark); color: var(--text-primary); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .navbar {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #fff;
+        padding: 0 20px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .highlight { color: var(--gold-bright); }
 
     .disclaimer-bar {
         background: linear-gradient(90deg, #f59e0b22, #f59e0b11);
@@ -406,23 +419,14 @@
 <body>
 
 <!-- Navbar -->
-<header class="navbar">
-    <div class="brand">
-        <span class="icon">&#x1F4B0;</span>
-        <span>Wealth<span class="highlight">AI</span> Copilot</span>
+<header class="navbar" style="justify-content:space-between">
+    <div class="brand" style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.4rem">&#x1F4C8;</span>
+        <span style="font-size:1.1rem;font-weight:700;letter-spacing:-0.02em">F&amp;O <span class="highlight">Trading</span> Dashboard</span>
     </div>
-    <nav>
-        <a href="client-dashboard.html">Dashboard</a>
-        <a href="trading-dashboard.html" class="active">F&amp;O Trading</a>
-        <a href="observability.html">Observability</a>
-        <a href="performance-tuning.html">Performance Lab</a>
-        <a href="loadtest.html">Load Test</a>
-    </nav>
-    <div class="user-info">
+    <div style="display:flex;align-items:center;gap:16px">
         <span class="last-updated" id="last-updated-time">--</span>
-        <div class="avatar" id="user-avatar">--</div>
-        <span id="user-name">Client</span>
-        <button class="logout-btn" onclick="logout()">Sign Out</button>
+        <span class="countdown" id="refresh-countdown"></span>
     </div>
 </header>
 
@@ -603,21 +607,12 @@
 <script>
 (function() {
     const API_URL = typeof CONFIG !== 'undefined' ? CONFIG.REST_API_URL : 'https://av9tutyi9h.execute-api.us-west-2.amazonaws.com/prod';
-    const clientId = localStorage.getItem('wm_client_id') || '';
-    const clientName = localStorage.getItem('wm_name') || 'Client';
 
     // State
     let currentChain = null;
     let currentIndices = {};
     let refreshTimer = null;
     let newsTimer = null;
-
-    // Init
-    document.getElementById('user-name').textContent = clientName;
-    if (clientName) {
-        const initials = clientName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
-        document.getElementById('user-avatar').textContent = initials;
-    }
 
     // ── Market Hours ──────────────────────────────────────────────
     function getISTNow() {
@@ -1015,11 +1010,7 @@
 Give me 2-3 specific F&O strategy recommendations with exact strikes, lot sizes, max profit, max loss, breakevens, and stop-loss levels. Include the reasoning based on OI data and VIX. Format each strategy clearly.`;
 
         try {
-            const data = await apiPost('/agent', {
-                agent: 'marcus',
-                message: prompt,
-                client_id: clientId || 'anonymous'
-            });
+            const data = await apiPost('/agent', { message: prompt });
             const resp = data.response || data.message || 'No response received.';
             body.innerHTML = '<div class="agent-response">' + formatAgentResponse(resp) + '</div>';
         } catch (e) {
@@ -1090,30 +1081,36 @@ Give me 2-3 specific F&O strategy recommendations with exact strikes, lot sizes,
         fetchOptionChainData();
     };
 
-    window.logout = function() {
-        localStorage.removeItem('wm_token');
-        localStorage.removeItem('wm_client_id');
-        localStorage.removeItem('wm_name');
-        localStorage.removeItem('wm_email');
-        localStorage.removeItem('wm_role');
-        window.location.href = 'index.html';
-    };
 
-    // ── Auto-refresh ──────────────────────────────────────────────
+    // ── Auto-refresh with countdown ─────────────────────────────
+    let countdownSec = 0;
+    let countdownTimer = null;
+
     function startAutoRefresh() {
         if (refreshTimer) clearInterval(refreshTimer);
         if (newsTimer) clearInterval(newsTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
 
         const interval = isMarketOpen() ? 30000 : 300000;
+        countdownSec = Math.floor(interval / 1000);
+
         fetchMarketData();
+
+        countdownTimer = setInterval(() => {
+            countdownSec--;
+            const el = document.getElementById('refresh-countdown');
+            if (el) el.textContent = countdownSec > 0 ? `${countdownSec}s` : '';
+        }, 1000);
+
         refreshTimer = setInterval(() => {
+            countdownSec = Math.floor(interval / 1000);
             fetchMarketData();
             updateMarketBadge();
         }, interval);
 
         newsTimer = setInterval(() => {
             apiPost('/market-data', { action: 'news' }).then(data => {
-                if (data && data.articles) updateNews(data.articles);
+                if (data) updateNews(data);
             }).catch(() => {});
         }, 300000);
     }
@@ -1123,14 +1120,6 @@ Give me 2-3 specific F&O strategy recommendations with exact strikes, lot sizes,
     setInterval(updateMarketBadge, 10000);
     startAutoRefresh();
     fetchOptionChainData();
-
-    // Re-evaluate refresh interval when market opens/closes
-    setInterval(() => {
-        const open = isMarketOpen();
-        const currentInterval = open ? 30000 : 300000;
-        // Restart if interval changed
-        startAutoRefresh();
-    }, 60000);
 
 })();
 </script>
