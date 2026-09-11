@@ -349,6 +349,184 @@ def seed_compliance_records():
     print(f"  Seeded {len(records)} compliance records")
 
 
+def seed_indian_clients():
+    """Seed Indian market clients with Groww-style portfolios"""
+    profile_table = dynamodb.Table('wealth_mgmt_client_profiles')
+    portfolio_table = dynamodb.Table('wealth_mgmt_portfolios')
+    auth_table = dynamodb.Table('wealth_mgmt_user_auth')
+    txn_table = dynamodb.Table('wealth_mgmt_transactions')
+
+    indian_clients = [
+        {
+            'client_id': 'client_ramu_de',
+            'full_name': 'Ramu DE',
+            'email': 'ramu@groww.in',
+            'phone': '+91-98765-43210',
+            'risk_tolerance': 'aggressive',
+            'investment_goals': ['wealth_accumulation', 'retirement', 'trading'],
+            'annual_income': Decimal('3500000'),
+            'net_worth': Decimal('15000000'),
+            'age': 32,
+            'filing_status': 'individual',
+            'tax_bracket': Decimal('30'),
+            'market': 'IN',
+            'currency': 'INR',
+            'broker': 'groww',
+            'groww_connected': True,
+            'pan': 'XXXXX0000X',
+            'kyc_status': 'VERIFIED',
+            'kyc_verified_date': '2024-01-15',
+            'created_at': '2024-01-15T10:00:00',
+            'status': 'active'
+        },
+        {
+            'client_id': 'client_ananya_sharma',
+            'full_name': 'Ananya Sharma',
+            'email': 'ananya@groww.in',
+            'phone': '+91-87654-32109',
+            'risk_tolerance': 'moderate',
+            'investment_goals': ['retirement', 'children_education', 'home_purchase'],
+            'annual_income': Decimal('2200000'),
+            'net_worth': Decimal('8500000'),
+            'age': 35,
+            'filing_status': 'individual',
+            'tax_bracket': Decimal('30'),
+            'market': 'IN',
+            'currency': 'INR',
+            'broker': 'groww',
+            'groww_connected': True,
+            'kyc_status': 'VERIFIED',
+            'created_at': '2024-03-01T10:00:00',
+            'status': 'active'
+        },
+        {
+            'client_id': 'client_vikram_patel',
+            'full_name': 'Vikram Patel',
+            'email': 'vikram@groww.in',
+            'phone': '+91-76543-21098',
+            'risk_tolerance': 'conservative',
+            'investment_goals': ['retirement', 'income', 'capital_preservation'],
+            'annual_income': Decimal('1800000'),
+            'net_worth': Decimal('25000000'),
+            'age': 55,
+            'filing_status': 'individual',
+            'tax_bracket': Decimal('30'),
+            'market': 'IN',
+            'currency': 'INR',
+            'broker': 'groww',
+            'kyc_status': 'VERIFIED',
+            'created_at': '2023-09-01T10:00:00',
+            'status': 'active'
+        },
+    ]
+
+    for client in indian_clients:
+        profile_table.put_item(Item=client)
+
+    # Groww-style stock portfolios (NSE tickers)
+    portfolios = [
+        {
+            'client_id': 'client_ramu_de',
+            'portfolio_id': 'groww_stocks',
+            'portfolio_type': 'groww_stocks',
+            'source': 'groww',
+            'currency': 'INR',
+            'total_invested': Decimal('4500000'),
+            'total_value': Decimal('5850000'),
+            'total_value_usd': Decimal('70200'),
+            'unrealized_pnl': Decimal('1350000'),
+            'unrealized_pnl_percent': Decimal('30.0'),
+            'holdings': [
+                {'ticker': 'RELIANCE.NS', 'name': 'Reliance Industries', 'shares': 50, 'avg_cost': Decimal('2400'), 'current_price': Decimal('2950'), 'value': Decimal('147500'), 'allocation': Decimal('2.52'), 'pnl': Decimal('27500'), 'pnl_percent': Decimal('22.92'), 'sector': 'Energy', 'exchange': 'NSE'},
+                {'ticker': 'TCS.NS', 'name': 'Tata Consultancy Services', 'shares': 100, 'avg_cost': Decimal('3200'), 'current_price': Decimal('4150'), 'value': Decimal('415000'), 'allocation': Decimal('7.09'), 'pnl': Decimal('95000'), 'pnl_percent': Decimal('29.69'), 'sector': 'Technology', 'exchange': 'NSE'},
+                {'ticker': 'HDFCBANK.NS', 'name': 'HDFC Bank', 'shares': 200, 'avg_cost': Decimal('1450'), 'current_price': Decimal('1720'), 'value': Decimal('344000'), 'allocation': Decimal('5.88'), 'pnl': Decimal('54000'), 'pnl_percent': Decimal('18.62'), 'sector': 'Banking', 'exchange': 'NSE'},
+                {'ticker': 'INFY.NS', 'name': 'Infosys', 'shares': 150, 'avg_cost': Decimal('1380'), 'current_price': Decimal('1850'), 'value': Decimal('277500'), 'allocation': Decimal('4.74'), 'pnl': Decimal('70500'), 'pnl_percent': Decimal('34.06'), 'sector': 'Technology', 'exchange': 'NSE'},
+                {'ticker': 'ICICIBANK.NS', 'name': 'ICICI Bank', 'shares': 300, 'avg_cost': Decimal('920'), 'current_price': Decimal('1280'), 'value': Decimal('384000'), 'allocation': Decimal('6.56'), 'pnl': Decimal('108000'), 'pnl_percent': Decimal('39.13'), 'sector': 'Banking', 'exchange': 'NSE'},
+                {'ticker': 'BHARTIARTL.NS', 'name': 'Bharti Airtel', 'shares': 100, 'avg_cost': Decimal('1100'), 'current_price': Decimal('1680'), 'value': Decimal('168000'), 'allocation': Decimal('2.87'), 'pnl': Decimal('58000'), 'pnl_percent': Decimal('52.73'), 'sector': 'Telecom', 'exchange': 'NSE'},
+                {'ticker': 'ITC.NS', 'name': 'ITC Limited', 'shares': 500, 'avg_cost': Decimal('340'), 'current_price': Decimal('465'), 'value': Decimal('232500'), 'allocation': Decimal('3.97'), 'pnl': Decimal('62500'), 'pnl_percent': Decimal('36.76'), 'sector': 'FMCG', 'exchange': 'NSE'},
+                {'ticker': 'TATAMOTORS.NS', 'name': 'Tata Motors', 'shares': 200, 'avg_cost': Decimal('650'), 'current_price': Decimal('980'), 'value': Decimal('196000'), 'allocation': Decimal('3.35'), 'pnl': Decimal('66000'), 'pnl_percent': Decimal('50.77'), 'sector': 'Auto', 'exchange': 'NSE'},
+                {'ticker': 'SUNPHARMA.NS', 'name': 'Sun Pharma', 'shares': 100, 'avg_cost': Decimal('1150'), 'current_price': Decimal('1820'), 'value': Decimal('182000'), 'allocation': Decimal('3.11'), 'pnl': Decimal('67000'), 'pnl_percent': Decimal('58.26'), 'sector': 'Pharma', 'exchange': 'NSE'},
+                {'ticker': 'LT.NS', 'name': 'Larsen & Toubro', 'shares': 50, 'avg_cost': Decimal('2800'), 'current_price': Decimal('3650'), 'value': Decimal('182500'), 'allocation': Decimal('3.12'), 'pnl': Decimal('42500'), 'pnl_percent': Decimal('30.36'), 'sector': 'Infrastructure', 'exchange': 'NSE'},
+            ],
+            'sector_allocation': {
+                'Technology': Decimal('11.83'), 'Banking': Decimal('12.44'),
+                'Energy': Decimal('2.52'), 'Telecom': Decimal('2.87'),
+                'FMCG': Decimal('3.97'), 'Auto': Decimal('3.35'),
+                'Pharma': Decimal('3.11'), 'Infrastructure': Decimal('3.12'),
+            },
+            'last_synced': datetime.now().isoformat(),
+        },
+        {
+            'client_id': 'client_ramu_de',
+            'portfolio_id': 'groww_mutual_funds',
+            'portfolio_type': 'groww_mutual_funds',
+            'source': 'groww',
+            'currency': 'INR',
+            'total_invested': Decimal('2400000'),
+            'total_value': Decimal('3150000'),
+            'holdings': [
+                {'scheme_name': 'Parag Parikh Flexi Cap Fund', 'fund_house': 'PPFAS', 'category': 'Flexi Cap', 'invested': Decimal('600000'), 'current': Decimal('840000'), 'returns_pct': Decimal('40.0'), 'xirr': Decimal('18.5'), 'units': Decimal('2400'), 'nav': Decimal('350'), 'sip_active': True, 'sip_amount': Decimal('25000')},
+                {'scheme_name': 'Mirae Asset Large Cap Fund', 'fund_house': 'Mirae', 'category': 'Large Cap', 'invested': Decimal('500000'), 'current': Decimal('625000'), 'returns_pct': Decimal('25.0'), 'xirr': Decimal('14.2'), 'units': Decimal('5000'), 'nav': Decimal('125'), 'sip_active': True, 'sip_amount': Decimal('20000')},
+                {'scheme_name': 'Axis Small Cap Fund', 'fund_house': 'Axis', 'category': 'Small Cap', 'invested': Decimal('400000'), 'current': Decimal('580000'), 'returns_pct': Decimal('45.0'), 'xirr': Decimal('22.8'), 'units': Decimal('4800'), 'nav': Decimal('120.83'), 'sip_active': True, 'sip_amount': Decimal('15000')},
+                {'scheme_name': 'HDFC Mid Cap Opportunities', 'fund_house': 'HDFC', 'category': 'Mid Cap', 'invested': Decimal('500000'), 'current': Decimal('650000'), 'returns_pct': Decimal('30.0'), 'xirr': Decimal('16.5'), 'units': Decimal('3200'), 'nav': Decimal('203.13'), 'sip_active': True, 'sip_amount': Decimal('20000')},
+                {'scheme_name': 'SBI Equity Hybrid Fund', 'fund_house': 'SBI', 'category': 'Hybrid', 'invested': Decimal('400000'), 'current': Decimal('455000'), 'returns_pct': Decimal('13.75'), 'xirr': Decimal('11.2'), 'units': Decimal('1800'), 'nav': Decimal('252.78'), 'sip_active': False, 'sip_amount': Decimal('0')},
+            ],
+            'last_synced': datetime.now().isoformat(),
+        },
+        {
+            'client_id': 'client_ananya_sharma',
+            'portfolio_id': 'groww_stocks',
+            'portfolio_type': 'groww_stocks',
+            'source': 'groww',
+            'currency': 'INR',
+            'total_invested': Decimal('2000000'),
+            'total_value': Decimal('2450000'),
+            'holdings': [
+                {'ticker': 'HDFCBANK.NS', 'name': 'HDFC Bank', 'shares': 150, 'avg_cost': Decimal('1500'), 'current_price': Decimal('1720'), 'value': Decimal('258000'), 'allocation': Decimal('10.53'), 'pnl': Decimal('33000'), 'sector': 'Banking', 'exchange': 'NSE'},
+                {'ticker': 'TCS.NS', 'name': 'TCS', 'shares': 60, 'avg_cost': Decimal('3400'), 'current_price': Decimal('4150'), 'value': Decimal('249000'), 'allocation': Decimal('10.16'), 'pnl': Decimal('45000'), 'sector': 'Technology', 'exchange': 'NSE'},
+                {'ticker': 'HINDUNILVR.NS', 'name': 'Hindustan Unilever', 'shares': 80, 'avg_cost': Decimal('2200'), 'current_price': Decimal('2550'), 'value': Decimal('204000'), 'allocation': Decimal('8.33'), 'pnl': Decimal('28000'), 'sector': 'FMCG', 'exchange': 'NSE'},
+                {'ticker': 'NESTLEIND.NS', 'name': 'Nestle India', 'shares': 30, 'avg_cost': Decimal('22000'), 'current_price': Decimal('24500'), 'value': Decimal('735000'), 'allocation': Decimal('30.0'), 'pnl': Decimal('75000'), 'sector': 'FMCG', 'exchange': 'NSE'},
+                {'ticker': 'BAJFINANCE.NS', 'name': 'Bajaj Finance', 'shares': 40, 'avg_cost': Decimal('6500'), 'current_price': Decimal('7200'), 'value': Decimal('288000'), 'allocation': Decimal('11.76'), 'pnl': Decimal('28000'), 'sector': 'Finance', 'exchange': 'NSE'},
+            ],
+            'last_synced': datetime.now().isoformat(),
+        },
+    ]
+
+    for p in portfolios:
+        portfolio_table.put_item(Item=p)
+
+    # Indian client auth records
+    import hashlib
+    def make_hash(password):
+        salt = 'wealthmgmt2024'
+        hashed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
+        return f"{salt}:{hashed}"
+
+    indian_auth = [
+        {'email': 'ramu@groww.in', 'client_id': 'client_ramu_de', 'full_name': 'Ramu DE', 'password_hash': make_hash('demo123'), 'role': 'client', 'status': 'active'},
+        {'email': 'ananya@groww.in', 'client_id': 'client_ananya_sharma', 'full_name': 'Ananya Sharma', 'password_hash': make_hash('demo123'), 'role': 'client', 'status': 'active'},
+        {'email': 'vikram@groww.in', 'client_id': 'client_vikram_patel', 'full_name': 'Vikram Patel', 'password_hash': make_hash('demo123'), 'role': 'client', 'status': 'active'},
+    ]
+    for user in indian_auth:
+        auth_table.put_item(Item=user)
+
+    # Sample Indian transactions
+    indian_txns = [
+        {'transaction_id': 'groww_001', 'client_id': 'client_ramu_de', 'source': 'groww', 'type': 'buy', 'ticker': 'RELIANCE.NS', 'exchange': 'NSE', 'shares': 50, 'price': Decimal('2400'), 'currency': 'INR', 'status': 'executed', 'timestamp': '2024-02-15T10:30:00', 'product_type': 'CNC'},
+        {'transaction_id': 'groww_002', 'client_id': 'client_ramu_de', 'source': 'groww', 'type': 'buy', 'ticker': 'TCS.NS', 'exchange': 'NSE', 'shares': 100, 'price': Decimal('3200'), 'currency': 'INR', 'status': 'executed', 'timestamp': '2024-01-20T11:15:00', 'product_type': 'CNC'},
+        {'transaction_id': 'groww_003', 'client_id': 'client_ramu_de', 'source': 'groww', 'type': 'buy', 'ticker': 'HDFCBANK.NS', 'exchange': 'NSE', 'shares': 200, 'price': Decimal('1450'), 'currency': 'INR', 'status': 'executed', 'timestamp': '2023-11-10T09:30:00', 'product_type': 'CNC'},
+        {'transaction_id': 'groww_004', 'client_id': 'client_ramu_de', 'source': 'groww', 'type': 'sip', 'ticker': 'Parag Parikh Flexi Cap Fund', 'shares': 71, 'price': Decimal('350'), 'currency': 'INR', 'status': 'executed', 'timestamp': '2024-09-01T09:00:00', 'product_type': 'MF_SIP'},
+        {'transaction_id': 'groww_005', 'client_id': 'client_ananya_sharma', 'source': 'groww', 'type': 'buy', 'ticker': 'NESTLEIND.NS', 'exchange': 'NSE', 'shares': 30, 'price': Decimal('22000'), 'currency': 'INR', 'status': 'executed', 'timestamp': '2024-04-05T10:00:00', 'product_type': 'CNC'},
+    ]
+    for txn in indian_txns:
+        txn_table.put_item(Item=txn)
+
+    print(f"  Seeded {len(indian_clients)} Indian client profiles")
+    print(f"  Seeded {len(portfolios)} Groww portfolios (stocks + mutual funds)")
+    print(f"  Seeded {len(indian_auth)} Indian auth records")
+    print(f"  Seeded {len(indian_txns)} Indian transactions")
+
+
 if __name__ == '__main__':
     print("Seeding Wealth Management data...")
     seed_client_profiles()
@@ -358,4 +536,5 @@ if __name__ == '__main__':
     seed_advisor_schedule()
     seed_tax_records()
     seed_compliance_records()
+    seed_indian_clients()
     print("Done.")

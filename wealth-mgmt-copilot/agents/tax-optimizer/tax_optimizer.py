@@ -957,6 +957,12 @@ try:
 except ImportError:
     CROSS_AGENT_AVAILABLE = False
 
+try:
+    from groww_connector import calculate_indian_tax_impact, INDIA_TAX_RATES
+    INDIA_TAX_AVAILABLE = True
+except ImportError:
+    INDIA_TAX_AVAILABLE = False
+
 @tool
 def consult_financial_planner(query: str, client_id: str = ""):
     """Consult Sophia (Financial Planner) for portfolio details, allocation strategy, or retirement projections.
@@ -989,6 +995,250 @@ def consult_market_analyst(query: str, client_id: str = ""):
 
 
 # =============================================================================
+# INDIAN TAX TOOLS (Groww / NSE / BSE)
+# =============================================================================
+
+@tool
+def calculate_indian_capital_gains_tax(client_id: str, sell_tickers: str = ""):
+    """Calculate Indian capital gains tax (STCG/LTCG) for a client's equity holdings.
+    Applies FY 2024-25 rates: STCG 20% (held < 1 year), LTCG 12.5% (held > 1 year, above 1.25L exemption).
+    Also calculates STT (Securities Transaction Tax) and stamp duty.
+
+    Args:
+        client_id: The client whose holdings to evaluate
+        sell_tickers: Comma-separated NSE tickers to sell (empty = all holdings)
+    """
+    try:
+        portfolios = get_client_positions(client_id)
+        groww_portfolio = None
+        default_portfolio = None
+        for p in portfolios:
+            pt = p.get('portfolio_type', '')
+            if pt == 'groww_stocks':
+                groww_portfolio = p
+            elif not default_portfolio:
+                default_portfolio = p
+
+        portfolio = groww_portfolio or default_portfolio
+        if not portfolio:
+            return json.dumps({'error': f'No portfolio found for {client_id}. Sync Groww data first or check client ID.'})
+
+        holdings = portfolio.get('holdings', [])
+        if not holdings:
+            return json.dumps({'error': 'No holdings found in portfolio.'})
+
+        sell_list = [t.strip().upper().replace('.NS', '') for t in sell_tickers.split(',') if t.strip()] if sell_tickers else None
+
+        holdings_for_calc = []
+        for h in holdings:
+            ticker = h.get('ticker', h.get('name', ''))
+            clean_ticker = ticker.replace('.NS', '').replace('.BSE', '')
+            if sell_list and clean_ticker not in sell_list:
+                continue
+            qty = int(h.get('shares', h.get('quantity', 0)))
+            avg = float(h.get('avg_cost', h.get('cost_basis', 0)))
+            cur = float(h.get('current_price', 0))
+            if cur == 0 and qty > 0:
+                val = float(h.get('value', 0))
+                cur = val / qty if qty else 0
+            holdings_for_calc.append({
+                'ticker': clean_ticker,
+                'quantity': qty,
+                'avg_price': avg,
+                'current_price': cur,
+                'purchase_date': h.get('purchase_date', ''),
+            })
+
+        if not holdings_for_calc:
+            return json.dumps({'error': f'No matching holdings found for tickers: {sell_tickers}'})
+
+        if INDIA_TAX_AVAILABLE:
+            result = calculate_indian_tax_impact(holdings_for_calc, sell_list)
+        else:
+            now = datetime.now()
+            one_year_ago = now - timedelta(days=365)
+            stcg_total = 0.0
+            ltcg_total = 0.0
+            total_sell_value = 0.0
+            per_stock = []
+            for h in holdings_for_calc:
+                gains = (h['current_price'] - h['avg_price']) * h['quantity']
+                sell_val = h['current_price'] * h['quantity']
+                total_sell_value += sell_val
+                pdate_str = h.get('purchase_date', '')
+                is_lt = True
+                if pdate_str:
+                    try:
+                        is_lt = datetime.fromisoformat(pdate_str) < one_year_ago
+                    except ValueError:
+                        pass
+                if gains > 0:
+                    if is_lt:
+                        ltcg_total += gains
+                    else:
+                        stcg_total += gains
+                per_stock.append({
+                    'ticker': h['ticker'],
+                    'gains_inr': round(gains, 2),
+                    'type': 'LTCG' if is_lt else 'STCG',
+                    'sell_value_inr': round(sell_val, 2),
+                })
+
+            ltcg_exemption = 125000.0
+            ltcg_taxable = max(0, ltcg_total - ltcg_exemption)
+            ltcg_tax = ltcg_taxable * 0.125
+            stcg_tax = max(0, stcg_total) * 0.20
+            stt = total_sell_value * 0.001
+
+            result = {
+                'stcg_gains': round(stcg_total, 2),
+                'stcg_tax': round(stcg_tax, 2),
+                'stcg_rate': '20%',
+                'ltcg_gains': round(ltcg_total, 2),
+                'ltcg_exemption_used': round(min(ltcg_total, ltcg_exemption), 2),
+                'ltcg_taxable': round(ltcg_taxable, 2),
+                'ltcg_tax': round(ltcg_tax, 2),
+                'ltcg_rate': '12.5%',
+                'total_stt': round(stt, 2),
+                'total_tax': round(stcg_tax + ltcg_tax, 2),
+                'effective_tax_rate': round(
+                    (stcg_tax + ltcg_tax) / (stcg_total + ltcg_total) * 100, 2
+                ) if (stcg_total + ltcg_total) > 0 else 0,
+                'per_stock': per_stock,
+                'note': 'FY 2024-25 rates. STCG@20%, LTCG@12.5% above 1.25L exemption.',
+            }
+
+        return json.dumps(result, default=str)
+
+    except Exception as e:
+        logger.error(f"Indian tax calculation error: {e}")
+        return json.dumps({'error': f'Tax calculation failed: {str(e)}'})
+
+
+@tool
+def get_india_tax_saving_suggestions(client_id: str):
+    """Suggest Indian tax-saving strategies based on client holdings and tax profile.
+    Covers Section 80C (ELSS, PPF, EPF — 1.5L limit), Section 80D (health insurance),
+    Section 80CCD(1B) (NPS — additional 50K), and equity tax-loss harvesting.
+
+    Args:
+        client_id: The client to generate suggestions for
+    """
+    try:
+        profile = get_client_tax_data(client_id)
+        portfolios = get_client_positions(client_id)
+
+        suggestions = []
+        total_potential_savings = 0.0
+
+        # --- Section 80C (limit 1.5L) ---
+        sec80c_limit = 150000
+        sec80c_used = 0
+        if profile:
+            retirement = profile.get('retirement_contributions', {})
+            sec80c_used += float(retirement.get('epf', 0))
+            sec80c_used += float(retirement.get('ppf', 0))
+            sec80c_used += float(retirement.get('elss', 0))
+            sec80c_used += float(profile.get('deductions', {}).get('home_loan_principal', 0))
+
+        sec80c_remaining = max(0, sec80c_limit - sec80c_used)
+        if sec80c_remaining > 0:
+            tax_saving = sec80c_remaining * 0.30
+            suggestions.append({
+                'section': '80C',
+                'limit': sec80c_limit,
+                'used': round(sec80c_used, 2),
+                'remaining': round(sec80c_remaining, 2),
+                'potential_tax_saving_inr': round(tax_saving, 2),
+                'options': [
+                    'ELSS Mutual Funds (3-year lock-in, equity exposure)',
+                    'PPF (15-year, 7.1% guaranteed, EEE status)',
+                    'NPS Tier-1 (additional 50K under 80CCD(1B))',
+                    'Tax-saving FD (5-year lock-in)',
+                    'ULIP / Life insurance premium',
+                ],
+                'recommendation': 'ELSS preferred for equity investors — shortest lock-in with market-linked returns.',
+            })
+            total_potential_savings += tax_saving
+
+        # --- Section 80CCD(1B) — NPS additional ---
+        nps_limit = 50000
+        nps_used = 0
+        if profile:
+            nps_used = float(profile.get('retirement_contributions', {}).get('nps', 0))
+        nps_remaining = max(0, nps_limit - nps_used)
+        if nps_remaining > 0:
+            nps_saving = nps_remaining * 0.30
+            suggestions.append({
+                'section': '80CCD(1B)',
+                'limit': nps_limit,
+                'used': round(nps_used, 2),
+                'remaining': round(nps_remaining, 2),
+                'potential_tax_saving_inr': round(nps_saving, 2),
+                'recommendation': 'Additional NPS contribution — over and above 80C limit. 30% tax bracket saves up to 15,000.',
+            })
+            total_potential_savings += nps_saving
+
+        # --- Section 80D — Health Insurance ---
+        sec80d_limit = 25000
+        sec80d_parents = 50000
+        suggestions.append({
+            'section': '80D',
+            'self_family_limit': sec80d_limit,
+            'parents_limit': sec80d_parents,
+            'total_potential': sec80d_limit + sec80d_parents,
+            'potential_tax_saving_inr': round((sec80d_limit + sec80d_parents) * 0.30, 2),
+            'recommendation': 'Ensure health insurance for self + parents. Parents (senior citizen) limit is 50K.',
+        })
+        total_potential_savings += (sec80d_limit + sec80d_parents) * 0.30
+
+        # --- Tax-Loss Harvesting on Equity ---
+        loss_positions = []
+        for p in portfolios:
+            for h in p.get('holdings', []):
+                pnl = float(h.get('pnl', h.get('unrealized_pnl', 0)))
+                if pnl < 0:
+                    loss_positions.append({
+                        'ticker': h.get('ticker', h.get('name', '')),
+                        'unrealized_loss_inr': round(abs(pnl), 2),
+                        'shares': h.get('shares', h.get('quantity', 0)),
+                    })
+
+        if loss_positions:
+            total_losses = sum(p['unrealized_loss_inr'] for p in loss_positions)
+            suggestions.append({
+                'strategy': 'Tax-Loss Harvesting',
+                'positions_with_losses': loss_positions,
+                'total_harvestable_loss_inr': round(total_losses, 2),
+                'tax_saving_stcg': round(total_losses * 0.20, 2),
+                'tax_saving_ltcg': round(total_losses * 0.125, 2),
+                'note': 'Sell losing positions to offset gains. No wash-sale rule in India — can repurchase immediately.',
+                'important': 'India has NO wash sale rule unlike US. You can sell and rebuy the same stock immediately.',
+            })
+            total_potential_savings += total_losses * 0.20
+
+        # --- LTCG Exemption Utilization ---
+        suggestions.append({
+            'strategy': 'LTCG Exemption Utilization',
+            'exemption_limit_inr': 125000,
+            'recommendation': 'Book up to 1.25L in long-term gains each year tax-free. Sell and rebuy to reset cost basis.',
+            'example': 'If you have 2L in LTCG, book 1.25L this FY (tax-free) and remainder next FY.',
+        })
+
+        return json.dumps({
+            'client_id': client_id,
+            'total_potential_tax_savings_inr': round(total_potential_savings, 2),
+            'suggestions': suggestions,
+            'tax_year': 'FY 2024-25 (AY 2025-26)',
+            'disclaimer': 'These are general suggestions. Consult a CA for personalized tax advice.',
+        }, default=str)
+
+    except Exception as e:
+        logger.error(f"India tax suggestions error: {e}")
+        return json.dumps({'error': f'Failed to generate suggestions: {str(e)}'})
+
+
+# =============================================================================
 # STRANDS AGENT SETUP
 # =============================================================================
 
@@ -1004,6 +1254,8 @@ base_tools = [
     save_conversation_memory,
     consult_financial_planner,
     consult_market_analyst,
+    calculate_indian_capital_gains_tax,
+    get_india_tax_saving_suggestions,
 ]
 
 agent = Agent(
@@ -1023,6 +1275,8 @@ YOUR TOOLS:
 - save_conversation_memory(client_id, user_message, agent_response, session_id=None): Save conversation context
 - consult_financial_planner(query, client_id): Ask Sophia for portfolio details or allocation info
 - consult_market_analyst(query, client_id): Ask Marcus for current market data and stock analysis
+- calculate_indian_capital_gains_tax(client_id, sell_tickers=""): Calculate Indian STCG/LTCG tax with STT
+- get_india_tax_saving_suggestions(client_id): Get Indian tax-saving suggestions (80C, 80D, 80CCD, harvesting)
 
 CROSS-AGENT COLLABORATION:
 - When you need portfolio details to assess tax impact → consult_financial_planner
@@ -1034,22 +1288,45 @@ MANDATORY TOOL USAGE:
 3. When asked about selling stock or making financial moves -> ALWAYS use calculate_tax_impact
 4. When asked for a strategy or plan -> ALWAYS use recommend_tax_strategy
 5. When asked about gains/losses summary -> ALWAYS use get_capital_gains_summary
+6. When client asks about Indian stock tax (STCG/LTCG, NSE/BSE) -> Use calculate_indian_capital_gains_tax
+7. When client asks about Indian tax saving tips -> Use get_india_tax_saving_suggestions
+
+INDIAN TAX EXPERTISE (Groww / NSE / BSE clients):
+You also handle Indian market tax optimization. Key Indian tax rules:
+- STCG on equity (held < 1 year): 20% flat (FY 2024-25 onwards)
+- LTCG on equity (held > 1 year): 12.5% above 1.25L annual exemption
+- No wash sale rule in India — clients can sell and immediately rebuy
+- STT (Securities Transaction Tax): 0.1% on delivery trades
+- Stamp duty: 0.015% on buy side
+- Section 80C: Up to 1.5L deduction (ELSS, PPF, EPF, tax-saving FD)
+- Section 80CCD(1B): Additional 50K for NPS contributions
+- Section 80D: Health insurance — 25K self, 50K for senior citizen parents
+- LTCG exemption harvesting: Book up to 1.25L LTCG per year tax-free
+- Groww integration: Portfolio data synced from Groww brokerage (read-only)
 
 RESPONSE GUIDELINES:
 - Always disclose that you provide informational analysis, not tax advice
-- Reference specific IRS rules when relevant (wash sale rule, Section 1031, etc.)
-- Consider both federal and state tax implications
-- Flag any potential AMT exposure
-- Remind clients of key deadlines (estimated payments, year-end harvesting, contribution limits)
+- For US clients: Reference IRS rules (wash sale, Section 1031, etc.), consider federal+state
+- For Indian clients: Reference Income Tax Act sections, SEBI rules, consider old vs new regime
+- Flag any potential AMT exposure (US) or surcharge applicability (India)
+- Remind clients of key deadlines
 - When discussing charitable giving, mention the advantage of donating appreciated securities
 - Always consider the client's full tax picture, not just one position
 
-TAX YEAR CONTEXT: Current tax year is 2026. Key limits:
+TAX YEAR CONTEXT — US (2026):
 - 401(k): $23,500 (under 50) / $31,000 (50+)
 - IRA: $7,000 (under 50) / $8,000 (50+)
 - HSA: $4,300 individual / $8,550 family
 - SALT deduction cap: $10,000
 - Standard deduction: $15,000 (single) / $30,000 (MFJ)
+
+TAX YEAR CONTEXT — India (FY 2024-25):
+- Section 80C limit: 1,50,000
+- Section 80CCD(1B) NPS: 50,000 additional
+- Section 80D: 25,000 self + 50,000 parents (senior citizen)
+- LTCG exemption: 1,25,000 per year on equity
+- STCG rate: 20% | LTCG rate: 12.5%
+- New tax regime default (can opt for old regime if beneficial)
 
 Be professional, precise, and thorough. Use clear formatting with dollar amounts and percentages. Always provide the "why" behind each recommendation.""",
 )

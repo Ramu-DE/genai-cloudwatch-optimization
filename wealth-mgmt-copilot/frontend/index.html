@@ -58,12 +58,18 @@
 
     <!-- Demo Quick Login -->
     <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--gray-200);">
-        <p style="font-size:0.82rem; color:var(--gray-500); margin-bottom:10px;">Quick Demo Login</p>
+        <p style="font-size:0.82rem; color:var(--gray-500); margin-bottom:10px;">Quick Demo Login (US Market)</p>
         <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
             <button class="btn btn-secondary btn-small" onclick="demoLogin('sarah.chen@email.com')">Sarah Chen</button>
             <button class="btn btn-secondary btn-small" onclick="demoLogin('james.wilson@email.com')">James Wilson</button>
             <button class="btn btn-secondary btn-small" onclick="demoLogin('priya.patel@email.com')">Priya Patel</button>
             <button class="btn btn-secondary btn-small" onclick="demoLogin('alex.rodriguez@email.com')">Alex Rodriguez</button>
+        </div>
+        <p style="font-size:0.82rem; color:var(--gold); margin-bottom:10px; margin-top:14px;">Groww Portfolio (Indian Market)</p>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
+            <button class="btn btn-small" style="background:var(--gold);color:var(--navy);font-weight:600;" onclick="demoLogin('ramu@groww.in')">Ramu DE</button>
+            <button class="btn btn-small" style="background:var(--gold);color:var(--navy);font-weight:600;" onclick="demoLogin('ananya@groww.in')">Ananya Sharma</button>
+            <button class="btn btn-small" style="background:var(--gold);color:var(--navy);font-weight:600;" onclick="demoLogin('vikram@groww.in')">Vikram Patel</button>
         </div>
     </div>
 </div>
@@ -164,7 +170,10 @@
             'sarah.chen@email.com': { id: 'client_sarah_chen', name: 'Sarah Chen' },
             'james.wilson@email.com': { id: 'client_james_wilson', name: 'James Wilson' },
             'priya.patel@email.com': { id: 'client_priya_patel', name: 'Priya Patel' },
-            'alex.rodriguez@email.com': { id: 'client_alex_rodriguez', name: 'Alex Rodriguez' }
+            'alex.rodriguez@email.com': { id: 'client_alex_rodriguez', name: 'Alex Rodriguez' },
+            'ramu@groww.in': { id: 'client_ramu_de', name: 'Ramu DE' },
+            'ananya@groww.in': { id: 'client_ananya_sharma', name: 'Ananya Sharma' },
+            'vikram@groww.in': { id: 'client_vikram_patel', name: 'Vikram Patel' }
         };
         const client = demoClients[email];
         if (client) {

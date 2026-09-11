@@ -1080,6 +1080,205 @@ def consult_tax_optimizer(query: str, client_id: str = ""):
     return invoke_peer_agent('olivia', query, client_id)
 
 
+# ── Indian Market / Groww Integration Tools ─────────────────────────
+
+try:
+    from groww_connector import GrowwConnector, calculate_indian_tax_impact, get_indian_market_hours, NIFTY50_STOCKS, NSE_SECTOR_MAP
+    GROWW_AVAILABLE = True
+except ImportError:
+    GROWW_AVAILABLE = False
+
+@tool
+def get_indian_market_status():
+    """Get current Indian stock market (NSE/BSE) status, trading hours, and session info.
+    Use this when clients ask about Indian market timing or whether markets are open."""
+    if not GROWW_AVAILABLE:
+        from datetime import timezone
+        now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+        is_weekday = now_ist.weekday() < 5
+        market_open = now_ist.replace(hour=9, minute=15)
+        market_close = now_ist.replace(hour=15, minute=30)
+        is_open = is_weekday and market_open <= now_ist <= market_close
+        return json.dumps({
+            'ist_time': now_ist.strftime('%Y-%m-%d %H:%M:%S IST'),
+            'market_open': is_open,
+            'session': 'trading' if is_open else 'closed',
+            'exchange': 'NSE/BSE',
+        })
+    return json.dumps(get_indian_market_hours())
+
+
+@tool
+def get_nse_stock_quote(ticker: str):
+    """Get live quote for an Indian stock on NSE/BSE.
+    Use this when clients ask about specific Indian stocks like RELIANCE, TCS, INFY, HDFCBANK etc.
+
+    Args:
+        ticker: NSE trading symbol (e.g., RELIANCE, TCS, INFY, HDFCBANK)
+    """
+    ticker = ticker.upper().replace('.NS', '').replace('.BSE', '').strip()
+
+    sector = NSE_SECTOR_MAP.get(ticker, 'Other') if GROWW_AVAILABLE else 'Unknown'
+    is_nifty50 = ticker in (NIFTY50_STOCKS if GROWW_AVAILABLE else [])
+
+    dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
+    try:
+        response = dynamodb_client.get_item(
+            TableName='wealth_mgmt_market_data',
+            Key={
+                'symbol': {'S': f"{ticker}.NS"},
+                'data_type': {'S': 'quote'}
+            }
+        )
+        if 'Item' in response:
+            item = response['Item']
+            return json.dumps({
+                'ticker': ticker,
+                'exchange': 'NSE',
+                'price': item.get('price', {}).get('N', '0'),
+                'change_percent': item.get('change_percent', {}).get('N', '0'),
+                'sector': sector,
+                'nifty50': is_nifty50,
+                'source': 'cached',
+            })
+    except Exception:
+        pass
+
+    return json.dumps({
+        'ticker': ticker,
+        'exchange': 'NSE',
+        'sector': sector,
+        'nifty50': is_nifty50,
+        'note': 'Live quote requires Groww connection. Use sync_groww_portfolio to connect.',
+        'suggestion': f'For {ticker} analysis, I can provide sector outlook and portfolio context from existing data.',
+    })
+
+
+@tool
+def calculate_india_tax(client_id: str, sell_tickers: str = ""):
+    """Calculate Indian capital gains tax (STCG/LTCG) for selling stocks.
+    Applies FY 2024-25 rates: STCG 20%, LTCG 12.5% above 1.25L exemption.
+
+    Args:
+        client_id: The client ID to look up holdings for
+        sell_tickers: Comma-separated tickers to sell (empty = calculate for all holdings)
+    """
+    portfolio_data = get_portfolio_from_db(client_id, 'groww_stocks')
+    if not portfolio_data:
+        portfolio_data = get_portfolio_from_db(client_id)
+    if not portfolio_data:
+        return json.dumps({'error': 'No portfolio found. Sync Groww data first.'})
+
+    holdings = portfolio_data.get('holdings', [])
+    if not holdings:
+        return json.dumps({'error': 'No holdings found in portfolio.'})
+
+    holdings_for_calc = []
+    sell_list = [t.strip().upper() for t in sell_tickers.split(',') if t.strip()] if sell_tickers else None
+
+    for h in holdings:
+        holdings_for_calc.append({
+            'ticker': h.get('ticker', h.get('name', '')),
+            'quantity': int(h.get('shares', h.get('quantity', 0))),
+            'avg_price': float(h.get('avg_cost', h.get('cost_basis', 0))),
+            'current_price': float(h.get('current_price', h.get('value', 0)) /
+                                   max(int(h.get('shares', 1)), 1)),
+            'purchase_date': h.get('purchase_date', ''),
+        })
+
+    if GROWW_AVAILABLE:
+        result = calculate_indian_tax_impact(holdings_for_calc, sell_list)
+    else:
+        stcg = sum(
+            (h['current_price'] - h['avg_price']) * h['quantity']
+            for h in holdings_for_calc
+            if (h['current_price'] - h['avg_price']) > 0
+        )
+        result = {
+            'stcg_gains': round(stcg, 2),
+            'stcg_tax_20pct': round(stcg * 0.20, 2),
+            'ltcg_exemption': 125000,
+            'note': 'Approximate calculation. Connect Groww for precise holding period data.',
+            'rates': 'STCG: 20%, LTCG: 12.5% (above 1.25L exemption)',
+        }
+
+    return json.dumps(result, default=str)
+
+
+@tool
+def sync_groww_portfolio(client_id: str, auth_token: str = ""):
+    """Sync portfolio data from Groww brokerage into WealthAI system.
+    Pulls stocks, mutual funds, and order history with read-only access.
+
+    Args:
+        client_id: WealthAI client ID to sync data for
+        auth_token: Groww authentication token (read-only)
+    """
+    if not GROWW_AVAILABLE:
+        return json.dumps({
+            'status': 'error',
+            'message': 'Groww connector not available. Ensure groww_connector.py is in the shared directory.',
+        })
+
+    if not auth_token:
+        return json.dumps({
+            'status': 'needs_auth',
+            'message': 'Please provide your Groww read-only auth token to sync portfolio data.',
+            'how_to_get_token': 'Log into Groww web > Developer Tools > Network tab > Copy Authorization header value',
+        })
+
+    try:
+        connector = GrowwConnector(auth_token=auth_token)
+        result = connector.sync_to_dynamodb(client_id)
+        return json.dumps(result, default=str)
+    except Exception as e:
+        return json.dumps({'status': 'error', 'message': str(e)})
+
+
+@tool
+def analyze_indian_sector(sector: str):
+    """Analyze an Indian market sector with NSE-specific data.
+    Sectors: Technology, Banking, FMCG, Pharma, Energy, Auto, Metals, Telecom, Infrastructure, Finance, Power.
+
+    Args:
+        sector: Indian market sector name
+    """
+    sector_stocks = {
+        'Technology': ['TCS', 'INFY', 'HCLTECH', 'WIPRO', 'TECHM', 'LTIM'],
+        'Banking': ['HDFCBANK', 'ICICIBANK', 'SBIN', 'KOTAKBANK', 'AXISBANK', 'INDUSINDBK'],
+        'FMCG': ['ITC', 'HINDUNILVR', 'NESTLEIND', 'BRITANNIA', 'TATACONSUM'],
+        'Pharma': ['SUNPHARMA', 'DRREDDY', 'CIPLA', 'DIVISLAB', 'APOLLOHOSP'],
+        'Energy': ['RELIANCE', 'ONGC', 'BPCL', 'NTPC', 'POWERGRID'],
+        'Auto': ['MARUTI', 'TATAMOTORS', 'M_M', 'BAJAJ_AUTO', 'HEROMOTOCO', 'EICHERMOT'],
+        'Metals': ['TATASTEEL', 'JSWSTEEL', 'HINDALCO', 'COALINDIA'],
+        'Finance': ['BAJFINANCE', 'BAJAJFINSV', 'SBILIFE', 'HDFCLIFE'],
+        'Infrastructure': ['LT', 'ADANIENT', 'ULTRACEMCO', 'GRASIM', 'SHREECEM'],
+        'Telecom': ['BHARTIARTL'],
+        'Consumer': ['TITAN', 'ASIANPAINT'],
+    }
+
+    sector_title = sector.title()
+    stocks = sector_stocks.get(sector_title, [])
+
+    if not stocks:
+        available = ', '.join(sector_stocks.keys())
+        return json.dumps({
+            'error': f'Sector "{sector}" not found.',
+            'available_sectors': available,
+        })
+
+    return json.dumps({
+        'sector': sector_title,
+        'exchange': 'NSE',
+        'market': 'India',
+        'key_stocks': stocks,
+        'stock_count': len(stocks),
+        'nifty50_representation': sum(1 for s in stocks if s in (NIFTY50_STOCKS if GROWW_AVAILABLE else [])),
+        'analysis_note': f'Indian {sector_title} sector with {len(stocks)} major constituents on NSE.',
+        'index': f'NIFTY{sector_title.upper()}' if sector_title in ['IT', 'Bank', 'Pharma', 'Metal'] else 'NIFTY50',
+    })
+
+
 model = BedrockModel(
     model_id=MODEL_ID,
 )
@@ -1093,7 +1292,12 @@ base_tools = [
     get_memory_context,
     save_conversation_memory,
     consult_financial_planner,
-    consult_tax_optimizer
+    consult_tax_optimizer,
+    get_indian_market_status,
+    get_nse_stock_quote,
+    calculate_india_tax,
+    sync_groww_portfolio,
+    analyze_indian_sector,
 ]
 
 agent = Agent(
@@ -1121,6 +1325,11 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 - save_conversation_memory(client_id, user_message, agent_response, session_id=None): Save conversation context
 - consult_financial_planner(query, client_id): Ask Sophia (Financial Planner) for portfolio allocation, retirement projections, or rebalancing advice
 - consult_tax_optimizer(query, client_id): Ask Olivia (Tax Optimizer) for tax-loss harvesting, capital gains, or tax bracket strategies
+- get_indian_market_status(): Check if NSE/BSE is open, current IST time, trading session
+- get_nse_stock_quote(ticker): Get quote for Indian stocks (RELIANCE, TCS, INFY, HDFCBANK, etc.)
+- calculate_india_tax(client_id, sell_tickers=""): Calculate STCG/LTCG tax under Indian rules (FY 2024-25)
+- sync_groww_portfolio(client_id, auth_token=""): Sync holdings from Groww brokerage (read-only)
+- analyze_indian_sector(sector): Analyze Indian market sectors (Technology, Banking, FMCG, Pharma, etc.)
 
 🎯 **Critical Response Patterns:**
 1. Client asks about their portfolio → IMMEDIATELY use get_client_portfolio
@@ -1131,6 +1340,11 @@ CRITICAL: You MUST use your tools to provide accurate information. Never guess o
 6. Client asks for a comprehensive review → Use MULTIPLE tools (portfolio + risk + indicators)
 7. Client asks about retirement planning, allocation changes, or rebalancing → Use consult_financial_planner to get Sophia's input
 8. Client asks about tax implications of trades or tax-efficient strategies → Use consult_tax_optimizer to get Olivia's input
+9. Client asks about Indian stocks (RELIANCE, TCS, etc.) → Use get_nse_stock_quote
+10. Client asks about NSE/BSE market timing → Use get_indian_market_status
+11. Client asks about Indian tax on selling stocks → Use calculate_india_tax (STCG 20%, LTCG 12.5%)
+12. Client asks to connect Groww portfolio → Use sync_groww_portfolio
+13. Client asks about Indian sectors (Banking, IT, Pharma) → Use analyze_indian_sector
 
 💼 **Professional Standards:**
 - Always provide data-backed analysis, never speculation
