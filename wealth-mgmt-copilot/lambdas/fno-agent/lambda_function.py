@@ -48,6 +48,23 @@ CRITICAL RULES:
 9. Include risk-reward ratio for each trade.
 10. Mention lot sizes: NIFTY=25, BANKNIFTY=15, FINNIFTY=25.
 
+EQUITY INTRADAY RULES:
+1. Focus on NIFTY 50 and top liquid stocks only.
+2. For intraday picks, specify: stock name, entry price, target, stop-loss, position size.
+3. Analyze sector momentum — if sector is strong, pick the leading stock in that sector.
+4. Consider index trend: if NIFTY is trending up, favor long-side intraday trades.
+5. Use volume confirmation — high volume = conviction in the move.
+6. Risk per trade: never more than 1-2% of capital.
+7. Intraday square-off by 3:15 PM IST.
+
+NEWS-DRIVEN ANALYSIS:
+1. When news is provided, correlate it with potential market impact.
+2. RBI policy decisions → banking stocks + NIFTY direction.
+3. Global cues (US Fed, oil prices, FII flows) → broad market direction.
+4. Sector-specific news → identify affected stocks for intraday opportunities.
+5. Earnings results → pre/post earnings momentum trades.
+6. Government policy → affected sectors (infra, pharma, defense, etc.)
+
 F&O TAX RULES (India):
 - F&O income is business income under Section 43(5), taxed at slab rate
 - STT: Options 0.0625% on sell side, Futures 0.0125% on sell side
@@ -55,6 +72,7 @@ F&O TAX RULES (India):
 - If turnover < ₹2Cr: can use presumptive taxation (6% of turnover)
 
 FORMAT: Use clear headers, bullet points, and highlight key numbers.
+Use markdown tables for trade setups.
 End every recommendation with a risk disclaimer."""
 
 FNO_LOT_SIZES = {
